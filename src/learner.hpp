@@ -1,1 +1,4 @@
-#include <learner.hpp>
+class Learner
+{
+    void Proclaim();
+};
