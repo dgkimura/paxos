@@ -3,6 +3,7 @@ project(paxos)
 
 set(SOURCES
     acceptor.cpp
+    callback.cpp
     learner.cpp
     proposer.cpp
     receiver.cpp
