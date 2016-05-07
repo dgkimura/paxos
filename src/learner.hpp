@@ -1,3 +1,5 @@
+#include <memory>
+
 #include <callback.hpp>
 #include <context.hpp>
 #include <messages.hpp>
