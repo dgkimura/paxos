@@ -7,6 +7,7 @@ set(SOURCES
     learner.cpp
     proposer.cpp
     receiver.cpp
+    replicaset.cpp
     sender.cpp
 )
 
