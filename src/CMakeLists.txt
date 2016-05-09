@@ -5,6 +5,7 @@ set(SOURCES
     acceptor.cpp
     callback.cpp
     learner.cpp
+    ledger.cpp
     proposer.cpp
     receiver.cpp
     replicaset.cpp
