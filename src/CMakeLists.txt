@@ -4,6 +4,7 @@ project(paxos.src)
 set(SOURCES
     acceptor.cpp
     callback.cpp
+    decree.cpp
     learner.cpp
     ledger.cpp
     proposer.cpp

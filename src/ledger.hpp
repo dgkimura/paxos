@@ -1,11 +1,6 @@
 #include <string>
 
-
-struct Decree
-{
-    std::string Contents;
-    unsigned long int Number;
-};
+#include <decree.hpp>
 
 
 class Ledger
