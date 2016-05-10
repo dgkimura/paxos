@@ -9,6 +9,8 @@
 
 void RegisterProposer(Receiver receiver, Sender sender);
 
-void HandlePrepare(Message message, std::shared_ptr<Context> context, Sender& sender);
+void HandleRequest(Message message, std::shared_ptr<Context> context, Sender& sender);
 
-void HandleAccept(Message message, std::shared_ptr<Context> context, Sender& sender);
+void HandlePromise(Message message, std::shared_ptr<Context> context, Sender& sender);
+
+void HandleAccepted(Message message, std::shared_ptr<Context> context, Sender& sender);

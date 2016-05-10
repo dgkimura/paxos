@@ -8,22 +8,22 @@ RegisterAcceptor(Receiver receiver, Sender& sender)
 
     std::shared_ptr<Context> context(new Context());
 
-    receiver.RegisterCallback<PromiseMessage>(
-        Callback(std::bind(HandlePromise, _1, context, sender))
+    receiver.RegisterCallback<PrepareMessage>(
+        Callback(std::bind(HandlePrepare, _1, context, sender))
     );
-    receiver.RegisterCallback<AcceptedMessage>(
-        Callback(std::bind(HandleAccepted, _1, context, sender))
+    receiver.RegisterCallback<AcceptMessage>(
+        Callback(std::bind(HandleAccept, _1, context, sender))
     );
 }
 
 
 void
-HandlePromise(Message message, std::shared_ptr<Context> context, Sender& sender)
+HandlePrepare(Message message, std::shared_ptr<Context> context, Sender& sender)
 {
 }
 
 
 void
-HandleAccepted(Message message, std::shared_ptr<Context> context, Sender& sender)
+HandleAccept(Message message, std::shared_ptr<Context> context, Sender& sender)
 {
 }

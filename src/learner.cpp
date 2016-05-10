@@ -8,7 +8,7 @@ RegisterLearner(Receiver receiver, Sender& sender)
 
     std::shared_ptr<Context> context(new Context());
 
-    receiver.RegisterCallback<ProclaimMessage>(
+    receiver.RegisterCallback<AcceptedMessage>(
         Callback(std::bind(HandleProclaim, _1, context, sender))
     );
 }

@@ -7,6 +7,11 @@ class Message
 };
 
 
+class RequestMessage : public Message
+{
+};
+
+
 class PrepareMessage : public Message
 {
 };
@@ -23,11 +28,6 @@ class AcceptMessage : public Message
 
 
 class AcceptedMessage : public Message
-{
-};
-
-
-class ProclaimMessage : public Message
 {
 };
 

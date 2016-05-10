@@ -8,4 +8,5 @@
 
 
 void RegisterLearner(Receiver receiver, Sender& sender);
+
 void HandleProclaim(Message message, std::shared_ptr<Context> context, Sender& sender);

@@ -7,22 +7,31 @@ RegisterProposer(Receiver receiver, Sender& sender)
 
     std::shared_ptr<Context> context(new Context());
 
-    receiver.RegisterCallback<PrepareMessage>(
-        Callback(std::bind(HandlePrepare, _1, context, sender))
+    receiver.RegisterCallback<RequestMessage>(
+        Callback(std::bind(HandleRequest, _1, context, sender))
     );
-    receiver.RegisterCallback<AcceptMessage>(
-        Callback(std::bind(HandleAccept, _1, context, sender))
+    receiver.RegisterCallback<PromiseMessage>(
+        Callback(std::bind(HandlePromise, _1, context, sender))
+    );
+    receiver.RegisterCallback<AcceptedMessage>(
+        Callback(std::bind(HandleAccepted, _1, context, sender))
     );
 }
 
 
 void
-HandlePrepare(Message message, std::shared_ptr<Context> context, Sender& sender)
+HandleRequest(Message message, std::shared_ptr<Context> context, Sender& sender)
 {
 }
 
 
 void
-HandleAccept(Message message, std::shared_ptr<Context> context, Sender& sender)
+HandlePromise(Message message, std::shared_ptr<Context> context, Sender& sender)
+{
+}
+
+
+void
+HandleAccepted(Message message, std::shared_ptr<Context> context, Sender& sender)
 {
 }
