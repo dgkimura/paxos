@@ -1,25 +1,20 @@
 #include <string>
 
 
-class Decree
+struct Decree
 {
-public:
-
-    std::string GetAuthor() const;
-
-    int GetNumber() const;
-
-    std::string GetContent() const;
-
-    void SetContent(std::string content);
-
-    bool operator<(const Decree & rhs);
-
-private:
-
     std::string author;
 
     int number;
 
     std::string content;
 };
+
+
+int CompareDecrees(Decree lhs, Decree rhs);
+
+bool IsDecreeHigher(Decree lhs, Decree rhs);
+
+bool IsDecreeEqual(Decree lhs, Decree rhs);
+
+bool IsDecreeLower(Decree lhs, Decree rhs);

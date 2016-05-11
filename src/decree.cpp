@@ -1,39 +1,31 @@
 #include <decree.hpp>
 
 
-bool
-Decree::operator<(const Decree& rhs)
-{
-    int lhs_number = GetNumber();
-    int rhs_number = rhs.GetNumber();
-    return lhs_number != rhs_number ? lhs_number < rhs_number
-        : GetAuthor() < rhs.GetAuthor();
-}
-
-
-std::string
-Decree::GetAuthor() const
-{
-    return author;
-}
-
-
 int
-Decree::GetNumber() const
+CompareDecrees(Decree lhs, Decree rhs)
 {
-    return number;
+    return lhs.number != rhs.number ?
+        lhs.number - rhs.number :
+        lhs.author.compare(rhs.author);
 }
 
 
-std::string
-Decree::GetContent() const
+bool
+IsDecreeHigher(Decree lhs, Decree rhs)
 {
-    return content;
+    return CompareDecrees(lhs, rhs) > 0;
 }
 
 
-void
-Decree::SetContent(std::string the_content)
+bool
+IsDecreeEqual(Decree lhs, Decree rhs)
 {
-    content = the_content;
+    return CompareDecrees(lhs, rhs) == 0;
+}
+
+
+bool
+IsDecreeLower(Decree lhs, Decree rhs)
+{
+    return CompareDecrees(lhs, rhs) < 0;
 }
