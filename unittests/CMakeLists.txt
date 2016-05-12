@@ -13,6 +13,8 @@ ExternalProject_Add(
 
 set(SOURCES
     acceptor_unittest.cpp
+    decree_unittest.cpp
+    replicaset_unittest.cpp
 )
 
 add_executable(all_unittests ${SOURCES})
