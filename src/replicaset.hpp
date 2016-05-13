@@ -1,3 +1,4 @@
+#include <iterator>
 #include <set>
 #include <string>
 
@@ -30,6 +31,14 @@ public:
     void Remove(Replica replica);
 
     int GetSize();
+
+    using iterator = std::set<Replica, compare_replica>::iterator;
+
+    using const_iterator = std::set<Replica, compare_replica>::const_iterator;
+
+    ReplicaSet::iterator begin();
+
+    ReplicaSet::iterator end();
 
 private:
 

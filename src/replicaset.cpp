@@ -31,3 +31,17 @@ ReplicaSet::GetSize()
 {
     return replicaset.size();
 }
+
+
+ReplicaSet::iterator
+ReplicaSet::begin()
+{
+    return replicaset.begin();
+}
+
+
+ReplicaSet::iterator
+ReplicaSet::end()
+{
+    return replicaset.end();
+}
