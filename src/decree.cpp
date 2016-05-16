@@ -18,6 +18,13 @@ IsDecreeHigher(Decree lhs, Decree rhs)
 
 
 bool
+IsDecreeHigherOrEqual(Decree lhs, Decree rhs)
+{
+    return CompareDecrees(lhs, rhs) >= 0;
+}
+
+
+bool
 IsDecreeEqual(Decree lhs, Decree rhs)
 {
     return CompareDecrees(lhs, rhs) == 0;
@@ -28,4 +35,11 @@ bool
 IsDecreeLower(Decree lhs, Decree rhs)
 {
     return CompareDecrees(lhs, rhs) < 0;
+}
+
+
+bool
+IsDecreeLowerOrEqual(Decree lhs, Decree rhs)
+{
+    return CompareDecrees(lhs, rhs) <= 0;
 }
