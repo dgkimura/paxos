@@ -33,6 +33,13 @@ ReplicaSet::GetSize()
 }
 
 
+void
+ReplicaSet::Clear()
+{
+    replicaset.clear();
+}
+
+
 ReplicaSet::iterator
 ReplicaSet::begin()
 {

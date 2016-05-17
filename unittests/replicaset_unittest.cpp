@@ -54,3 +54,21 @@ TEST(ReplicaSetUnittest, testIterateReplicaSet)
     }
     ASSERT_EQ(set.GetSize(), 3);
 }
+
+
+TEST(ReplicaSetUnittest, testClearReplicaSetRemovesAllReplicas)
+{
+    ReplicaSet set;
+
+    Replica replica_1{"replica 1"};
+    Replica replica_2{"replica 2"};
+    Replica replica_3{"replica 3"};
+
+    set.Add(replica_1);
+    set.Add(replica_2);
+    set.Add(replica_3);
+
+    set.Clear();
+
+    ASSERT_EQ(set.GetSize(), 0);
+}

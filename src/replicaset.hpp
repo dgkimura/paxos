@@ -32,6 +32,8 @@ public:
 
     int GetSize();
 
+    void Clear();
+
     using iterator = std::set<Replica, compare_replica>::iterator;
 
     using const_iterator = std::set<Replica, compare_replica>::const_iterator;
