@@ -14,7 +14,7 @@ public:
     }
 
     template <typename T>
-    void ReplyAll()
+    void ReplyAll(Message message)
     {
     }
 };

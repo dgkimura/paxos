@@ -1,33 +1,36 @@
 #ifndef __MESSAGES_HPP_INCLUDED__
 #define __MESSAGES_HPP_INCLUDED__
 
+#include <decree.hpp>
 
-class Message
+
+struct Message
+{
+    Decree decree;
+};
+
+
+struct RequestMessage : public Message
 {
 };
 
 
-class RequestMessage : public Message
+struct PrepareMessage : public Message
 {
 };
 
 
-class PrepareMessage : public Message
+struct PromiseMessage : public Message
 {
 };
 
 
-class PromiseMessage : public Message
+struct AcceptMessage : public Message
 {
 };
 
 
-class AcceptMessage : public Message
-{
-};
-
-
-class AcceptedMessage : public Message
+struct AcceptedMessage : public Message
 {
 };
 
