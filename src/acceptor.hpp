@@ -7,7 +7,7 @@
 #include <sender.hpp>
 
 
-void RegisterAcceptor(Receiver receiver, Sender& sender);
+void RegisterAcceptor(Receiver receiver, std::shared_ptr<Sender> sender);
 
 
 struct AcceptorContext : public Context

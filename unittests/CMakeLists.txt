@@ -14,6 +14,7 @@ ExternalProject_Add(
 set(SOURCES
     acceptor_unittest.cpp
     decree_unittest.cpp
+    proposer_unittest.cpp
     replicaset_unittest.cpp
 )
 

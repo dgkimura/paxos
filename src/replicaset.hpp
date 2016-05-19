@@ -1,3 +1,6 @@
+#ifndef __REPLICASET_HPP_INCLUDED__
+#define __REPLICASET_HPP_INCLUDED__
+
 #include <iterator>
 #include <set>
 #include <string>
@@ -46,3 +49,6 @@ private:
 
     std::set<Replica, compare_replica> replicaset;
 };
+
+
+#endif

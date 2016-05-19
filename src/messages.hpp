@@ -2,11 +2,14 @@
 #define __MESSAGES_HPP_INCLUDED__
 
 #include <decree.hpp>
+#include <replicaset.hpp>
 
 
 struct Message
 {
     Decree decree;
+    Replica from;
+    Replica to;
 };
 
 
