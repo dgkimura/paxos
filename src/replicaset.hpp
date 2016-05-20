@@ -9,6 +9,11 @@
 struct Replica
 {
     std::string hostname;
+
+    Replica(std::string h)
+        : hostname(h)
+    {
+    }
 };
 
 

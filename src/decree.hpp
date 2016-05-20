@@ -1,3 +1,6 @@
+#ifndef __DECREE_HPP_INCLUDED__
+#define __DECREE_HPP_INCLUDED__
+
 #include <string>
 
 
@@ -8,6 +11,16 @@ struct Decree
     int number;
 
     std::string content;
+
+    Decree()
+        : author(), number(), content()
+    {
+    }
+
+    Decree(std::string a, int n, std::string c)
+        : author(a), number(n), content(c)
+    {
+    }
 };
 
 
@@ -30,3 +43,6 @@ struct compare_decree
         return IsDecreeLower(lhs, rhs);
     }
 };
+
+
+#endif

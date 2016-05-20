@@ -14,7 +14,7 @@ TEST(ReplicaSetUnittest, testReplicaSetSizeInitializedToZero)
 TEST(ReplicaSetUnittest, testAddReplicaIncrementsReplicaSetSize)
 {
     ReplicaSet set;
-    Replica replica;
+    Replica replica("host1");
     set.Add(replica);
 
     ASSERT_EQ(set.GetSize(), 1);
@@ -24,7 +24,7 @@ TEST(ReplicaSetUnittest, testAddReplicaIncrementsReplicaSetSize)
 TEST(ReplicaSetUnittest, testRemoveReplicaDecrementsReplicaSetSize)
 {
     ReplicaSet set;
-    Replica replica;
+    Replica replica("host1");
 
     set.Add(replica);
     ASSERT_EQ(set.GetSize(), 1);
@@ -37,13 +37,13 @@ TEST(ReplicaSetUnittest, testRemoveReplicaDecrementsReplicaSetSize)
 TEST(ReplicaSetUnittest, testIterateReplicaSet)
 {
     ReplicaSet set;
-    Replica first = {"myhost"};
+    Replica first("myhost");
     set.Add(first);
 
-    Replica second = {"yourhost"};
+    Replica second("yourhost");
     set.Add(second);
 
-    Replica third = {"theirhost"};
+    Replica third("theirhost");
     set.Add(third);
 
     std::set<std::string> expected = {"myhost", "yourhost", "theirhost"};
@@ -60,13 +60,13 @@ TEST(ReplicaSetUnittest, testClearReplicaSetRemovesAllReplicas)
 {
     ReplicaSet set;
 
-    Replica replica_1{"replica 1"};
-    Replica replica_2{"replica 2"};
-    Replica replica_3{"replica 3"};
+    Replica first("myhost");
+    Replica second("yourhost");
+    Replica third("theirhost");
 
-    set.Add(replica_1);
-    set.Add(replica_2);
-    set.Add(replica_3);
+    set.Add(first);
+    set.Add(second);
+    set.Add(third);
 
     set.Clear();
 
@@ -77,7 +77,7 @@ TEST(ReplicaSetUnittest, testClearReplicaSetRemovesAllReplicas)
 TEST(ReplicaSetUnittest, testContainsOnEmptyReplicaSet)
 {
     ReplicaSet set;
-    Replica replica;
+    Replica replica("host1");
 
     ASSERT_FALSE(set.Contains(replica));
 }
@@ -86,7 +86,7 @@ TEST(ReplicaSetUnittest, testContainsOnEmptyReplicaSet)
 TEST(ReplicaSetUnittest, testContainsOnReplicaSetWithReplica)
 {
     ReplicaSet set;
-    set.Add(Replica());
+    set.Add(Replica("host1"));
 
-    ASSERT_TRUE(set.Contains(Replica()));
+    ASSERT_TRUE(set.Contains(Replica("host1")));
 }

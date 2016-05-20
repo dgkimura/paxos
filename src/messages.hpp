@@ -10,6 +10,11 @@ struct Message
     Decree decree;
     Replica from;
     Replica to;
+
+    Message(Decree d, Replica f, Replica t)
+        : decree(d), from(f), to(t)
+    {
+    }
 };
 
 

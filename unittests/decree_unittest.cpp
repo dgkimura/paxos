@@ -5,8 +5,8 @@
 
 TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower{"an_author", 1};
-    Decree higher{"an_author", 2};
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
 
     ASSERT_TRUE(CompareDecrees(lower, higher) < 0);
 }
@@ -14,8 +14,8 @@ TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeNumberOnRightHandSide)
 
 TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeAuthorOnRightHandSide)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_2", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
 
     ASSERT_TRUE(CompareDecrees(lower, higher) < 0);
 }
@@ -23,8 +23,8 @@ TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeAuthorOnRightHandSide)
 
 TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower{"an_author", 1};
-    Decree higher{"an_author", 2};
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
 
     ASSERT_TRUE(CompareDecrees(higher, lower) > 0);
 }
@@ -32,8 +32,8 @@ TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeNumberOnLeftHandSide)
 
 TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeAuthorOnLeftHandSide)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_2", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
 
     ASSERT_TRUE(CompareDecrees(higher, lower) > 0);
 }
@@ -41,8 +41,8 @@ TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeAuthorOnLeftHandSide)
 
 TEST(DecreeUnitTest, testCompareDecreesWithIdenticalDecrees)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_1", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_1", 1, "");
 
     ASSERT_TRUE(CompareDecrees(higher, lower) == 0);
 }
@@ -50,8 +50,8 @@ TEST(DecreeUnitTest, testCompareDecreesWithIdenticalDecrees)
 
 TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower{"an_author", 1};
-    Decree higher{"an_author", 2};
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
 
     ASSERT_TRUE(IsDecreeLower(lower, higher));
 }
@@ -59,8 +59,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeNumberOnRightHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeAuthorOnRightHandSide)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_2", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
 
     ASSERT_TRUE(IsDecreeLower(lower, higher));
 }
@@ -68,8 +68,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeAuthorOnRightHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower{"an_author", 1};
-    Decree higher{"an_author", 2};
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
 
     ASSERT_FALSE(IsDecreeLower(higher, lower));
 }
@@ -77,8 +77,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeNumberOnLeftHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeAuthorOnLeftHandSide)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_2", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
 
     ASSERT_FALSE(IsDecreeLower(higher, lower));
 }
@@ -86,8 +86,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeAuthorOnLeftHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeLowerWithIdenticalDecrees)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_1", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_1", 1, "");
 
     ASSERT_FALSE(IsDecreeLower(higher, lower));
 }
@@ -95,8 +95,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerWithIdenticalDecrees)
 
 TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower{"an_author", 1};
-    Decree higher{"an_author", 2};
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
 
     ASSERT_FALSE(IsDecreeEqual(lower, higher));
 }
@@ -104,8 +104,8 @@ TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeNumberOnRightHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeAuthorOnRightHandSide)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_2", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
 
     ASSERT_FALSE(IsDecreeEqual(lower, higher));
 }
@@ -113,8 +113,8 @@ TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeAuthorOnRightHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower{"an_author", 1};
-    Decree higher{"an_author", 2};
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
 
     ASSERT_FALSE(IsDecreeEqual(higher, lower));
 }
@@ -122,8 +122,8 @@ TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeNumberOnLeftHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeAuthorOnLeftHandSide)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_2", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
 
     ASSERT_FALSE(IsDecreeEqual(higher, lower));
 }
@@ -131,8 +131,8 @@ TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeAuthorOnLeftHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeEqualWithIdenticalDecrees)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_1", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_1", 1, "");
 
     ASSERT_TRUE(IsDecreeEqual(higher, lower));
 }
@@ -140,8 +140,8 @@ TEST(DecreeUnitTest, testIsDecreeEqualWithIdenticalDecrees)
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower{"an_author", 1};
-    Decree higher{"an_author", 2};
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
 
     ASSERT_FALSE(IsDecreeHigher(lower, higher));
 }
@@ -149,8 +149,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeNumberOnRightHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeAuthorOnRightHandSide)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_2", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
 
     ASSERT_FALSE(IsDecreeHigher(lower, higher));
 }
@@ -158,8 +158,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeAuthorOnRightHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower{"an_author", 1};
-    Decree higher{"an_author", 2};
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
 
     ASSERT_TRUE(IsDecreeHigher(higher, lower));
 }
@@ -167,8 +167,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeNumberOnLeftHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeAuthorOnLeftHandSide)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_2", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
 
     ASSERT_TRUE(IsDecreeHigher(higher, lower));
 }
@@ -176,8 +176,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeAuthorOnLeftHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithIdenticalDecrees)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_1", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_1", 1, "");
 
     ASSERT_FALSE(IsDecreeHigher(higher, lower));
 }
@@ -185,8 +185,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherWithIdenticalDecrees)
 
 TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower{"an_author", 1};
-    Decree higher{"an_author", 2};
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
 
     ASSERT_FALSE(IsDecreeHigherOrEqual(lower, higher));
 }
@@ -194,8 +194,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeNumberOnRightHandS
 
 TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeAuthorOnRightHandSide)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_2", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
 
     ASSERT_FALSE(IsDecreeHigherOrEqual(lower, higher));
 }
@@ -203,8 +203,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeAuthorOnRightHandS
 
 TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower{"an_author", 1};
-    Decree higher{"an_author", 2};
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
 
     ASSERT_TRUE(IsDecreeHigherOrEqual(higher, lower));
 }
@@ -212,8 +212,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeNumberOnLeftHandSi
 
 TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeAuthorOnLeftHandSide)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_2", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
 
     ASSERT_TRUE(IsDecreeHigherOrEqual(higher, lower));
 }
@@ -221,8 +221,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeAuthorOnLeftHandSi
 
 TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithIdenticalDecrees)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_1", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_1", 1, "");
 
     ASSERT_TRUE(IsDecreeHigherOrEqual(higher, lower));
 }
@@ -230,8 +230,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithIdenticalDecrees)
 
 TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower{"an_author", 1};
-    Decree higher{"an_author", 2};
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
 
     ASSERT_TRUE(IsDecreeLowerOrEqual(lower, higher));
 }
@@ -239,8 +239,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeNumberOnRightHandSi
 
 TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeAuthorOnRightHandSide)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_2", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
 
     ASSERT_TRUE(IsDecreeLowerOrEqual(lower, higher));
 }
@@ -248,8 +248,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeAuthorOnRightHandSi
 
 TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower{"an_author", 1};
-    Decree higher{"an_author", 2};
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
 
     ASSERT_FALSE(IsDecreeLowerOrEqual(higher, lower));
 }
@@ -257,8 +257,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeNumberOnLeftHandSid
 
 TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeAuthorOnLeftHandSide)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_2", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
 
     ASSERT_FALSE(IsDecreeLowerOrEqual(higher, lower));
 }
@@ -266,8 +266,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeAuthorOnLeftHandSid
 
 TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithIdenticalDecrees)
 {
-    Decree lower{"an_author_1", 1};
-    Decree higher{"an_author_1", 1};
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_1", 1, "");
 
     ASSERT_TRUE(IsDecreeLowerOrEqual(higher, lower));
 }
