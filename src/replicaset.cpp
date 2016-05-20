@@ -26,6 +26,13 @@ ReplicaSet::Remove(Replica replica)
 }
 
 
+bool
+ReplicaSet::Contains(Replica replica)
+{
+    return replicaset.find(replica) != replicaset.end();
+}
+
+
 int
 ReplicaSet::GetSize()
 {

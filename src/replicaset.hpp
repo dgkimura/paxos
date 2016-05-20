@@ -33,6 +33,8 @@ public:
 
     void Remove(Replica replica);
 
+    bool Contains(Replica replica);
+
     int GetSize();
 
     void Clear();

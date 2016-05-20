@@ -72,3 +72,21 @@ TEST(ReplicaSetUnittest, testClearReplicaSetRemovesAllReplicas)
 
     ASSERT_EQ(set.GetSize(), 0);
 }
+
+
+TEST(ReplicaSetUnittest, testContainsOnEmptyReplicaSet)
+{
+    ReplicaSet set;
+    Replica replica;
+
+    ASSERT_FALSE(set.Contains(replica));
+}
+
+
+TEST(ReplicaSetUnittest, testContainsOnReplicaSetWithReplica)
+{
+    ReplicaSet set;
+    set.Add(Replica());
+
+    ASSERT_TRUE(set.Contains(Replica()));
+}
