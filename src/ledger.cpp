@@ -1,23 +1,40 @@
 #include <ledger.hpp>
 
 
-Ledger::Ledger()
+VolatileLedger::VolatileLedger()
+    : decree_entries()
+{
+}
+
+
+VolatileLedger::~VolatileLedger()
 {
 }
 
 
 void
-Ledger::Append(Decree decree)
+VolatileLedger::Append(Decree decree)
 {
+    decree_entries.push_back(decree);
+}
+
+
+bool
+VolatileLedger::Contains(Decree decree)
+{
+    for (Decree d : decree_entries)
+    {
+        if (IsDecreeEqual(d, decree))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 
 void
-Ledger::ApplyCheckpoint()
+VolatileLedger::ApplyCheckpoint()
 {
-}
-
-
-Ledger::~Ledger()
-{
+    decree_entries.clear();
 }
