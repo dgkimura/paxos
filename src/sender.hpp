@@ -1,3 +1,7 @@
+#ifndef __SENDER_HPP_INCLUDED__
+#define __SENDER_HPP_INCLUDED__
+
+
 #include <vector>
 
 #include <messages.hpp>
@@ -10,6 +14,20 @@ public:
     virtual void Reply(Message message) = 0;
 
     virtual void ReplyAll(Message message) = 0;
+};
+
+
+class NetworkSender : public Sender
+{
+public:
+
+    NetworkSender();
+
+    ~NetworkSender();
+
+    void Reply(Message message);
+
+    void ReplyAll(Message message);
 };
 
 
@@ -57,3 +75,6 @@ private:
 
     ReplicaSet full_replicaset;
 };
+
+
+#endif
