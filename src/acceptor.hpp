@@ -7,9 +7,6 @@
 #include <sender.hpp>
 
 
-void RegisterAcceptor(Receiver receiver, std::shared_ptr<Sender> sender);
-
-
 struct AcceptorContext : public Context
 {
     Decree promised_decree;
@@ -17,7 +14,19 @@ struct AcceptorContext : public Context
 };
 
 
-void HandlePrepare(Message message, std::shared_ptr<AcceptorContext> context, std::shared_ptr<Sender> sender);
+void RegisterAcceptor(
+    Receiver receiver,
+    std::shared_ptr<Sender> sender,
+    std::shared_ptr<AcceptorContext> context);
 
 
-void HandleAccept(Message message, std::shared_ptr<AcceptorContext> context, std::shared_ptr<Sender> sender);
+void HandlePrepare(
+    Message message,
+    std::shared_ptr<AcceptorContext> context,
+    std::shared_ptr<Sender> sender);
+
+
+void HandleAccept(
+    Message message,
+    std::shared_ptr<AcceptorContext> context,
+    std::shared_ptr<Sender> sender);

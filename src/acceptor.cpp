@@ -2,11 +2,12 @@
 
 
 void
-RegisterAcceptor(Receiver receiver, std::shared_ptr<Sender> sender)
+RegisterAcceptor(
+    Receiver receiver,
+    std::shared_ptr<Sender> sender,
+    std::shared_ptr<AcceptorContext> context)
 {
     using namespace std::placeholders;
-
-    std::shared_ptr<AcceptorContext> context(new AcceptorContext());
 
     receiver.RegisterCallback<PrepareMessage>(
         Callback(std::bind(HandlePrepare, _1, context, sender))
@@ -18,7 +19,10 @@ RegisterAcceptor(Receiver receiver, std::shared_ptr<Sender> sender)
 
 
 void
-HandlePrepare(Message message, std::shared_ptr<AcceptorContext> context, std::shared_ptr<Sender> sender)
+HandlePrepare(
+    Message message,
+    std::shared_ptr<AcceptorContext> context,
+    std::shared_ptr<Sender> sender)
 {
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree))
     {
@@ -29,7 +33,10 @@ HandlePrepare(Message message, std::shared_ptr<AcceptorContext> context, std::sh
 
 
 void
-HandleAccept(Message message, std::shared_ptr<AcceptorContext> context, std::shared_ptr<Sender> sender)
+HandleAccept(
+    Message message,
+    std::shared_ptr<AcceptorContext> context,
+    std::shared_ptr<Sender> sender)
 {
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree))
     {

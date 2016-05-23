@@ -2,11 +2,12 @@
 
 
 void
-RegisterLearner(Receiver receiver, std::shared_ptr<Sender> sender)
+RegisterLearner(
+    Receiver receiver,
+    std::shared_ptr<Sender> sender,
+    std::shared_ptr<LearnerContext> context)
 {
     using namespace std::placeholders;
-
-    std::shared_ptr<LearnerContext> context(new LearnerContext());
 
     receiver.RegisterCallback<AcceptedMessage>(
         Callback(std::bind(HandleProclaim, _1, context, sender))
@@ -15,7 +16,10 @@ RegisterLearner(Receiver receiver, std::shared_ptr<Sender> sender)
 
 
 void
-HandleProclaim(Message message, std::shared_ptr<LearnerContext> context, std::shared_ptr<Sender> sender)
+HandleProclaim(
+    Message message,
+    std::shared_ptr<LearnerContext> context,
+    std::shared_ptr<Sender> sender)
 {
     if (context->accepted_map.find(message.decree) == context->accepted_map.end())
     {

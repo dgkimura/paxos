@@ -2,11 +2,12 @@
 
 
 void
-RegisterProposer(Receiver receiver, std::shared_ptr<Sender> sender)
+RegisterProposer(
+    Receiver receiver,
+    std::shared_ptr<Sender> sender,
+    std::shared_ptr<ProposerContext> context)
 {
     using namespace std::placeholders;
-
-    std::shared_ptr<ProposerContext> context(new ProposerContext());
 
     receiver.RegisterCallback<RequestMessage>(
         Callback(std::bind(HandleRequest, _1, context, sender))
@@ -21,13 +22,19 @@ RegisterProposer(Receiver receiver, std::shared_ptr<Sender> sender)
 
 
 void
-HandleRequest(Message message, std::shared_ptr<ProposerContext> context, std::shared_ptr<Sender> sender)
+HandleRequest(
+    Message message,
+    std::shared_ptr<ProposerContext> context,
+    std::shared_ptr<Sender> sender)
 {
 }
 
 
 void
-HandlePromise(Message message, std::shared_ptr<ProposerContext> context, std::shared_ptr<Sender> sender)
+HandlePromise(
+    Message message,
+    std::shared_ptr<ProposerContext> context,
+    std::shared_ptr<Sender> sender)
 {
     if (IsDecreeHigher(message.decree, context->highest_promised_decree))
     {
@@ -52,7 +59,10 @@ HandlePromise(Message message, std::shared_ptr<ProposerContext> context, std::sh
 
 
 void
-HandleAccepted(Message message, std::shared_ptr<ProposerContext> context, std::shared_ptr<Sender> sender)
+HandleAccepted(
+    Message message,
+    std::shared_ptr<ProposerContext> context,
+    std::shared_ptr<Sender> sender)
 {
     context->promise_map.erase(message.decree);
 }

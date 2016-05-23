@@ -18,6 +18,13 @@ struct LearnerContext : public Context
 };
 
 
-void RegisterLearner(Receiver receiver, std::shared_ptr<Sender> sender);
+void RegisterLearner(
+    Receiver receiver,
+    std::shared_ptr<Sender> sender,
+    std::shared_ptr<LearnerContext> context);
 
-void HandleProclaim(Message message, std::shared_ptr<LearnerContext> context, std::shared_ptr<Sender> sender);
+
+void HandleProclaim(
+    Message message,
+    std::shared_ptr<LearnerContext> context,
+    std::shared_ptr<Sender> sender);
