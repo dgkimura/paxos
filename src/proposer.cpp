@@ -1,5 +1,6 @@
 #include <proposer.hpp>
 
+
 void
 RegisterProposer(Receiver receiver, std::shared_ptr<Sender> sender)
 {
@@ -43,7 +44,7 @@ HandlePromise(Message message, std::shared_ptr<ProposerContext> context, std::sh
 
         if (received_promises >= minimum_quorum)
         {
-            sender->ReplyAll<AcceptedMessage>(message);
+            sender->ReplyAll(Response<AcceptedMessage>(message));
         }
     }
 

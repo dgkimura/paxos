@@ -23,7 +23,7 @@ HandlePrepare(Message message, std::shared_ptr<AcceptorContext> context, std::sh
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree))
     {
         context->promised_decree = message.decree;
-        sender->Reply<PromiseMessage>(message);
+        sender->Reply(Response<PromiseMessage>(message));
     }
 }
 
@@ -37,6 +37,6 @@ HandleAccept(Message message, std::shared_ptr<AcceptorContext> context, std::sha
         {
             context->accepted_decree = message.decree;
         }
-        sender->ReplyAll<AcceptedMessage>(message);
+        sender->ReplyAll(Response<AcceptedMessage>(message));
     }
 }

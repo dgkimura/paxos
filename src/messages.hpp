@@ -20,27 +20,55 @@ struct Message
 
 struct RequestMessage : public Message
 {
+    RequestMessage(Decree d, Replica f, Replica t)
+        : Message(d, f, t)
+    {
+    }
 };
 
 
 struct PrepareMessage : public Message
 {
+    PrepareMessage(Decree d, Replica f, Replica t)
+        : Message(d, f, t)
+    {
+    }
 };
 
 
 struct PromiseMessage : public Message
 {
+    PromiseMessage(Decree d, Replica f, Replica t)
+        : Message(d, f, t)
+    {
+    }
 };
 
 
 struct AcceptMessage : public Message
 {
+    AcceptMessage(Decree d, Replica f, Replica t)
+        : Message(d, f, t)
+    {
+    }
 };
 
 
 struct AcceptedMessage : public Message
 {
+    AcceptedMessage(Decree d, Replica f, Replica t)
+        : Message(d, f, t)
+    {
+    }
 };
+
+
+template <typename T>
+T Response(Message message)
+{
+    T response(message.decree, message.to, message.from);
+    return response;
+}
 
 
 #endif

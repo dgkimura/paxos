@@ -10,7 +10,7 @@ TEST(AcceptorTest, testHandlePrepareWithHigherDecreeUpdatesPromisedDecree)
     std::shared_ptr<AcceptorContext> context(new AcceptorContext());
     context->promised_decree = Decree("the_author", 0, "");
 
-    std::shared_ptr<Sender> sender(new Sender());
+    std::shared_ptr<FakeSender> sender(new FakeSender());
 
     HandlePrepare(message, context, sender);
 
@@ -25,7 +25,7 @@ TEST(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree)
     std::shared_ptr<AcceptorContext> context(new AcceptorContext());
     context->promised_decree = Decree("the_author", 1, "");
 
-    std::shared_ptr<Sender> sender(new Sender());
+    std::shared_ptr<FakeSender> sender(new FakeSender());
 
     HandlePrepare(message, context, sender);
 
@@ -41,7 +41,7 @@ TEST(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
     context->promised_decree = Decree("the_author", 1, "");
     context->accepted_decree = Decree("the_author", 1, "");
 
-    std::shared_ptr<Sender> sender(new Sender());
+    std::shared_ptr<FakeSender> sender(new FakeSender());
 
     HandleAccept(message, context, sender);
 
@@ -57,7 +57,7 @@ TEST(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
     context->promised_decree = Decree("the_author", 1, "");
     context->accepted_decree = Decree("the_author", 1, "");
 
-    std::shared_ptr<Sender> sender(new Sender());
+    std::shared_ptr<FakeSender> sender(new FakeSender());
 
     HandleAccept(message, context, sender);
 
@@ -73,7 +73,7 @@ TEST(AcceptorTest, testHandleAcceptWithHigherDecreeDoesUpdateAcceptedDecree)
     context->promised_decree = Decree("the_author", 1, "");
     context->accepted_decree = Decree("the_author", 1, "");
 
-    std::shared_ptr<Sender> sender(new Sender());
+    std::shared_ptr<FakeSender> sender(new FakeSender());
 
     HandleAccept(message, context, sender);
 
