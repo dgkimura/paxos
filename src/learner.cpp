@@ -25,12 +25,12 @@ HandleProclaim(
     {
         context->accepted_map[message.decree] = std::shared_ptr<ReplicaSet>(new ReplicaSet());
     }
-    if (context->full_replicaset.Contains(message.from))
+    if (context->replicaset->Contains(message.from))
     {
         context->accepted_map[message.decree]->Add(message.from);
     }
 
-    int minimum_quorum = context->full_replicaset.GetSize() / 2 + 1;
+    int minimum_quorum = context->replicaset->GetSize() / 2 + 1;
     int accepted_quorum = context->accepted_map[message.decree]->GetSize();
 
     if (accepted_quorum >= minimum_quorum)

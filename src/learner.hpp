@@ -12,7 +12,7 @@
 
 struct LearnerContext : public Context
 {
-    ReplicaSet full_replicaset;
+    std::shared_ptr<ReplicaSet> replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> accepted_map;
     std::shared_ptr<Ledger> ledger;
 };

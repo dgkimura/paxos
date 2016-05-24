@@ -10,15 +10,15 @@ std::shared_ptr<LearnerContext> createLearnerContext(std::initializer_list<std::
 {
     std::shared_ptr<LearnerContext> context(new LearnerContext());
 
-    ReplicaSet replicaset;
+    std::shared_ptr<ReplicaSet> replicaset(new ReplicaSet());
     for (auto a : authors)
     {
         Replica r(a);
-        replicaset.Add(r);
+        replicaset->Add(r);
     }
 
     context->ledger = std::shared_ptr<VolatileLedger>(new VolatileLedger());
-    context->full_replicaset = replicaset;
+    context->replicaset = replicaset;
 
     return context;
 }

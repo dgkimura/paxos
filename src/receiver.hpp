@@ -1,3 +1,7 @@
+#ifndef __RECEIVER_HPP_INCLUDED__
+#define __RECEIVER_HPP_INCLUDED__
+
+
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
@@ -21,3 +25,6 @@ public:
 private:
     std::unordered_map<std::type_index, std::vector<Callback>> registered_map;
 };
+
+
+#endif
