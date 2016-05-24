@@ -12,7 +12,7 @@
 struct ProposerContext : public Context
 {
     Decree highest_promised_decree;
-    ReplicaSet full_replicaset;
+    std::shared_ptr<ReplicaSet> replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> promise_map;
 };
 

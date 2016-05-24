@@ -24,10 +24,10 @@ TEST(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecree
 
     std::shared_ptr<ProposerContext> context(new ProposerContext());
     context->highest_promised_decree = Decree("host", 0, "");
-    context->full_replicaset = ReplicaSet();
-    context->full_replicaset.Add(Replica("host"));
+    context->replicaset = std::shared_ptr<ReplicaSet>(new ReplicaSet());
+    context->replicaset->Add(Replica("host"));
 
-    std::shared_ptr<FakeSender> sender(new FakeSender(context->full_replicaset));
+    std::shared_ptr<FakeSender> sender(new FakeSender(context->replicaset));
 
     HandlePromise(message, context, sender);
 

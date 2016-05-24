@@ -37,13 +37,13 @@ public:
 
     FakeSender()
         : sent_messages(),
-          full_replicaset()
+          replicaset(std::shared_ptr<ReplicaSet>(new ReplicaSet()))
     {
     }
 
-    FakeSender(ReplicaSet full_replicaset_)
+    FakeSender(std::shared_ptr<ReplicaSet> replicaset_)
         : sent_messages(),
-          full_replicaset(full_replicaset_)
+          replicaset(replicaset_)
     {
     }
 
@@ -58,7 +58,7 @@ public:
 
     void ReplyAll(Message message)
     {
-        for (auto r : full_replicaset)
+        for (auto r : *replicaset)
         {
             sent_messages.push_back(message);
         }
@@ -73,7 +73,7 @@ private:
 
     std::vector<Message> sent_messages;
 
-    ReplicaSet full_replicaset;
+    std::shared_ptr<ReplicaSet> replicaset;
 };
 
 
