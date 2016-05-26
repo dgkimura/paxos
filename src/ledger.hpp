@@ -1,4 +1,5 @@
 #include <vector>
+#include<fstream>
 
 #include <decree.hpp>
 
@@ -12,6 +13,25 @@ public:
     virtual bool Contains(Decree decree) = 0;
 
     virtual void ApplyCheckpoint() = 0;
+};
+
+
+class PersistentLedger : public Ledger
+{
+public:
+
+    PersistentLedger();
+
+    virtual ~PersistentLedger();
+
+    virtual void Append(Decree decree);
+
+    virtual bool Contains(Decree decree);
+
+    virtual void ApplyCheckpoint();
+
+private:
+    std::fstream file;
 };
 
 
@@ -31,5 +51,5 @@ public:
 
 private:
 
-    std::vector<Decree> decree_entries;
+    std::vector<Decree> decrees;
 };
