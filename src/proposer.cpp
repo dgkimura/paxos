@@ -3,19 +3,19 @@
 
 void
 RegisterProposer(
-    Receiver receiver,
+    std::shared_ptr<Receiver> receiver,
     std::shared_ptr<Sender> sender,
     std::shared_ptr<ProposerContext> context)
 {
     using namespace std::placeholders;
 
-    receiver.RegisterCallback<RequestMessage>(
+    receiver->RegisterCallback<RequestMessage>(
         Callback(std::bind(HandleRequest, _1, context, sender))
     );
-    receiver.RegisterCallback<PromiseMessage>(
+    receiver->RegisterCallback<PromiseMessage>(
         Callback(std::bind(HandlePromise, _1, context, sender))
     );
-    receiver.RegisterCallback<AcceptedMessage>(
+    receiver->RegisterCallback<AcceptedMessage>(
         Callback(std::bind(HandleAccepted, _1, context, sender))
     );
 }

@@ -3,13 +3,13 @@
 
 void
 RegisterLearner(
-    Receiver receiver,
+    std::shared_ptr<Receiver> receiver,
     std::shared_ptr<Sender> sender,
     std::shared_ptr<LearnerContext> context)
 {
     using namespace std::placeholders;
 
-    receiver.RegisterCallback<AcceptedMessage>(
+    receiver->RegisterCallback<AcceptedMessage>(
         Callback(std::bind(HandleProclaim, _1, context, sender))
     );
 }

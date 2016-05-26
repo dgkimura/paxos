@@ -19,7 +19,7 @@ struct LearnerContext : public Context
 
 
 void RegisterLearner(
-    Receiver receiver,
+    std::shared_ptr<Receiver> receiver,
     std::shared_ptr<Sender> sender,
     std::shared_ptr<LearnerContext> context);
 

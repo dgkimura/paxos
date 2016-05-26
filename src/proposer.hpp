@@ -18,7 +18,7 @@ struct ProposerContext : public Context
 
 
 void RegisterProposer(
-    Receiver receiver,
+    std::shared_ptr<Receiver> receiver,
     std::shared_ptr<Sender> sender,
     std::shared_ptr<ProposerContext> context);
 

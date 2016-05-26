@@ -3,16 +3,16 @@
 
 void
 RegisterAcceptor(
-    Receiver receiver,
+    std::shared_ptr<Receiver> receiver,
     std::shared_ptr<Sender> sender,
     std::shared_ptr<AcceptorContext> context)
 {
     using namespace std::placeholders;
 
-    receiver.RegisterCallback<PrepareMessage>(
+    receiver->RegisterCallback<PrepareMessage>(
         Callback(std::bind(HandlePrepare, _1, context, sender))
     );
-    receiver.RegisterCallback<AcceptMessage>(
+    receiver->RegisterCallback<AcceptMessage>(
         Callback(std::bind(HandleAccept, _1, context, sender))
     );
 }

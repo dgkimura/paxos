@@ -1,10 +1,12 @@
+#include <memory>
+
 #include <paxos.hpp>
 
 
 void
 Init()
 {
-    Receiver receiver;
+    std::shared_ptr<Receiver> receiver(new Receiver());
     std::shared_ptr<NetworkSender> sender(new NetworkSender());
 
     RegisterProposer(
