@@ -34,3 +34,4 @@ target_link_libraries(all_unittests
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/gtest-prefix/src/gtest/include)
 include_directories(${paxos_DIR})
+include_directories(${DEPENDENCIES_boost_DIR}/include)
