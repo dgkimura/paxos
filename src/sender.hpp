@@ -2,7 +2,10 @@
 #define __SENDER_HPP_INCLUDED__
 
 
+#include <string>
 #include <vector>
+
+#include <boost/asio.hpp>
 
 #include <messages.hpp>
 #include <replicaset.hpp>
@@ -28,6 +31,14 @@ public:
     void Reply(Message message);
 
     void ReplyAll(Message message);
+
+private:
+
+    boost::asio::io_service io_service_;
+
+    boost::asio::ip::tcp::socket socket_;
+
+    std::shared_ptr<ReplicaSet> replicaset;
 };
 
 

@@ -10,8 +10,11 @@ struct Replica
 {
     std::string hostname;
 
-    Replica(std::string h)
-        : hostname(h)
+    short port;
+
+    Replica(std::string h, short p=8081)
+        : hostname(h),
+          port(p)
     {
     }
 };
