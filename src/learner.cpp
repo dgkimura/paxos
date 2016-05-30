@@ -12,6 +12,9 @@ RegisterLearner(
     receiver->RegisterCallback<AcceptedMessage>(
         Callback(std::bind(HandleProclaim, _1, context, sender))
     );
+    receiver->RegisterCallback<UpdatedMessage>(
+        Callback(std::bind(HandleProclaim, _1, context, sender))
+    );
 }
 
 
@@ -37,4 +40,13 @@ HandleProclaim(
     {
         context->ledger->Append(message.decree);
     }
+}
+
+
+void
+HandleUpdateed(
+    Message message,
+    std::shared_ptr<LearnerContext> context,
+    std::shared_ptr<Sender> sender)
+{
 }

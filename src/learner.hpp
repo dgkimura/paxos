@@ -28,3 +28,9 @@ void HandleProclaim(
     Message message,
     std::shared_ptr<LearnerContext> context,
     std::shared_ptr<Sender> sender);
+
+
+void HandleUpdated(
+    Message message,
+    std::shared_ptr<LearnerContext> context,
+    std::shared_ptr<Sender> sender);

@@ -12,6 +12,7 @@ set(SOURCES
     receiver.cpp
     replicaset.cpp
     sender.cpp
+    updater.cpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

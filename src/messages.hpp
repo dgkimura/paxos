@@ -63,6 +63,24 @@ struct AcceptedMessage : public Message
 };
 
 
+struct UpdateMessage : public Message
+{
+    UpdateMessage(Decree d, Replica f, Replica t)
+        : Message(d, f, t)
+    {
+    }
+};
+
+
+struct UpdatedMessage : public Message
+{
+    UpdatedMessage(Decree d, Replica f, Replica t)
+        : Message(d, f, t)
+    {
+    }
+};
+
+
 template <typename T>
 T Response(Message message)
 {
