@@ -90,3 +90,12 @@ TEST(ReplicaSetUnittest, testContainsOnReplicaSetWithReplica)
 
     ASSERT_TRUE(set.Contains(Replica("host1")));
 }
+
+
+TEST(ReplicaTest, testReplicaFields)
+{
+    Replica r("host", 1234);
+
+    ASSERT_EQ(r.hostname, "host");
+    ASSERT_EQ(r.port, 1234);
+}
