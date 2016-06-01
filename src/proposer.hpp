@@ -1,3 +1,7 @@
+#ifndef __PROPOSER_HPP_INCLUDED__
+#define __PROPOSER_HPP_INCLUDED__
+
+
 #include <map>
 #include <memory>
 
@@ -39,3 +43,6 @@ void HandleAccepted(
     Message message,
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender);
+
+
+#endif

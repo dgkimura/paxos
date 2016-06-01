@@ -1,3 +1,7 @@
+#ifndef __PAXOS_HPP_INCLUDED__
+#define __PAXOS_HPP_INCLUDED__
+
+
 #include <memory>
 
 #include <acceptor.hpp>
@@ -8,3 +12,6 @@
 
 
 void Init();
+
+
+#endif

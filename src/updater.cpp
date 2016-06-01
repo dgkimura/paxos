@@ -9,8 +9,9 @@ RegisterUpdater(
 {
     using namespace std::placeholders;
 
-    receiver->RegisterCallback<UpdateMessage>(
-        Callback(std::bind(HandleUpdate, _1, context, sender))
+    receiver->RegisterCallback(
+        Callback(std::bind(HandleUpdate, _1, context, sender)),
+        MessageType::UpdateMessage
     );
 }
 

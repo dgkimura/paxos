@@ -26,7 +26,7 @@ std::shared_ptr<LearnerContext> createLearnerContext(std::initializer_list<std::
 
 TEST(LearnerTest, testProclaimHandleWithSingleReplica)
 {
-    Message message(Decree("A", 1, ""), Replica("A"), Replica("A"));
+    Message message(Decree("A", 1, ""), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
     std::shared_ptr<LearnerContext> context = createLearnerContext({"A"});
 
     HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
@@ -37,7 +37,7 @@ TEST(LearnerTest, testProclaimHandleWithSingleReplica)
 
 TEST(LearnerTest, testProclaimHandleIgnoresMessagesFromUnknownReplica)
 {
-    Message message(Decree("A", 1, ""), Replica("Unknown"), Replica("A"));
+    Message message(Decree("A", 1, ""), Replica("Unknown"), Replica("A"), MessageType::AcceptedMessage);
     std::shared_ptr<LearnerContext> context = createLearnerContext({"A"});
 
     HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
@@ -48,7 +48,7 @@ TEST(LearnerTest, testProclaimHandleIgnoresMessagesFromUnknownReplica)
 
 TEST(LearnerTest, testProclaimHandleReceivesOneAcceptedWithThreeReplicaSet)
 {
-    Message message(Decree("A", 1, ""), Replica("A"), Replica("B"));
+    Message message(Decree("A", 1, ""), Replica("A"), Replica("B"), MessageType::AcceptedMessage);
     std::shared_ptr<LearnerContext> context = createLearnerContext({"A", "B", "C"});
 
     HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
@@ -65,7 +65,8 @@ TEST(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
         Message(
             Decree("A", 1, ""),
             Replica("A"),
-            Replica("B")
+            Replica("B"),
+            MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
@@ -74,7 +75,8 @@ TEST(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
         Message(
             Decree("A", 1, ""),
             Replica("B"),
-            Replica("B")
+            Replica("B"),
+            MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
@@ -92,7 +94,8 @@ TEST(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
         Message(
             Decree("A", 1, ""),
             Replica("A"),
-            Replica("B")
+            Replica("B"),
+            MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
@@ -101,7 +104,8 @@ TEST(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
         Message(
             Decree("A", 1, ""),
             Replica("A"),
-            Replica("B")
+            Replica("B"),
+            MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())

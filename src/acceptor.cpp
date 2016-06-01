@@ -9,11 +9,13 @@ RegisterAcceptor(
 {
     using namespace std::placeholders;
 
-    receiver->RegisterCallback<PrepareMessage>(
-        Callback(std::bind(HandlePrepare, _1, context, sender))
+    receiver->RegisterCallback(
+        Callback(std::bind(HandlePrepare, _1, context, sender)),
+        MessageType::PrepareMessage
     );
-    receiver->RegisterCallback<AcceptMessage>(
-        Callback(std::bind(HandleAccept, _1, context, sender))
+    receiver->RegisterCallback(
+        Callback(std::bind(HandleAccept, _1, context, sender)),
+        MessageType::AcceptMessage
     );
 }
 
@@ -27,7 +29,7 @@ HandlePrepare(
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree))
     {
         context->promised_decree = message.decree;
-        sender->Reply(Response<PromiseMessage>(message));
+        sender->Reply(Response(message, MessageType::PromiseMessage));
     }
 }
 
@@ -44,6 +46,6 @@ HandleAccept(
         {
             context->accepted_decree = message.decree;
         }
-        sender->ReplyAll(Response<AcceptedMessage>(message));
+        sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
     }
 }

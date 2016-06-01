@@ -1,3 +1,6 @@
+#ifndef __ACCEPTOR_HPP_INCLUDED__
+#define __ACCEPTOR_HPP_INCLUDED__
+
 #include <memory>
 
 #include <callback.hpp>
@@ -30,3 +33,6 @@ void HandleAccept(
     Message message,
     std::shared_ptr<AcceptorContext> context,
     std::shared_ptr<Sender> sender);
+
+
+#endif

@@ -9,14 +9,17 @@ RegisterProposer(
 {
     using namespace std::placeholders;
 
-    receiver->RegisterCallback<RequestMessage>(
-        Callback(std::bind(HandleRequest, _1, context, sender))
+    receiver->RegisterCallback(
+        Callback(std::bind(HandleRequest, _1, context, sender)),
+        MessageType::RequestMessage
     );
-    receiver->RegisterCallback<PromiseMessage>(
-        Callback(std::bind(HandlePromise, _1, context, sender))
+    receiver->RegisterCallback(
+        Callback(std::bind(HandlePromise, _1, context, sender)),
+        MessageType::PromiseMessage
     );
-    receiver->RegisterCallback<AcceptedMessage>(
-        Callback(std::bind(HandleAccepted, _1, context, sender))
+    receiver->RegisterCallback(
+        Callback(std::bind(HandleAccepted, _1, context, sender)),
+        MessageType::AcceptedMessage
     );
 }
 
@@ -51,7 +54,7 @@ HandlePromise(
 
         if (received_promises >= minimum_quorum)
         {
-            sender->ReplyAll(Response<AcceptedMessage>(message));
+            sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
         }
     }
 

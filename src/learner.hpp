@@ -1,3 +1,7 @@
+#ifndef __LEARNER_HPP_INCLUDED__
+#define __LEARNER_HPP_INCLUDED__
+
+
 #include <map>
 #include <memory>
 
@@ -34,3 +38,6 @@ void HandleUpdated(
     Message message,
     std::shared_ptr<LearnerContext> context,
     std::shared_ptr<Sender> sender);
+
+
+#endif

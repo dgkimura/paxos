@@ -7,14 +7,28 @@ using boost::asio::ip::tcp;
 Receiver::Receiver(short port)
     : io_service_(),
       acceptor_(io_service_, tcp::endpoint(tcp::v4(), port)),
-      socket_(io_service_)
+      socket_(io_service_),
+      registered_map()
 {
 
-    registered_map = {};
 
     do_accept();
 
     io_service_.run();
+}
+
+
+void
+Receiver::RegisterCallback(Callback&& callback, MessageType type)
+{
+    if (registered_map.find(type) == registered_map.end())
+    {
+        registered_map[type] = std::vector<Callback> { std::move(callback) };
+    }
+    else
+    {
+        registered_map[type].push_back(std::move(callback));
+    }
 }
 
 

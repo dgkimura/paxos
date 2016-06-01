@@ -7,6 +7,7 @@ set(SOURCES
     decree.cpp
     learner.cpp
     ledger.cpp
+    messages.cpp
     paxos.cpp
     proposer.cpp
     receiver.cpp

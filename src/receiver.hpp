@@ -20,11 +20,7 @@ public:
 
     Receiver(short port=8081);
 
-    template <typename T>
-    void RegisterCallback(Callback&& callback)
-    {
-        registered_map[typeid(T)] = std::vector<Callback> { std::move(callback) };
-    }
+    void RegisterCallback(Callback&& callback, MessageType type);
 
 private:
 
@@ -36,7 +32,7 @@ private:
 
     boost::asio::ip::tcp::socket socket_;
 
-    std::unordered_map<std::type_index, std::vector<Callback>> registered_map;
+    std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map;
 
     enum {max_length = 8192};
 

@@ -5,7 +5,11 @@
 
 TEST(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromisedDecree)
 {
-    Message message(Decree("the_author", -1, ""), Replica("from"), Replica("to"));
+    Message message(
+        Decree("the_author", -1, ""),
+        Replica("from"),
+        Replica("to"),
+        MessageType::PromiseMessage);
 
     std::shared_ptr<ProposerContext> context(new ProposerContext());
     context->highest_promised_decree = Decree("the_author", 0, "");
@@ -20,7 +24,7 @@ TEST(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromisedD
 
 TEST(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecree)
 {
-    Message message(Decree("host", 1, ""), Replica("host"), Replica("host"));
+    Message message(Decree("host", 1, ""), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
     std::shared_ptr<ProposerContext> context(new ProposerContext());
     context->highest_promised_decree = Decree("host", 0, "");

@@ -9,11 +9,13 @@ RegisterLearner(
 {
     using namespace std::placeholders;
 
-    receiver->RegisterCallback<AcceptedMessage>(
-        Callback(std::bind(HandleProclaim, _1, context, sender))
+    receiver->RegisterCallback(
+        Callback(std::bind(HandleProclaim, _1, context, sender)),
+        MessageType::AcceptedMessage
     );
-    receiver->RegisterCallback<UpdatedMessage>(
-        Callback(std::bind(HandleProclaim, _1, context, sender))
+    receiver->RegisterCallback(
+        Callback(std::bind(HandleProclaim, _1, context, sender)),
+        MessageType::UpdatedMessage
     );
 }
 
