@@ -20,6 +20,8 @@ public:
 
     Receiver(short port=8081);
 
+    ~Receiver();
+
     void RegisterCallback(Callback&& callback, MessageType type);
 
 private:

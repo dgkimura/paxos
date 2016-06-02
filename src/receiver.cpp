@@ -10,11 +10,16 @@ Receiver::Receiver(short port)
       socket_(io_service_),
       registered_map()
 {
-
-
     do_accept();
 
-    io_service_.run();
+    std::thread([&]() { io_service_.run(); }).detach();
+}
+
+
+Receiver::~Receiver()
+{
+    io_service_.stop();
+    acceptor_.close();
 }
 
 
