@@ -9,7 +9,7 @@ using boost::asio::ip::tcp;
 NetworkSender::NetworkSender()
     : io_service_(),
       socket_(io_service_),
-      replicaset()
+      replicaset(new ReplicaSet())
 {
 }
 

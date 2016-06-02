@@ -1,27 +1,40 @@
-#include <memory>
-
 #include <paxos.hpp>
+
+
+Instance *
+CreateInstance()
+{
+    Instance *i = new Instance();
+    i->Receiver = std::shared_ptr<Receiver>(new Receiver());
+    i->Sender = std::shared_ptr<Sender>(new NetworkSender());
+    i->Proposer = std::shared_ptr<ProposerContext>(new ProposerContext());
+    i->Acceptor = std::shared_ptr<AcceptorContext>(new AcceptorContext());
+    i->Learner = std::shared_ptr<LearnerContext>(new LearnerContext());
+    i->Updater = std::shared_ptr<UpdaterContext>(new UpdaterContext());
+    return i;
+}
 
 
 void
 Init()
 {
-    std::shared_ptr<Receiver> receiver(new Receiver());
-    std::shared_ptr<NetworkSender> sender(new NetworkSender());
+    Instance *i = CreateInstance();
 
     RegisterProposer(
-        receiver,
-        sender,
-        std::shared_ptr<ProposerContext>(new ProposerContext())
+        i->Receiver,
+        i->Sender,
+        i->Proposer
     );
     RegisterAcceptor(
-        receiver,
-        sender,
-        std::shared_ptr<AcceptorContext>(new AcceptorContext())
+        i->Receiver,
+        i->Sender,
+        i->Acceptor
     );
     RegisterLearner(
-        receiver,
-        sender,
-        std::shared_ptr<LearnerContext>(new LearnerContext())
+        i->Receiver,
+        i->Sender,
+        i->Learner
     );
+
+    _Instances.push_back(i);
 }
