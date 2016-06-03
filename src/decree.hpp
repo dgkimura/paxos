@@ -21,6 +21,14 @@ struct Decree
         : author(a), number(n), content(c)
     {
     }
+
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+        ar & author;
+        ar & number;
+        ar & content;
+    }
 };
 
 
