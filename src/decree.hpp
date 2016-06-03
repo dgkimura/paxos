@@ -21,16 +21,16 @@ struct Decree
         : author(a), number(n), content(c)
     {
     }
-
-    template <typename Archive>
-    void serialize(Archive& ar, const unsigned int version)
-    {
-        ar & author;
-        ar & number;
-        ar & content;
-    }
 };
 
+
+template <typename Archive>
+void serialize(Archive& ar, Decree& d, const unsigned int version)
+{
+    ar & d.author;
+    ar & d.number;
+    ar & d.content;
+}
 
 int CompareDecrees(Decree lhs, Decree rhs);
 
