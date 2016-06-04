@@ -54,7 +54,7 @@ HandlePromise(
 
         if (received_promises >= minimum_quorum)
         {
-            sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
+            sender->ReplyAll(Response(message, MessageType::AcceptMessage));
         }
     }
 
