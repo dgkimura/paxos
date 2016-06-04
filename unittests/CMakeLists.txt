@@ -18,6 +18,7 @@ set(SOURCES
     messages_unittest.cpp
     proposer_unittest.cpp
     replicaset_unittest.cpp
+    serialization_unittest.cpp
 )
 
 add_executable(all_unittests ${SOURCES})

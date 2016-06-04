@@ -34,6 +34,11 @@ struct Message
     Replica to;
     MessageType type;
 
+    Message()
+        : decree(), from(), to(), type()
+    {
+    }
+
     Message(Decree d, Replica f, Replica t, MessageType mtype)
         : decree(d), from(f), to(t), type(mtype)
     {

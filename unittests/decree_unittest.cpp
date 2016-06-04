@@ -1,5 +1,3 @@
-#include "boost/archive/text_iarchive.hpp"
-#include "boost/archive/text_oarchive.hpp"
 #include "gtest/gtest.h"
 
 #include "decree.hpp"
@@ -272,22 +270,4 @@ TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithIdenticalDecrees)
     Decree higher("an_author_1", 1, "");
 
     ASSERT_TRUE(IsDecreeLowerOrEqual(higher, lower));
-}
-
-
-TEST(DecreeUnitTest, testDecreeIsBoostSerializable)
-{
-    Decree expected("an_author_1", 1, "the_decree_contents"), actual;
-
-    std::stringstream stream;
-
-    boost::archive::text_oarchive oa(stream);
-    oa << expected;
-
-    boost::archive::text_iarchive ia(stream);
-    ia >> actual;
-
-    ASSERT_EQ(expected.author, actual.author);
-    ASSERT_EQ(expected.content, actual.content);
-    ASSERT_EQ(expected.number, actual.number);
 }

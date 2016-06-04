@@ -12,6 +12,12 @@ struct Replica
 
     short port;
 
+    Replica()
+        : hostname(),
+          port()
+    {
+    }
+
     Replica(std::string h, short p=8081)
         : hostname(h),
           port(p)

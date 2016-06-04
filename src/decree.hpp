@@ -23,15 +23,6 @@ struct Decree
     }
 };
 
-
-template <typename Archive>
-void serialize(Archive& ar, Decree& d, const unsigned int version)
-{
-    ar & d.author;
-    ar & d.number;
-    ar & d.content;
-}
-
 int CompareDecrees(Decree lhs, Decree rhs);
 
 bool IsDecreeHigher(Decree lhs, Decree rhs);
