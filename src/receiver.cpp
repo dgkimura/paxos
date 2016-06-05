@@ -1,4 +1,5 @@
 #include <receiver.hpp>
+#include <serialization.hpp>
 
 
 using boost::asio::ip::tcp;
@@ -50,8 +51,14 @@ Receiver::do_accept()
                     {
                         if (!ec_read)
                         {
-                            // 1. Deserialize data_ into Message
-                            // 2. Callback registered functions with Message.
+                            std::stringstream stream;
+                            stream << data_;
+                            Message message = Deserialize<Message>(std::move(stream));
+
+                            for (Callback callback : registered_map[message.type])
+                            {
+                                callback(message);
+                            }
                         }
                     });
             }
