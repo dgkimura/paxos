@@ -5,7 +5,7 @@ Instance *
 CreateInstance()
 {
     Instance *i = new Instance();
-    i->Receiver = std::shared_ptr<Receiver>(new Receiver());
+    i->Receiver = std::shared_ptr<Receiver>(new NetworkReceiver());
     i->Sender = std::shared_ptr<Sender>(new NetworkSender());
     i->Proposer = std::shared_ptr<ProposerContext>(new ProposerContext());
     i->Acceptor = std::shared_ptr<AcceptorContext>(new AcceptorContext());

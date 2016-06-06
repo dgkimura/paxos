@@ -18,15 +18,25 @@ class Receiver
 {
 public:
 
-    Receiver(short port=8081);
+    virtual void RegisterCallback(Callback&& callback, MessageType type) = 0;
+};
 
-    ~Receiver();
+
+class NetworkReceiver : public Receiver
+{
+public:
+
+    NetworkReceiver(short port=8081);
+
+    ~NetworkReceiver();
 
     void RegisterCallback(Callback&& callback, MessageType type);
 
 private:
 
     void do_accept();
+
+    void do_read(boost::asio::ip::tcp::socket&& socket);
 
     boost::asio::io_service io_service_;
 

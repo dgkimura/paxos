@@ -5,7 +5,7 @@
 using boost::asio::ip::tcp;
 
 
-Receiver::Receiver(short port)
+NetworkReceiver::NetworkReceiver(short port)
     : io_service_(),
       acceptor_(io_service_, tcp::endpoint(tcp::v4(), port)),
       socket_(io_service_),
@@ -17,7 +17,7 @@ Receiver::Receiver(short port)
 }
 
 
-Receiver::~Receiver()
+NetworkReceiver::~NetworkReceiver()
 {
     io_service_.stop();
     acceptor_.close();
@@ -25,7 +25,7 @@ Receiver::~Receiver()
 
 
 void
-Receiver::RegisterCallback(Callback&& callback, MessageType type)
+NetworkReceiver::RegisterCallback(Callback&& callback, MessageType type)
 {
     if (registered_map.find(type) == registered_map.end())
     {
@@ -39,29 +39,36 @@ Receiver::RegisterCallback(Callback&& callback, MessageType type)
 
 
 void
-Receiver::do_accept()
+NetworkReceiver::do_accept()
 {
     acceptor_.async_accept(socket_,
         [this](boost::system::error_code ec_accept)
         {
             if (!ec_accept)
             {
-                socket_.async_read_some(boost::asio::buffer(data_, max_length),
-                    [this](boost::system::error_code ec_read, std::size_t length)
-                    {
-                        if (!ec_read)
-                        {
-                            std::stringstream stream;
-                            stream << data_;
-                            Message message = Deserialize<Message>(std::move(stream));
-
-                            for (Callback callback : registered_map[message.type])
-                            {
-                                callback(message);
-                            }
-                        }
-                    });
+                do_read(std::move(socket_));
             }
             do_accept();
+        });
+}
+
+
+void
+NetworkReceiver::do_read(boost::asio::ip::tcp::socket&& socket)
+{
+    socket.async_read_some(boost::asio::buffer(data_, max_length),
+        [this](boost::system::error_code ec_read, std::size_t length)
+        {
+            if (!ec_read)
+            {
+                std::stringstream stream;
+                stream << data_;
+                Message message = Deserialize<Message>(std::move(stream));
+
+                for (Callback callback : registered_map[message.type])
+                {
+                    callback(message);
+                }
+            }
         });
 }
