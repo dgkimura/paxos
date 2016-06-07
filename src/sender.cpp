@@ -1,9 +1,18 @@
 #include <sender.hpp>
+#include <serialization.hpp>
 
 #include <boost/asio/io_service.hpp>
 
 
 using boost::asio::ip::tcp;
+
+
+NetworkSender::NetworkSender(std::shared_ptr<ReplicaSet> replicaset_)
+    : io_service_(),
+      socket_(io_service_),
+      replicaset(replicaset_)
+{
+}
 
 
 NetworkSender::NetworkSender()
@@ -24,14 +33,25 @@ void
 NetworkSender::Reply(Message message)
 {
     tcp::resolver resolver(io_service_);
-    auto endpoint = resolver.resolve({message.to.hostname, std::to_string(message.to.port)});
+    auto endpoint = resolver.resolve(
+                        {
+                            message.to.hostname,
+                            std::to_string(message.to.port)
+                        });
     boost::asio::async_connect(socket_, endpoint,
-        [this](boost::system::error_code ec, tcp::resolver::iterator)
+        [this, message](boost::system::error_code ec, tcp::resolver::iterator)
         {
             if (!ec)
             {
                 // 1. serialize message
+                std::string message_str = Serialize(message).str();
+
                 // 2. write message
+                boost::asio::write(
+                    socket_,
+                    boost::asio::buffer(
+                        message_str.c_str(),
+                        message_str.size()));
             }
         });
 }

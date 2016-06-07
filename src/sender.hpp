@@ -24,6 +24,8 @@ class NetworkSender : public Sender
 {
 public:
 
+    NetworkSender(std::shared_ptr<ReplicaSet> replicaset_);
+
     NetworkSender();
 
     ~NetworkSender();
