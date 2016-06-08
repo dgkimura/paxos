@@ -1,9 +1,9 @@
 #include <callback.hpp>
 
 
-Callback::Callback(MessageHandler message_handler)
+Callback::Callback(MessageHandler message_handler_)
 {
-    message_handler = message_handler;
+    message_handler = message_handler_;
 }
 
 
