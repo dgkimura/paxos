@@ -25,7 +25,7 @@ NetworkSender::NetworkSender()
 
 NetworkSender::~NetworkSender()
 {
-    io_service_.post([this]() { socket_.close(); } );
+    socket_.close();
 }
 
 
@@ -38,22 +38,13 @@ NetworkSender::Reply(Message message)
                             message.to.hostname,
                             std::to_string(message.to.port)
                         });
-    boost::asio::async_connect(socket_, endpoint,
-        [this, message](boost::system::error_code ec, tcp::resolver::iterator)
-        {
-            if (!ec)
-            {
-                // 1. serialize message
-                std::string message_str = Serialize(message).str();
+    boost::asio::connect(socket_, endpoint);
 
-                // 2. write message
-                boost::asio::write(
-                    socket_,
-                    boost::asio::buffer(
-                        message_str.c_str(),
-                        message_str.size()));
-            }
-        });
+    // 1. serialize message
+    std::string message_str = Serialize(message).str();
+
+    // 2. write message
+    boost::asio::write(socket_, boost::asio::buffer(message_str.c_str(), message_str.size()));
 }
 
 
