@@ -1,40 +1,66 @@
 #include <paxos.hpp>
 
 
-Instance *
-CreateInstance()
+Parliament::Parliament()
+    : legislators(std::make_shared<ReplicaSet>()),
+      receiver(std::make_shared<NetworkReceiver>()),
+      sender(std::make_shared<NetworkSender>(legislators)),
+      proposer(std::make_shared<ProposerContext>()),
+      acceptor(std::make_shared<AcceptorContext>()),
+      learner(std::make_shared<LearnerContext>()),
+      updater(std::make_shared<UpdaterContext>())
 {
-    Instance *i = new Instance();
-    i->Receiver = std::shared_ptr<Receiver>(new NetworkReceiver());
-    i->Sender = std::shared_ptr<Sender>(new NetworkSender());
-    i->Proposer = std::shared_ptr<ProposerContext>(new ProposerContext());
-    i->Acceptor = std::shared_ptr<AcceptorContext>(new AcceptorContext());
-    i->Learner = std::shared_ptr<LearnerContext>(new LearnerContext());
-    i->Updater = std::shared_ptr<UpdaterContext>(new UpdaterContext());
-    return i;
+    RegisterProposer(
+        receiver,
+        sender,
+        proposer
+    );
+    RegisterAcceptor(
+        receiver,
+        sender,
+        acceptor
+    );
+    RegisterLearner(
+        receiver,
+        sender,
+        learner
+    );
+    RegisterUpdater(
+        receiver,
+        sender,
+        updater
+    );
 }
 
 
 void
-Init()
+Parliament::AddLegislator(Replica replica)
 {
-    Instance *i = CreateInstance();
+    legislators->Add(replica);
+}
 
-    RegisterProposer(
-        i->Receiver,
-        i->Sender,
-        i->Proposer
-    );
-    RegisterAcceptor(
-        i->Receiver,
-        i->Sender,
-        i->Acceptor
-    );
-    RegisterLearner(
-        i->Receiver,
-        i->Sender,
-        i->Learner
-    );
 
-    _Instances.push_back(i);
+void
+Parliament::RemoveLegislator(Replica replica)
+{
+    legislators->Remove(replica);
+}
+
+
+void
+Parliament::CreateProposal(std::string entry)
+{
+    Decree d;
+    d.content = entry;
+    for (Replica r : *legislators)
+    {
+        Message m(
+            d,
+            Replica(),
+            Replica(r.hostname, r.port),
+            MessageType::RequestMessage);
+
+        sender->Reply(m);
+        break;
+    }
 }
