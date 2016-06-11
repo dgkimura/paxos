@@ -5,9 +5,9 @@ Parliament::Parliament()
     : legislators(std::make_shared<ReplicaSet>()),
       receiver(std::make_shared<NetworkReceiver>()),
       sender(std::make_shared<NetworkSender>(legislators)),
-      proposer(std::make_shared<ProposerContext>()),
+      proposer(std::make_shared<ProposerContext>(legislators)),
       acceptor(std::make_shared<AcceptorContext>()),
-      learner(std::make_shared<LearnerContext>()),
+      learner(std::make_shared<LearnerContext>(legislators)),
       updater(std::make_shared<UpdaterContext>())
 {
     RegisterProposer(

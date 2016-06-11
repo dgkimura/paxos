@@ -18,6 +18,18 @@ struct ProposerContext : public Context
     Decree highest_promised_decree;
     std::shared_ptr<ReplicaSet> replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> promise_map;
+
+    ProposerContext()
+        : ProposerContext(std::shared_ptr<ReplicaSet>(new ReplicaSet()))
+    {
+    }
+
+    ProposerContext(std::shared_ptr<ReplicaSet> replicaset_)
+        : highest_promised_decree(),
+          replicaset(replicaset_),
+          promise_map()
+    {
+    }
 };
 
 
