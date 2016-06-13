@@ -1,3 +1,6 @@
+#ifndef __SERIALIZATION_HPP_INCLUDED__
+#define __SERIALIZATION_HPP_INCLUDED__
+
 #include <sstream>
 
 #include "boost/archive/text_iarchive.hpp"
@@ -53,3 +56,6 @@ T Deserialize(std::stringstream stream)
     oa >> object;
     return object;
 }
+
+
+#endif
