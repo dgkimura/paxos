@@ -30,6 +30,9 @@ HandleRequest(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
+    Message response = Response(message, MessageType::PrepareMessage);
+    response.decree.number = context->highest_promised_decree.number;
+    sender->ReplyAll(response);
 }
 
 
@@ -42,6 +45,10 @@ HandlePromise(
     if (IsDecreeHigher(message.decree, context->highest_promised_decree))
     {
         context->highest_promised_decree = message.decree;
+    }
+
+    if (context->promise_map.find(message.decree) == context->promise_map.end())
+    {
         context->promise_map[message.decree] = std::shared_ptr<ReplicaSet>(new ReplicaSet());
     }
 

@@ -2,6 +2,7 @@
 #define __SENDER_HPP_INCLUDED__
 
 
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -41,6 +42,8 @@ private:
     boost::asio::ip::tcp::socket socket_;
 
     std::shared_ptr<ReplicaSet> replicaset;
+
+    std::mutex mutex;
 };
 
 

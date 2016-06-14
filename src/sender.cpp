@@ -38,6 +38,7 @@ NetworkSender::Reply(Message message)
                             message.to.hostname,
                             std::to_string(message.to.port)
                         });
+    std::lock_guard<std::mutex> guard(mutex);
     boost::asio::connect(socket_, endpoint);
 
     // 1. serialize message

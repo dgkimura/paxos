@@ -56,7 +56,7 @@ Parliament::CreateProposal(std::string entry)
     {
         Message m(
             d,
-            Replica(),
+            Replica(r.hostname, r.port),
             Replica(r.hostname, r.port),
             MessageType::RequestMessage);
 

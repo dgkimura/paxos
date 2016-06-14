@@ -46,29 +46,44 @@ NetworkReceiver::do_accept()
         {
             if (!ec_accept)
             {
-                do_read(std::move(socket_));
+                std::make_shared<Session>(std::move(socket_), registered_map)->Start();
             }
             do_accept();
         });
 }
 
 
-void
-NetworkReceiver::do_read(boost::asio::ip::tcp::socket&& socket)
+NetworkReceiver::Session::Session(
+    boost::asio::ip::tcp::socket socket,
+    std::unordered_map<
+        MessageType,
+        std::vector<Callback>,
+        MessageTypeHash> registered_map
+)
+    : socket_(std::move(socket)),
+      registered_map_(registered_map)
 {
-    socket.async_read_some(boost::asio::buffer(data_, max_length),
-        [this](boost::system::error_code ec_read, std::size_t length)
+}
+
+
+void
+NetworkReceiver::Session::Start()
+{
+    auto self(shared_from_this());
+    socket_.async_read_some(boost::asio::buffer(data_, max_length),
+        [this, self](boost::system::error_code ec, std::size_t length)
         {
-            if (!ec_read)
+            if (!ec)
             {
                 std::stringstream stream;
                 stream << data_;
                 Message message = Deserialize<Message>(std::move(stream));
 
-                for (Callback callback : registered_map[message.type])
+                for (Callback callback : registered_map_[message.type])
                 {
                     callback(message);
                 }
             }
-        });
+        }
+    );
 }

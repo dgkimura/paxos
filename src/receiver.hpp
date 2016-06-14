@@ -36,8 +36,6 @@ private:
 
     void do_accept();
 
-    void do_read(boost::asio::ip::tcp::socket&& socket);
-
     boost::asio::io_service io_service_;
 
     boost::asio::ip::tcp::acceptor acceptor_;
@@ -46,9 +44,26 @@ private:
 
     std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map;
 
-    enum {max_length = 8192};
+    class Session : public std::enable_shared_from_this<Session>
+    {
+    public:
+        Session(
+            boost::asio::ip::tcp::socket socket,
+            std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map
+        );
 
-    char data_[max_length];
+        void Start();
+
+    private:
+
+        boost::asio::ip::tcp::socket socket_;
+
+        std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map_;
+
+        enum {max_length = 8192};
+
+        char data_[max_length];
+    };
 };
 
 
