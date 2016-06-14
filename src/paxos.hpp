@@ -4,13 +4,9 @@
 
 #include <memory>
 
-#include <acceptor.hpp>
-#include <learner.hpp>
-#include <proposer.hpp>
-#include <receiver.hpp>
 #include <replicaset.hpp>
+#include <roles.hpp>
 #include <sender.hpp>
-#include <updater.hpp>
 
 
 class Parliament

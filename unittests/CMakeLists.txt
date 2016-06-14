@@ -12,13 +12,11 @@ ExternalProject_Add(
 )
 
 set(SOURCES
-    acceptor_unittest.cpp
     callback_unittest.cpp
     decree_unittest.cpp
-    learner_unittest.cpp
     messages_unittest.cpp
-    proposer_unittest.cpp
     replicaset_unittest.cpp
+    roles_unittest.cpp
     serialization_unittest.cpp
 )
 

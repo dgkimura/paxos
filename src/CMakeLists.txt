@@ -2,18 +2,15 @@ cmake_minimum_required(VERSION 3.4)
 project(paxos.src)
 
 set(SOURCES
-    acceptor.cpp
     callback.cpp
     decree.cpp
-    learner.cpp
     ledger.cpp
     messages.cpp
     paxos.cpp
-    proposer.cpp
     receiver.cpp
     replicaset.cpp
+    roles.cpp
     sender.cpp
-    updater.cpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
