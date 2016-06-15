@@ -54,8 +54,6 @@ private:
 
 std::shared_ptr<LearnerContext> createLearnerContext(std::initializer_list<std::string> authors)
 {
-    std::shared_ptr<LearnerContext> context(new LearnerContext());
-
     std::shared_ptr<ReplicaSet> replicaset(new ReplicaSet());
     for (auto a : authors)
     {
@@ -63,10 +61,8 @@ std::shared_ptr<LearnerContext> createLearnerContext(std::initializer_list<std::
         replicaset->Add(r);
     }
 
-    context->ledger = std::shared_ptr<VolatileLedger>(new VolatileLedger());
-    context->replicaset = replicaset;
-
-    return context;
+    std::shared_ptr<Ledger> ledger = std::make_shared<VolatileLedger>();
+    return std::make_shared<LearnerContext>(replicaset, ledger);
 }
 
 

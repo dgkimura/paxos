@@ -48,14 +48,20 @@ struct LearnerContext : public Context
     std::shared_ptr<Ledger> ledger;
 
     LearnerContext()
-        : LearnerContext(std::shared_ptr<ReplicaSet>(new ReplicaSet()))
+        : LearnerContext(
+            std::make_shared<ReplicaSet>(),
+            std::make_shared<PersistentLedger>()
+          )
     {
     }
 
-    LearnerContext(std::shared_ptr<ReplicaSet> replicaset_)
+    LearnerContext(
+        std::shared_ptr<ReplicaSet> replicaset_,
+        std::shared_ptr<Ledger> ledger_
+    )
         : replicaset(replicaset_),
           accepted_map(),
-          ledger(new VolatileLedger())
+          ledger(ledger_)
     {
     }
 };
