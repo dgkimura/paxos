@@ -6,7 +6,7 @@ Parliament::Parliament()
       receiver(std::make_shared<NetworkReceiver>()),
       sender(std::make_shared<NetworkSender>(legislators)),
       ledger(std::make_shared<PersistentLedger>()),
-      proposer(std::make_shared<ProposerContext>(legislators)),
+      proposer(std::make_shared<ProposerContext>(legislators, ledger)),
       acceptor(std::make_shared<AcceptorContext>()),
       learner(std::make_shared<LearnerContext>(legislators, ledger)),
       updater(std::make_shared<UpdaterContext>())

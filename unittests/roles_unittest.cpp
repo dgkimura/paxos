@@ -103,7 +103,9 @@ TEST(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromisedD
         Replica("to"),
         MessageType::PromiseMessage);
 
-    std::shared_ptr<ProposerContext> context(new ProposerContext());
+    std::shared_ptr<ProposerContext> context(new ProposerContext(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<VolatileLedger>()));
     context->highest_promised_decree = Decree("the_author", 0, "");
 
     std::shared_ptr<FakeSender> sender(new FakeSender());
@@ -119,7 +121,9 @@ TEST(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecree
 {
     Message message(Decree("host", 1, ""), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
-    std::shared_ptr<ProposerContext> context(new ProposerContext());
+    std::shared_ptr<ProposerContext> context(new ProposerContext(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<VolatileLedger>()));
     context->highest_promised_decree = Decree("host", 0, "");
     context->replicaset = std::shared_ptr<ReplicaSet>(new ReplicaSet());
     context->replicaset->Add(Replica("host"));

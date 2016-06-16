@@ -19,16 +19,18 @@ struct ProposerContext : public Context
     Decree highest_promised_decree;
     std::shared_ptr<ReplicaSet> replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> promise_map;
+    std::shared_ptr<Ledger> ledger;
 
     ProposerContext()
-        : ProposerContext(std::shared_ptr<ReplicaSet>(new ReplicaSet()))
+        : ProposerContext(std::make_shared<ReplicaSet>(), std::make_shared<PersistentLedger>())
     {
     }
 
-    ProposerContext(std::shared_ptr<ReplicaSet> replicaset_)
+    ProposerContext(std::shared_ptr<ReplicaSet> replicaset_, std::shared_ptr<Ledger> ledger_)
         : highest_promised_decree(),
           replicaset(replicaset_),
-          promise_map()
+          promise_map(),
+          ledger(ledger_)
     {
     }
 };
