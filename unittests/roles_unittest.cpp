@@ -3,6 +3,7 @@
 
 #include "gtest/gtest.h"
 
+#include "logging.hpp"
 #include "roles.hpp"
 
 
@@ -95,7 +96,16 @@ ASSERT_MESSAGE_TYPE_NOT_SENT(std::shared_ptr<FakeSender> sender, MessageType typ
 }
 
 
-TEST(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromisedDecree)
+class ProposerTest: public testing::Test
+{
+    virtual void SetUp()
+    {
+        DisableLogging();
+    }
+};
+
+
+TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromisedDecree)
 {
     Message message(
         Decree("the_author", -1, ""),
@@ -117,7 +127,7 @@ TEST(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromisedD
 }
 
 
-TEST(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecree)
+TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecree)
 {
     Message message(Decree("host", 1, ""), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
@@ -137,7 +147,16 @@ TEST(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecree
 }
 
 
-TEST(AcceptorTest, testHandlePrepareWithHigherDecreeUpdatesPromisedDecree)
+class AcceptorTest: public testing::Test
+{
+    virtual void SetUp()
+    {
+        DisableLogging();
+    }
+};
+
+
+TEST_F(AcceptorTest, testHandlePrepareWithHigherDecreeUpdatesPromisedDecree)
 {
     Message message(Decree("the_author", 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
 
@@ -152,7 +171,7 @@ TEST(AcceptorTest, testHandlePrepareWithHigherDecreeUpdatesPromisedDecree)
 }
 
 
-TEST(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree)
+TEST_F(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree)
 {
     Message message(Decree("the_author", -1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
 
@@ -167,7 +186,7 @@ TEST(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree)
 }
 
 
-TEST(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
+TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 {
     Message message(Decree("the_author", -1, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 
@@ -183,7 +202,7 @@ TEST(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 }
 
 
-TEST(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
+TEST_F(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
 {
     Message message(Decree("the_author", 1, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 
@@ -199,7 +218,7 @@ TEST(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
 }
 
 
-TEST(AcceptorTest, testHandleAcceptWithHigherDecreeDoesUpdateAcceptedDecree)
+TEST_F(AcceptorTest, testHandleAcceptWithHigherDecreeDoesUpdateAcceptedDecree)
 {
     Message message(Decree("the_author", 2, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 
@@ -215,7 +234,16 @@ TEST(AcceptorTest, testHandleAcceptWithHigherDecreeDoesUpdateAcceptedDecree)
 }
 
 
-TEST(LearnerTest, testProclaimHandleWithSingleReplica)
+class LearnerTest: public testing::Test
+{
+    virtual void SetUp()
+    {
+        DisableLogging();
+    }
+};
+
+
+TEST_F(LearnerTest, testProclaimHandleWithSingleReplica)
 {
     Message message(Decree("A", 1, ""), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
     std::shared_ptr<LearnerContext> context = createLearnerContext({"A"});
@@ -226,7 +254,7 @@ TEST(LearnerTest, testProclaimHandleWithSingleReplica)
 }
 
 
-TEST(LearnerTest, testProclaimHandleIgnoresMessagesFromUnknownReplica)
+TEST_F(LearnerTest, testProclaimHandleIgnoresMessagesFromUnknownReplica)
 {
     Message message(Decree("A", 1, ""), Replica("Unknown"), Replica("A"), MessageType::AcceptedMessage);
     std::shared_ptr<LearnerContext> context = createLearnerContext({"A"});
@@ -237,7 +265,7 @@ TEST(LearnerTest, testProclaimHandleIgnoresMessagesFromUnknownReplica)
 }
 
 
-TEST(LearnerTest, testProclaimHandleReceivesOneAcceptedWithThreeReplicaSet)
+TEST_F(LearnerTest, testProclaimHandleReceivesOneAcceptedWithThreeReplicaSet)
 {
     Message message(Decree("A", 1, ""), Replica("A"), Replica("B"), MessageType::AcceptedMessage);
     std::shared_ptr<LearnerContext> context = createLearnerContext({"A", "B", "C"});
@@ -248,7 +276,7 @@ TEST(LearnerTest, testProclaimHandleReceivesOneAcceptedWithThreeReplicaSet)
 }
 
 
-TEST(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
+TEST_F(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
 {
     std::shared_ptr<LearnerContext> context = createLearnerContext({"A", "B", "C"});
 
@@ -277,7 +305,7 @@ TEST(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
 }
 
 
-TEST(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
+TEST_F(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
 {
     std::shared_ptr<LearnerContext> context = createLearnerContext({"A", "B", "C"});
 

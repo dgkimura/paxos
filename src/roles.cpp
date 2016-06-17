@@ -1,4 +1,6 @@
+#include <logging.hpp>
 #include <roles.hpp>
+#include <serialization.hpp>
 
 
 void
@@ -56,7 +58,7 @@ RegisterLearner(
         MessageType::AcceptedMessage
     );
     receiver->RegisterCallback(
-        Callback(std::bind(HandleProclaim, _1, context, sender)),
+        Callback(std::bind(HandleUpdated, _1, context, sender)),
         MessageType::UpdatedMessage
     );
 }
@@ -95,6 +97,7 @@ HandlePromise(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
+    LOG(LogLevel::Info) << "HandlePromise | " << Serialize(message);
     if (IsDecreeHigher(message.decree, context->highest_promised_decree))
     {
         context->highest_promised_decree = message.decree;
@@ -127,6 +130,7 @@ HandleAccepted(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
+    LOG(LogLevel::Info) << "HandleAccepted| " << Serialize(message);
     context->promise_map.erase(message.decree);
 }
 
@@ -137,6 +141,7 @@ HandlePrepare(
     std::shared_ptr<AcceptorContext> context,
     std::shared_ptr<Sender> sender)
 {
+    LOG(LogLevel::Info) << "HandlePrepare | " << Serialize(message);
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree))
     {
         context->promised_decree = message.decree;
@@ -151,6 +156,7 @@ HandleAccept(
     std::shared_ptr<AcceptorContext> context,
     std::shared_ptr<Sender> sender)
 {
+    LOG(LogLevel::Info) << "HandleAccept  | " << Serialize(message);
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree))
     {
         if (IsDecreeHigher(message.decree, context->accepted_decree))
@@ -168,6 +174,7 @@ HandleProclaim(
     std::shared_ptr<LearnerContext> context,
     std::shared_ptr<Sender> sender)
 {
+    LOG(LogLevel::Info) << "HandleProclaim| " << Serialize(message);
     if (context->accepted_map.find(message.decree) == context->accepted_map.end())
     {
         context->accepted_map[message.decree] = std::shared_ptr<ReplicaSet>(
@@ -189,11 +196,13 @@ HandleProclaim(
 
 
 void
-HandleUpdateed(
+HandleUpdated(
     Message message,
     std::shared_ptr<LearnerContext> context,
     std::shared_ptr<Sender> sender)
 {
+    LOG(LogLevel::Info) << "HandleUpdated| " << Serialize(message);
+
     // 1. Check if message.decree == highest ledger entry + 1
     // 2. If correct entry, then write to ledger
     // 3. Reply with another UpdateMessage
@@ -206,6 +215,8 @@ HandleUpdate(
     std::shared_ptr<UpdaterContext> context,
     std::shared_ptr<Sender> sender)
 {
+    LOG(LogLevel::Info) << "HandleUpdate| " << Serialize(message);
+
     // 1. Check message.decree and see if ledger contains message.decree + 1
     // 2. Reply UpdatedMessage with message.decree + 1 or highest known decree
 }

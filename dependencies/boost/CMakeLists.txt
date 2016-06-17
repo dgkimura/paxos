@@ -6,6 +6,7 @@ include(ExternalProject)
 set(boost_libraries
     filesystem
     iostreams
+    log
     serialization
     system
     thread
@@ -31,4 +32,5 @@ set(DEPENDENCIES_boost_DIR ${CMAKE_CURRENT_BINARY_DIR} PARENT_SCOPE)
 foreach(_M ${boost_libraries})
     set(boost_STATIC_LIB ${boost_STATIC_LIB} ${CMAKE_CURRENT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}boost_${_M}${CMAKE_STATIC_LIBRARY_SUFFIX})
 endforeach(_M)
+
 set(boost_STATIC_LIB ${boost_STATIC_LIB} PARENT_SCOPE)

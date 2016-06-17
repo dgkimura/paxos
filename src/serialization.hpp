@@ -31,10 +31,10 @@ void serialize(Archive& ar, Replica& obj, const unsigned int version)
 template <typename Archive>
 void serialize(Archive& ar, Message& obj, const unsigned int version)
 {
-    ar & obj.decree;
     ar & obj.from;
     ar & obj.to;
     ar & obj.type;
+    ar & obj.decree;
 }
 
 
