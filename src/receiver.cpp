@@ -75,9 +75,7 @@ NetworkReceiver::Session::Start()
         {
             if (!ec)
             {
-                std::stringstream stream;
-                stream << data_;
-                Message message = Deserialize<Message>(std::move(stream));
+                Message message = Deserialize<Message>(std::string(data_));
 
                 for (Callback callback : registered_map_[message.type])
                 {

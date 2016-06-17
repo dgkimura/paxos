@@ -7,8 +7,8 @@ TEST(SerializationUnitTest, testDecreeIsSerializableAndDeserializable)
 {
     Decree expected("an_author_1", 1, "the_decree_contents"), actual;
 
-    std::stringstream stream = Serialize(expected);
-    actual = Deserialize<Decree>(std::move(stream));
+    std::string string_obj = Serialize(expected);
+    actual = Deserialize<Decree>(string_obj);
 
     ASSERT_EQ(expected.author, actual.author);
     ASSERT_EQ(expected.content, actual.content);
@@ -20,8 +20,8 @@ TEST(SerializationUnitTest, testReplicaIsSerializableAndDeserializable)
 {
     Replica expected("hostname", 123), actual;
 
-    std::stringstream stream = Serialize(expected);
-    actual = Deserialize<Replica>(std::move(stream));
+    std::string string_obj = Serialize(expected);
+    actual = Deserialize<Replica>(string_obj);
 
     ASSERT_EQ(expected.hostname, actual.hostname);
     ASSERT_EQ(expected.port, actual.port);
@@ -37,8 +37,8 @@ TEST(SerializationUnitTest, testMessageIsSerializableAndDeserializable)
         MessageType::PrepareMessage),
     actual;
 
-    std::stringstream stream = Serialize(expected);
-    actual = Deserialize<Message>(std::move(stream));
+    std::string string_obj = Serialize(expected);
+    actual = Deserialize<Message>(string_obj);
 
     ASSERT_EQ(expected.decree.author, actual.decree.author);
     ASSERT_EQ(expected.decree.number, actual.decree.number);

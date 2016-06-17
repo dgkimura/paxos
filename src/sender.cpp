@@ -42,7 +42,7 @@ NetworkSender::Reply(Message message)
     boost::asio::connect(socket_, endpoint);
 
     // 1. serialize message
-    std::string message_str = Serialize(message).str();
+    std::string message_str = Serialize(message);
 
     // 2. write message
     boost::asio::write(socket_, boost::asio::buffer(message_str.c_str(), message_str.size()));
