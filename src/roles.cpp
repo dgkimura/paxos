@@ -85,8 +85,10 @@ HandleRequest(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
+    context->requested_values.push_back(message.decree.content);
+
     Message response = Response(message, MessageType::PrepareMessage);
-    response.decree.number = context->highest_promised_decree.number;
+    response.decree.number = context->current_decree_number;
     sender->ReplyAll(response);
 }
 
@@ -98,9 +100,9 @@ HandlePromise(
     std::shared_ptr<Sender> sender)
 {
     LOG(LogLevel::Info) << "HandlePromise | " << Serialize(message);
-    if (IsDecreeHigher(message.decree, context->highest_promised_decree))
+    if (IsDecreeHigher(message.decree, context->highest_proposed_decree))
     {
-        context->highest_promised_decree = message.decree;
+        context->highest_proposed_decree = message.decree;
     }
 
     if (context->promise_map.find(message.decree) == context->promise_map.end())
@@ -108,7 +110,7 @@ HandlePromise(
         context->promise_map[message.decree] = std::shared_ptr<ReplicaSet>(new ReplicaSet());
     }
 
-    if (IsDecreeEqual(message.decree, context->highest_promised_decree))
+    if (IsDecreeEqual(message.decree, context->highest_proposed_decree))
     {
         context->promise_map[message.decree]->Add(message.from);
 
@@ -132,6 +134,7 @@ HandleAccepted(
 {
     LOG(LogLevel::Info) << "HandleAccepted| " << Serialize(message);
     context->promise_map.erase(message.decree);
+    context->current_decree_number++;
 }
 
 

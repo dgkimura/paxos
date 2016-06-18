@@ -114,15 +114,14 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromise
         MessageType::PromiseMessage);
 
     std::shared_ptr<ProposerContext> context(new ProposerContext(
-        std::make_shared<ReplicaSet>(),
-        std::make_shared<VolatileLedger>()));
-    context->highest_promised_decree = Decree("the_author", 0, "");
+        std::make_shared<ReplicaSet>(), 0));
+    context->highest_proposed_decree = Decree("the_author", 0, "");
 
     std::shared_ptr<FakeSender> sender(new FakeSender());
 
     HandlePromise(message, context, sender);
 
-    ASSERT_TRUE(IsDecreeLower(message.decree, context->highest_promised_decree));
+    ASSERT_TRUE(IsDecreeLower(message.decree, context->highest_proposed_decree));
     ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::AcceptMessage);
 }
 
@@ -132,9 +131,8 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
     Message message(Decree("host", 1, ""), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
     std::shared_ptr<ProposerContext> context(new ProposerContext(
-        std::make_shared<ReplicaSet>(),
-        std::make_shared<VolatileLedger>()));
-    context->highest_promised_decree = Decree("host", 0, "");
+        std::make_shared<ReplicaSet>(), 0));
+    context->highest_proposed_decree = Decree("host", 0, "");
     context->replicaset = std::shared_ptr<ReplicaSet>(new ReplicaSet());
     context->replicaset->Add(Replica("host"));
 
@@ -142,7 +140,7 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
 
     HandlePromise(message, context, sender);
 
-    ASSERT_TRUE(IsDecreeEqual(message.decree, context->highest_promised_decree));
+    ASSERT_TRUE(IsDecreeEqual(message.decree, context->highest_proposed_decree));
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::AcceptMessage);
 }
 
