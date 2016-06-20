@@ -166,6 +166,7 @@ TEST_F(AcceptorTest, testHandlePrepareWithHigherDecreeUpdatesPromisedDecree)
     HandlePrepare(message, context, sender);
 
     ASSERT_TRUE(IsDecreeEqual(message.decree, context->promised_decree));
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PromiseMessage);
 }
 
 
@@ -181,6 +182,21 @@ TEST_F(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree
     HandlePrepare(message, context, sender);
 
     ASSERT_TRUE(IsDecreeLower(message.decree, context->promised_decree));
+}
+
+
+TEST_F(AcceptorTest, testHandlePrepareWithReplayedPrepareDoesNotSendAnotherPromise)
+{
+    Message message(Decree("the_author", 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+
+    std::shared_ptr<AcceptorContext> context(new AcceptorContext());
+    context->promised_decree = Decree("the_author", 1, "");
+
+    std::shared_ptr<FakeSender> sender(new FakeSender());
+
+    HandlePrepare(message, context, sender);
+
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::PromiseMessage);
 }
 
 

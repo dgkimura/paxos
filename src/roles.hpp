@@ -23,7 +23,7 @@ struct ProposerContext : public Context
     std::vector<std::string> requested_values;
 
     ProposerContext()
-        : ProposerContext(std::make_shared<ReplicaSet>(), 0)
+        : ProposerContext(std::make_shared<ReplicaSet>(), 1)
     {
     }
 

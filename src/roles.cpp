@@ -89,6 +89,7 @@ HandleRequest(
 
     Message response = Response(message, MessageType::PrepareMessage);
     response.decree.number = context->current_decree_number;
+    response.decree.content = "";
     sender->ReplyAll(response);
 }
 
@@ -119,6 +120,11 @@ HandlePromise(
 
         if (received_promises >= minimum_quorum)
         {
+            if (message.decree.content.empty() && !context->requested_values.empty())
+            {
+                message.decree.content = context->requested_values[0];
+                context->requested_values.erase(context->requested_values.begin());
+            }
             sender->ReplyAll(Response(message, MessageType::AcceptMessage));
         }
     }
@@ -145,7 +151,7 @@ HandlePrepare(
     std::shared_ptr<Sender> sender)
 {
     LOG(LogLevel::Info) << "HandlePrepare | " << Serialize(message);
-    if (IsDecreeHigherOrEqual(message.decree, context->promised_decree))
+    if (IsDecreeHigher(message.decree, context->promised_decree))
     {
         context->promised_decree = message.decree;
         sender->Reply(Response(message, MessageType::PromiseMessage));
