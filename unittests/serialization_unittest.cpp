@@ -49,3 +49,18 @@ TEST(SerializationUnitTest, testMessageIsSerializableAndDeserializable)
     ASSERT_EQ(expected.to.port, actual.to.port);
     ASSERT_EQ(expected.type, actual.type);
 }
+
+
+TEST(SerializationUnitTest, testSerializationWithPaddedFluffOnTheEndOfTheBuffer)
+{
+    Decree expected("an_author_1", 1, "the_decree_contents"), actual;
+
+    actual = Deserialize<Decree>(
+        "22 serialization::archive 11 0 0 11 an_author_1 "
+        "1 19 the_decree_contents THIS IS FLUFF!!!"
+    );
+
+    ASSERT_EQ(expected.author, actual.author);
+    ASSERT_EQ(expected.content, actual.content);
+    ASSERT_EQ(expected.number, actual.number);
+}
