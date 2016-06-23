@@ -11,6 +11,7 @@
 #include <messages.hpp>
 #include <receiver.hpp>
 #include <replicaset.hpp>
+#include <queue.hpp>
 #include <sender.hpp>
 
 
@@ -49,7 +50,7 @@ struct LearnerContext : public Context
 {
     std::shared_ptr<ReplicaSet> replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> accepted_map;
-    std::shared_ptr<Ledger> ledger;
+    std::shared_ptr<LedgerType> ledger;
 
     LearnerContext()
         : LearnerContext(
@@ -61,7 +62,7 @@ struct LearnerContext : public Context
 
     LearnerContext(
         std::shared_ptr<ReplicaSet> replicaset_,
-        std::shared_ptr<Ledger> ledger_
+        std::shared_ptr<LedgerType> ledger_
     )
         : replicaset(replicaset_),
           accepted_map(),

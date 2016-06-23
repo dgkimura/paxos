@@ -1,6 +1,7 @@
 #ifndef __SERIALIZATION_HPP_INCLUDED__
 #define __SERIALIZATION_HPP_INCLUDED__
 
+#include <fstream>
 #include <sstream>
 
 #include "boost/archive/text_iarchive.hpp"
@@ -53,6 +54,16 @@ T Deserialize(std::string string_obj)
 {
     T object;
     std::stringstream stream(string_obj);
+    boost::archive::text_iarchive oa(stream);
+    oa >> object;
+    return object;
+}
+
+
+template <typename T>
+T Deserialize(std::fstream stream)
+{
+    T object;
     boost::archive::text_iarchive oa(stream);
     oa >> object;
     return object;

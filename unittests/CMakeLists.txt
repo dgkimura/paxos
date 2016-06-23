@@ -15,6 +15,7 @@ set(SOURCES
     callback_unittest.cpp
     decree_unittest.cpp
     messages_unittest.cpp
+    queue_unittest.cpp
     replicaset_unittest.cpp
     roles_unittest.cpp
     serialization_unittest.cpp

@@ -62,7 +62,7 @@ std::shared_ptr<LearnerContext> createLearnerContext(std::initializer_list<std::
         replicaset->Add(r);
     }
 
-    std::shared_ptr<Ledger> ledger = std::make_shared<VolatileLedger>();
+    std::shared_ptr<VolatileLedger> ledger = std::make_shared<VolatileLedger>();
     return std::make_shared<LearnerContext>(replicaset, ledger);
 }
 

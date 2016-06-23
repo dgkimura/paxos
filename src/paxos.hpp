@@ -29,7 +29,7 @@ private:
 
     std::shared_ptr<Sender> sender;
 
-    std::shared_ptr<Ledger> ledger;
+    std::shared_ptr<LedgerType> ledger;
 
     std::shared_ptr<ProposerContext> proposer;
 

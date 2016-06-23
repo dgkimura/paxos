@@ -1,10 +1,11 @@
-#include <vector>
-#include<fstream>
+#ifndef __LEDGER_HPP_INCLUDED__
+#define __LEDGER_HPP_INCLUDED__
 
 #include <decree.hpp>
+#include <queue.hpp>
 
 
-class Ledger
+class LedgerType
 {
 public:
 
@@ -16,40 +17,51 @@ public:
 };
 
 
-class PersistentLedger : public Ledger
+template <typename T>
+class Ledger : public LedgerType
 {
 public:
 
-    PersistentLedger();
+    Ledger()
+        : decrees()
+    {
+    }
 
-    virtual ~PersistentLedger();
+    ~Ledger()
+    {
+    }
 
-    virtual void Append(Decree decree);
+    void Append(Decree decree)
+    {
+        decrees.Enqueue(decree);
+    }
 
-    virtual bool Contains(Decree decree);
+    bool Contains(Decree decree)
+    {
+        for (Decree d : decrees)
+        {
+            if (IsDecreeEqual(d, decree))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
-    virtual void ApplyCheckpoint();
+    void ApplyCheckpoint()
+    {
+    }
 
 private:
-    std::fstream file;
+
+    T decrees;
 };
 
 
-class VolatileLedger : public Ledger
-{
-public:
+using VolatileLedger = Ledger<VolatileQueue<Decree>>;
 
-    VolatileLedger();
 
-    virtual ~VolatileLedger();
+using PersistentLedger = Ledger<PersistentQueue<Decree>>;
 
-    virtual void Append(Decree decree);
 
-    virtual bool Contains(Decree decree);
-
-    virtual void ApplyCheckpoint();
-
-private:
-
-    std::vector<Decree> decrees;
-};
+#endif
