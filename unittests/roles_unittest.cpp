@@ -145,6 +145,24 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
 }
 
 
+TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotSendAcceptMessage)
+{
+    Message message(Decree("host", 1, ""), Replica("unknown_host"), Replica("host"), MessageType::PromiseMessage);
+
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(), 0);
+    context->highest_proposed_decree = Decree("host", 0, "");
+    context->replicaset = std::shared_ptr<ReplicaSet>(new ReplicaSet());
+    context->replicaset->Add(Replica("host"));
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandlePromise(message, context, sender);
+
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::AcceptMessage);
+}
+
+
 class AcceptorTest: public testing::Test
 {
     virtual void SetUp()

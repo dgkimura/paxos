@@ -47,15 +47,30 @@ ReplicaSet::Clear()
 }
 
 
+std::shared_ptr<ReplicaSet>
+ReplicaSet::Intersection(std::shared_ptr<ReplicaSet> other)
+{
+    std::shared_ptr<ReplicaSet> intersection = std::make_shared<ReplicaSet>();
+    for (auto r : *other)
+    {
+        if (Contains(r))
+        {
+            intersection->Add(r);
+        }
+    }
+    return intersection;
+}
+
+
 ReplicaSet::iterator
-ReplicaSet::begin()
+ReplicaSet::begin() const
 {
     return replicaset.begin();
 }
 
 
 ReplicaSet::iterator
-ReplicaSet::end()
+ReplicaSet::end() const
 {
     return replicaset.end();
 }

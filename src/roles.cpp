@@ -116,7 +116,9 @@ HandlePromise(
         context->promise_map[message.decree]->Add(message.from);
 
         int minimum_quorum = context->replicaset->GetSize() / 2 + 1;
-        int received_promises = context->promise_map[message.decree]->GetSize();
+        int received_promises = context->promise_map[message.decree]
+                                       ->Intersection(context->replicaset)
+                                       ->GetSize();
 
         if (received_promises >= minimum_quorum)
         {

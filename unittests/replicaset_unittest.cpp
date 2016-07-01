@@ -92,6 +92,20 @@ TEST(ReplicaSetUnittest, testContainsOnReplicaSetWithReplica)
 }
 
 
+TEST(ReplicaSetUnittest, testIntersectionBetweenReplicaSets)
+{
+    auto set_a = std::make_shared<ReplicaSet>();
+    set_a->Add(Replica("host"));
+
+    auto set_b = std::make_shared<ReplicaSet>();
+    set_b->Add(Replica("host"));
+
+    auto set_c = set_a->Intersection(set_b);
+
+    ASSERT_TRUE(set_c->Contains(Replica("host")));
+}
+
+
 TEST(ReplicaTest, testReplicaFields)
 {
     Replica r("host", 1234);
