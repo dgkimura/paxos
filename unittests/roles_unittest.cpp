@@ -145,7 +145,7 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
 }
 
 
-TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotSendAcceptMessage)
+TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotUpdateHighestPromisedDecree)
 {
     Message message(Decree("host", 1, ""), Replica("unknown_host"), Replica("host"), MessageType::PromiseMessage);
 
@@ -159,6 +159,7 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotS
 
     HandlePromise(message, context, sender);
 
+    ASSERT_FALSE(IsDecreeEqual(message.decree, context->highest_proposed_decree));
     ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::AcceptMessage);
 }
 

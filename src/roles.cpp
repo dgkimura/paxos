@@ -101,7 +101,8 @@ HandlePromise(
     std::shared_ptr<Sender> sender)
 {
     LOG(LogLevel::Info) << "HandlePromise | " << Serialize(message);
-    if (IsDecreeHigher(message.decree, context->highest_proposed_decree))
+    if (IsDecreeHigher(message.decree, context->highest_proposed_decree) &&
+        context->replicaset->Contains(message.from))
     {
         context->highest_proposed_decree = message.decree;
     }
