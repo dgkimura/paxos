@@ -92,7 +92,13 @@ private:
     {
     public:
 
-        Iterator(std::fstream& file_, int offset_)
+        Iterator(Iterator&& other)
+            : file(std::move(other.file)),
+              offset(other.offset)
+        {
+        }
+
+        Iterator(std::unique_ptr<std::fstream> file_, int offset_)
             : file(std::move(file_)),
               offset(offset_)
         {
@@ -101,7 +107,7 @@ private:
         T operator*()
         {
             std::string element_as_string;
-            file >> element_as_string;
+            *file >> element_as_string;
             T element = Deserialize<T>(element_as_string);
             return element;
         }
@@ -109,7 +115,7 @@ private:
         Iterator& operator++()
         {
             int element_size;
-            file >> element_size;
+            *file >> element_size;
             offset += element_size;
             return *this;
         }
@@ -123,34 +129,34 @@ private:
 
         int offset;
 
-        std::fstream file;
+        std::unique_ptr<std::fstream> file;
     };
 
     int lastoffset;
 
-    std::fstream file;
+    std::unique_ptr<std::fstream> file;
 
 public:
 
     PersistentQueue()
         : lastoffset(0)
     {
-        file.open("persistent-queue-data", std::ios::app | std::ios::binary);
+        file->open("persistent-queue-data", std::ios::app | std::ios::binary);
     }
 
     void Enqueue(T e)
     {
-        file.seekg(0, std::ios::beg);
+        file->seekg(0, std::ios::beg);
         std::string element_as_string = Serialize(e);
-        file << element_as_string;
+        *file << element_as_string;
         lastoffset += element_as_string.size();
     }
 
     void Dequeue()
     {
-        file.seekg(0, std::ios::beg);
+        file->seekg(0, std::ios::beg);
 
-        T first_element = Deserialize<T>(file);
+        T first_element = Deserialize<T>(*file);
         std::string first_element_serialized = Serialize(first_element);
         int offset = first_element_serialized.size();
 
@@ -159,7 +165,7 @@ public:
         {
             tmpfile << Serialize(element);
         }
-        file << tmpfile.rdbuf();
+        *file << tmpfile.rdbuf();
     }
 
     int Size()
@@ -174,12 +180,12 @@ public:
 
     Iterator begin()
     {
-        return Iterator(file, 0);
+        return Iterator(std::move(file), 0);
     }
 
     Iterator end()
     {
-        return Iterator(file, lastoffset);
+        return Iterator(std::move(file), lastoffset);
     }
 };
 

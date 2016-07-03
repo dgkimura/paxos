@@ -2,6 +2,7 @@
 #define __REPLICASET_HPP_INCLUDED__
 
 #include <iterator>
+#include <memory>
 #include <set>
 #include <string>
 
