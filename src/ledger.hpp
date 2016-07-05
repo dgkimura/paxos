@@ -22,8 +22,13 @@ class Ledger : public LedgerType
 {
 public:
 
+    Ledger(std::string name)
+        : decrees(name)
+    {
+    }
+
     Ledger()
-        : decrees()
+        : Ledger("paxos.ledger")
     {
     }
 

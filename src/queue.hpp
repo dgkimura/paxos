@@ -48,8 +48,13 @@ private:
 
 public:
 
-    VolatileQueue()
+    VolatileQueue(std::string name)
         : data()
+    {
+    }
+
+    VolatileQueue()
+        : VolatileQueue("default-volatile-queue-name")
     {
     }
 
@@ -138,9 +143,14 @@ private:
 
 public:
 
-    PersistentQueue()
-        : file("persistent-queue-data", std::ios::app | std::ios::binary),
+    PersistentQueue(std::string name)
+        : file(name, std::ios::app | std::ios::binary),
           lastoffset(0)
+    {
+    }
+
+    PersistentQueue()
+        : PersistentQueue("default-persistent-queue-name")
     {
     }
 
