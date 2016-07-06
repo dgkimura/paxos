@@ -159,6 +159,7 @@ public:
         file.seekg(0, std::ios::beg);
         std::string element_as_string = Serialize(e);
         file << element_as_string;
+        file.flush();
         lastoffset += element_as_string.size();
     }
 
