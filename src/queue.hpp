@@ -111,17 +111,14 @@ private:
 
         T operator*()
         {
-            std::string element_as_string;
-            file >> element_as_string;
-            T element = Deserialize<T>(element_as_string);
-            return element;
+            file.seekg(offset, std::ios::beg);
+            return Deserialize<T>(file);
         }
 
         Iterator& operator++()
         {
-            int element_size;
-            file >> element_size;
-            offset += element_size;
+            file.seekg(offset, std::ios::beg);
+            offset += Serialize(Deserialize<T>(file)).length();
             return *this;
         }
 
@@ -137,15 +134,12 @@ private:
         std::fstream& file;
     };
 
-    int lastoffset;
-
     std::fstream file;
 
 public:
 
     PersistentQueue(std::string name)
-        : file(name, std::ios::app | std::ios::binary),
-          lastoffset(0)
+        : file(name, std::ios::out | std::ios::in | std::ios::app | std::ios::binary)
     {
     }
 
@@ -156,11 +150,10 @@ public:
 
     void Enqueue(T e)
     {
-        file.seekg(0, std::ios::beg);
+        file.seekp(0, std::ios::end);
         std::string element_as_string = Serialize(e);
         file << element_as_string;
         file.flush();
-        lastoffset += element_as_string.size();
     }
 
     void Dequeue()
@@ -169,7 +162,7 @@ public:
 
         T first_element = Deserialize<T>(file);
         std::string first_element_serialized = Serialize(first_element);
-        int offset = first_element_serialized.size();
+        int offset = first_element_serialized.length();
 
         std::fstream tmpfile("persistent-queue.tmp");
         for (T element : this)
@@ -182,7 +175,7 @@ public:
     int Size()
     {
         int size = 0;
-        for (auto e : this)
+        for (auto e : *this)
         {
             size += 1;
         }
@@ -196,7 +189,9 @@ public:
 
     Iterator end()
     {
-        return Iterator(file, lastoffset);
+        file.seekg(0, std::ios::end);
+        int end = file.tellg();
+        return Iterator(file, file.tellg());
     }
 };
 

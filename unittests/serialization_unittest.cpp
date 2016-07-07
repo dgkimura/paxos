@@ -64,3 +64,16 @@ TEST(SerializationUnitTest, testSerializationWithPaddedFluffOnTheEndOfTheBuffer)
     ASSERT_EQ(expected.content, actual.content);
     ASSERT_EQ(expected.number, actual.number);
 }
+
+
+TEST(SerializationUnitTest, testSerializationWithUniversalReferenceValues)
+{
+    Decree expected("an_author_1", 1, "the_decree_contents"), actual;
+
+    std::string string_obj = Serialize(Decree("an_author_1", 1, "the_decree_contents"));
+    actual = Deserialize<Decree>(string_obj);
+
+    ASSERT_EQ(expected.author, actual.author);
+    ASSERT_EQ(expected.content, actual.content);
+    ASSERT_EQ(expected.number, actual.number);
+}

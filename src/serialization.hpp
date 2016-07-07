@@ -40,6 +40,16 @@ void serialize(Archive& ar, Message& obj, const unsigned int version)
 
 
 template <typename T>
+std::string Serialize(T&& object)
+{
+    std::stringstream stream;
+    boost::archive::text_oarchive oa(stream);
+    oa << object;
+    return stream.str();
+}
+
+
+template <typename T>
 std::string Serialize(T& object)
 {
     std::stringstream stream;
@@ -61,7 +71,7 @@ T Deserialize(std::string string_obj)
 
 
 template <typename T>
-T Deserialize(std::fstream stream)
+T Deserialize(std::fstream& stream)
 {
     T object;
     boost::archive::text_iarchive oa(stream);
