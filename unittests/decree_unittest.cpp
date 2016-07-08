@@ -3,6 +3,16 @@
 #include "decree.hpp"
 
 
+TEST(DecreeUnitTest, testDecreeDefaultConstructor)
+{
+    Decree decree;
+
+    ASSERT_EQ(decree.author, "");
+    ASSERT_EQ(decree.number, 0);
+    ASSERT_EQ(decree.content, "");
+}
+
+
 TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeNumberOnRightHandSide)
 {
     Decree lower("an_author", 1, "");

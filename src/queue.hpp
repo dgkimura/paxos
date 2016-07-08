@@ -165,7 +165,7 @@ public:
         int offset = first_element_serialized.length();
 
         std::fstream tmpfile("persistent-queue.tmp");
-        for (T element : this)
+        for (T element : *this)
         {
             tmpfile << Serialize(element);
         }

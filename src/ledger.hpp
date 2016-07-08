@@ -11,7 +11,13 @@ public:
 
     virtual void Append(Decree decree) = 0;
 
+    virtual void Remove() = 0;
+
     virtual int Size() = 0;
+
+    virtual Decree Head() = 0;
+
+    virtual Decree Tail() = 0;
 };
 
 
@@ -39,9 +45,35 @@ public:
         decrees.Enqueue(decree);
     }
 
+    void Remove()
+    {
+        decrees.Dequeue();
+    }
+
     int Size()
     {
         return decrees.Size();
+    }
+
+    Decree Head()
+    {
+        Decree head;
+        for (Decree d : decrees)
+        {
+            head = d;
+            break;
+        }
+        return head;
+    }
+
+    Decree Tail()
+    {
+        Decree tail;
+        for (Decree d : decrees)
+        {
+            tail = d;
+        }
+        return tail;
     }
 
 private:
