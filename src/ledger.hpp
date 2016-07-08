@@ -11,8 +11,6 @@ public:
 
     virtual void Append(Decree decree) = 0;
 
-    virtual bool Contains(Decree decree) = 0;
-
     virtual int Size() = 0;
 };
 
@@ -39,18 +37,6 @@ public:
     void Append(Decree decree)
     {
         decrees.Enqueue(decree);
-    }
-
-    bool Contains(Decree decree)
-    {
-        for (Decree d : decrees)
-        {
-            if (IsDecreeEqual(d, decree))
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     int Size()

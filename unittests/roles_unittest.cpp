@@ -283,7 +283,7 @@ TEST_F(LearnerTest, testProclaimHandleWithSingleReplica)
 
     HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
-    ASSERT_TRUE(context->ledger->Contains(message.decree));
+    ASSERT_EQ(context->ledger->Size(), 1);
 }
 
 
@@ -294,7 +294,7 @@ TEST_F(LearnerTest, testProclaimHandleIgnoresMessagesFromUnknownReplica)
 
     HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
-    ASSERT_FALSE(context->ledger->Contains(message.decree));
+    ASSERT_EQ(context->ledger->Size(), 0);
 }
 
 
@@ -305,7 +305,7 @@ TEST_F(LearnerTest, testProclaimHandleReceivesOneAcceptedWithThreeReplicaSet)
 
     HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
-    ASSERT_FALSE(context->ledger->Contains(message.decree));
+    ASSERT_EQ(context->ledger->Size(), 0);
 }
 
 
@@ -334,7 +334,7 @@ TEST_F(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
         std::shared_ptr<FakeSender>(new FakeSender())
     );
 
-    ASSERT_TRUE(context->ledger->Contains(Decree("A", 1, "")));
+    ASSERT_EQ(context->ledger->Size(), 1);
 }
 
 
@@ -363,6 +363,6 @@ TEST_F(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
         std::shared_ptr<FakeSender>(new FakeSender())
     );
 
-    ASSERT_FALSE(context->ledger->Contains(Decree("A", 1, "")));
+    ASSERT_EQ(context->ledger->Size(), 0);
 }
 
