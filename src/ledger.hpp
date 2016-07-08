@@ -13,8 +13,6 @@ public:
 
     virtual bool Contains(Decree decree) = 0;
 
-    virtual void ApplyCheckpoint() = 0;
-
     virtual int Size() = 0;
 };
 
@@ -53,10 +51,6 @@ public:
             }
         }
         return false;
-    }
-
-    void ApplyCheckpoint()
-    {
     }
 
     int Size()

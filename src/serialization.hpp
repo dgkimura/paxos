@@ -50,16 +50,6 @@ std::string Serialize(T&& object)
 
 
 template <typename T>
-std::string Serialize(T& object)
-{
-    std::stringstream stream;
-    boost::archive::text_oarchive oa(stream);
-    oa << object;
-    return stream.str();
-}
-
-
-template <typename T>
 T Deserialize(std::string string_obj)
 {
     T object;
