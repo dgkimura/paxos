@@ -3,7 +3,16 @@
 #include "ledger.hpp"
 
 
-TEST(LedgerUnitTest, testAppendIncrementsTheSize)
+class LedgerUnitTest: public testing::Test
+{
+    virtual void SetUp()
+    {
+        DisableLogging();
+    }
+};
+
+
+TEST_F(LedgerUnitTest, testAppendIncrementsTheSize)
 {
     VolatileLedger ledger;
 
@@ -15,7 +24,7 @@ TEST(LedgerUnitTest, testAppendIncrementsTheSize)
 }
 
 
-TEST(LedgerUnitTest, testRemoveDecrementsTheSize)
+TEST_F(LedgerUnitTest, testRemoveDecrementsTheSize)
 {
     VolatileLedger ledger;
 
@@ -26,7 +35,7 @@ TEST(LedgerUnitTest, testRemoveDecrementsTheSize)
 }
 
 
-TEST(LedgerUnitTest, testEmptyHeadReturnsDefaultDecree)
+TEST_F(LedgerUnitTest, testEmptyHeadReturnsDefaultDecree)
 {
     VolatileLedger ledger;
     Decree expected, actual = ledger.Head();
@@ -37,7 +46,7 @@ TEST(LedgerUnitTest, testEmptyHeadReturnsDefaultDecree)
 }
 
 
-TEST(LedgerUnitTest, testEmptyTailReturnsDefaultDecree)
+TEST_F(LedgerUnitTest, testEmptyTailReturnsDefaultDecree)
 {
     VolatileLedger ledger;
     Decree expected, actual = ledger.Tail();
@@ -48,7 +57,7 @@ TEST(LedgerUnitTest, testEmptyTailReturnsDefaultDecree)
 }
 
 
-TEST(LedgerUnitTest, testHeadWithMultipleDecrees)
+TEST_F(LedgerUnitTest, testHeadWithMultipleDecrees)
 {
     VolatileLedger ledger;
     ledger.Append(Decree("a_author", 1, "a_content"));
@@ -62,7 +71,7 @@ TEST(LedgerUnitTest, testHeadWithMultipleDecrees)
 }
 
 
-TEST(LedgerUnitTest, testTailWithMultipleDecrees)
+TEST_F(LedgerUnitTest, testTailWithMultipleDecrees)
 {
     VolatileLedger ledger;
     ledger.Append(Decree("a_author", 1, "a_content"));
@@ -73,4 +82,24 @@ TEST(LedgerUnitTest, testTailWithMultipleDecrees)
     ASSERT_EQ(expected.author, actual.author);
     ASSERT_EQ(expected.number, actual.number);
     ASSERT_EQ(expected.content, actual.content);
+}
+
+
+TEST_F(LedgerUnitTest, testAppendIgnoresOutOfOrderDecrees)
+{
+    VolatileLedger ledger;
+    ledger.Append(Decree("b_author", 2, "b_content"));
+    ledger.Append(Decree("a_author", 1, "a_content"));
+
+    ASSERT_EQ(ledger.Size(), 1);
+}
+
+
+TEST_F(LedgerUnitTest, testAppendIgnoresDuplicateDecrees)
+{
+    VolatileLedger ledger;
+    ledger.Append(Decree("a_author", 1, "a_content"));
+    ledger.Append(Decree("a_author", 1, "a_content"));
+
+    ASSERT_EQ(ledger.Size(), 1);
 }

@@ -2,6 +2,7 @@
 #define __LEDGER_HPP_INCLUDED__
 
 #include <decree.hpp>
+#include <logging.hpp>
 #include <queue.hpp>
 
 
@@ -42,7 +43,15 @@ public:
 
     void Append(Decree decree)
     {
-        decrees.Enqueue(decree);
+        Decree tail = Tail();
+        if (tail.number < decree.number)
+        {
+            decrees.Enqueue(decree);
+        } else
+        {
+            LOG(LogLevel::Warning) << "Out of order decree. Ledger: "
+                << tail.number << " Received: " << decree.number;
+        }
     }
 
     void Remove()
