@@ -7,74 +7,10 @@
 
 #include <callback.hpp>
 #include <context.hpp>
-#include <ledger.hpp>
 #include <messages.hpp>
 #include <receiver.hpp>
-#include <replicaset.hpp>
-#include <queue.hpp>
 #include <sender.hpp>
-
-
-struct ProposerContext : public Context
-{
-    std::atomic<int> current_decree_number;
-    Decree highest_proposed_decree;
-    std::shared_ptr<ReplicaSet> replicaset;
-    std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> promise_map;
-    std::vector<std::string> requested_values;
-
-    ProposerContext()
-        : ProposerContext(std::make_shared<ReplicaSet>(), 1)
-    {
-    }
-
-    ProposerContext(std::shared_ptr<ReplicaSet> replicaset_, int current_decree_number_)
-        : current_decree_number(current_decree_number_),
-          highest_proposed_decree(),
-          replicaset(replicaset_),
-          promise_map(),
-          requested_values()
-    {
-    }
-};
-
-
-struct AcceptorContext : public Context
-{
-    Decree promised_decree;
-    Decree accepted_decree;
-};
-
-
-struct LearnerContext : public Context
-{
-    std::shared_ptr<ReplicaSet> replicaset;
-    std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> accepted_map;
-    std::shared_ptr<LedgerType> ledger;
-
-    LearnerContext()
-        : LearnerContext(
-            std::make_shared<ReplicaSet>(),
-            std::make_shared<PersistentLedger>()
-          )
-    {
-    }
-
-    LearnerContext(
-        std::shared_ptr<ReplicaSet> replicaset_,
-        std::shared_ptr<LedgerType> ledger_
-    )
-        : replicaset(replicaset_),
-          accepted_map(),
-          ledger(ledger_)
-    {
-    }
-};
-
-
-struct UpdaterContext : public Context
-{
-};
+#include <serialization.hpp>
 
 
 void RegisterProposer(
