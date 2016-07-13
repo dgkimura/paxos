@@ -9,9 +9,8 @@ before_script:
   - wget --no-check-certificate https://cmake.org/files/v3.5/cmake-3.5.2-Linux-x86_64.tar.gz
   - tar zvfx cmake-3.5.2-Linux-x86_64.tar.gz
   - ./cmake-3.5.2-Linux-x86_64/bin/cmake ..
-script:
-  - make
-  - ./unittests/all_unittests
+install:
+- if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 addons:
  apt:
    sources:
@@ -19,3 +18,6 @@ addons:
    packages:
    - gcc-4.8
    - g++-4.8
+script:
+  - make
+  - ./unittests/all_unittests
