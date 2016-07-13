@@ -56,9 +56,9 @@ public:
 
     std::shared_ptr<ReplicaSet> Intersection(std::shared_ptr<ReplicaSet> other);
 
-    using iterator = std::set<Replica, compare_replica>::iterator;
+    typedef typename std::set<Replica, compare_replica>::iterator iterator;
 
-    using const_iterator = std::set<Replica, compare_replica>::const_iterator;
+    typedef typename std::set<Replica, compare_replica>::const_iterator const_iterator;
 
     ReplicaSet::iterator begin() const;
 
