@@ -2,6 +2,7 @@
 #define __CONTEXT_HPP_INCLUDED__
 
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include <vector>
