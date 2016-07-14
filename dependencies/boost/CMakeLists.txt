@@ -18,19 +18,13 @@ endforeach(_M)
 
 add_definitions(-fPIC)
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-    set(TOOLSET gcc-4.8)
-elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    set(TOOLSET darwin-4.2.1)
-endif()
-
 ExternalProject_Add(Boost
     URL http://downloads.sourceforge.net/project/boost/boost/1.56.0/boost_1_56_0.tar.gz
     URL_MD5 8c54705c424513fa2be0042696a3a162
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/boost"
     INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}"
     CONFIGURE_COMMAND ./bootstrap.sh --prefix=<INSTALL_DIR>
-    BUILD_COMMAND ./b2 toolset=${TOOLSET} cxxflags=-fPIC cflags=-fPIC ${boost_with_libraries}
+    BUILD_COMMAND ./b2 cxxflags=-fPIC cflags=-fPIC ${boost_with_libraries}
     INSTALL_COMMAND ./b2 cxxflags=-fPIC cflags=-fPIC ${boost_with_libraries} install
     BUILD_IN_SOURCE 1
 )
