@@ -3,8 +3,6 @@
 
 #include <fstream>
 
-#include <serialization.hpp>
-
 
 template <typename T>
 class VolatileQueue
@@ -88,6 +86,22 @@ public:
 };
 
 
+//
+// Forward declare serialization functions.
+//
+// XXX: Remove after resolving circular dependency:
+//      Context->Ledger->Queue->Serialization->Context->...
+//
+template <typename T>
+std::string Serialize(T object);
+
+template <typename T>
+T Deserialize(std::string stream);
+
+template <typename T>
+T Deserialize(std::fstream& stream);
+
+
 template <typename T>
 class PersistentQueue
 {
@@ -118,7 +132,7 @@ private:
         Iterator& operator++()
         {
             file.seekg(offset, std::ios::beg);
-            offset += Serialize(Deserialize<T>(file)).length();
+            offset += Serialize<T>(Deserialize<T>(file)).length();
             return *this;
         }
 
@@ -151,7 +165,7 @@ public:
     void Enqueue(T e)
     {
         file.seekp(0, std::ios::end);
-        std::string element_as_string = Serialize(e);
+        std::string element_as_string = Serialize<T>(e);
         file << element_as_string;
         file.flush();
     }
@@ -161,13 +175,13 @@ public:
         file.seekg(0, std::ios::beg);
 
         T first_element = Deserialize<T>(file);
-        std::string first_element_serialized = Serialize(first_element);
+        std::string first_element_serialized = Serialize<T>(first_element);
         int offset = first_element_serialized.length();
 
         std::fstream tmpfile("persistent-queue.tmp");
         for (T element : *this)
         {
-            tmpfile << Serialize(element);
+            tmpfile << Serialize<T>(element);
         }
         file << tmpfile.rdbuf();
     }
