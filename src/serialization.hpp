@@ -7,7 +7,6 @@
 #include "boost/archive/text_iarchive.hpp"
 #include "boost/archive/text_oarchive.hpp"
 
-#include <context.hpp>
 #include <decree.hpp>
 #include <messages.hpp>
 #include <replicaset.hpp>
@@ -37,14 +36,6 @@ void serialize(Archive& ar, Message& obj, const unsigned int version)
     ar & obj.to;
     ar & obj.type;
     ar & obj.decree;
-}
-
-
-template <typename Archive>
-void serialize(Archive& ar, AcceptorContext::State& obj, const unsigned int version)
-{
-    ar & obj.promised_decree;
-    ar & obj.accepted_decree;
 }
 
 

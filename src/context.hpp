@@ -43,11 +43,8 @@ struct ProposerContext : public Context
 
 struct AcceptorContext : public Context
 {
-    struct State
-    {
-        Decree promised_decree;
-        Decree accepted_decree;
-    } state;
+    Decree promised_decree;
+    Decree accepted_decree;
 };
 
 
