@@ -3,6 +3,8 @@
 
 #include <fstream>
 
+#include "serialization.hpp"
+
 
 template <typename T>
 class VolatileQueue
@@ -84,22 +86,6 @@ public:
         return Iterator(data, data.size());
     }
 };
-
-
-//
-// Forward declare serialization functions.
-//
-// XXX: Remove after resolving circular dependency:
-//      Context->Ledger->Queue->Serialization->Context->...
-//
-template <typename T>
-std::string Serialize(T object);
-
-template <typename T>
-T Deserialize(std::string stream);
-
-template <typename T>
-T Deserialize(std::fstream& stream);
 
 
 template <typename T>

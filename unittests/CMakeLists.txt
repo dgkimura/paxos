@@ -14,6 +14,7 @@ ExternalProject_Add(
 set(SOURCES
     callback_unittest.cpp
     decree_unittest.cpp
+    fields_unittest.cpp
     ledger_unittest.cpp
     messages_unittest.cpp
     queue_unittest.cpp

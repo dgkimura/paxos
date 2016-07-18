@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <decree.hpp>
+#include <fields.hpp>
 #include <ledger.hpp>
 #include <replicaset.hpp>
 
