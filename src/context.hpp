@@ -44,8 +44,25 @@ struct ProposerContext : public Context
 
 struct AcceptorContext : public Context
 {
-    Decree promised_decree;
-    Decree accepted_decree;
+    Field<Decree> promised_decree;
+    Field<Decree> accepted_decree;
+
+    AcceptorContext()
+        : AcceptorContext(
+            std::make_shared<PersistentDecree>("promised_decree"),
+            std::make_shared<PersistentDecree>("accepted_decree")
+          )
+    {
+    }
+
+    AcceptorContext(
+        std::shared_ptr<Storage<Decree>> promised_decree_,
+        std::shared_ptr<Storage<Decree>> accepted_decree_
+    )
+        : promised_decree(promised_decree_),
+          accepted_decree(accepted_decree_)
+    {
+    }
 };
 
 

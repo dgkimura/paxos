@@ -7,65 +7,57 @@
 
 
 template <typename T>
-class Field
+class Storage
 {
 public:
 
-    virtual T& Value() = 0;
+    virtual T Get() = 0;
+
+    virtual void Put(T data) = 0;
 };
 
 
 template <typename T>
-class VolatileField : public Field<T>
+class VolatileStorage : public Storage<T>
 {
 public:
 
-    VolatileField(std::string fieldname_)
-    {
-        fieldname = fieldname_;
-    }
-
-    VolatileField(const T& value)
-    {
-        data = value;
-    }
-
-    T& Value()
+    T Get()
     {
         return data;
+    }
+
+    void Put(T data_)
+    {
+        data = data_;
     }
 
 private:
 
     T data;
-
-    std::string fieldname;
 };
 
 
 template <typename T>
-class PersistentField : public Field<T>
+class PersistentStorage : public Storage<T>
 {
 public:
 
-    PersistentField(std::string fieldname)
-        : file(fieldname, std::ios::out | std::ios::in | std::ios::binary)
+    PersistentStorage(std::string fieldname)
+        : file(fieldname,
+               std::ios::out |
+               std::ios::in |
+               std::ios::trunc |
+               std::ios::binary
+          )
     {
     }
 
-    PersistentField(const T& value)
+    T Get()
     {
-        file.seekp(0, std::ios::end);
-        std::string element_as_string = Serialize<T>(value);
-        file << element_as_string;
-        file.flush();
-
-        data = value;
-    }
-
-    T& Value()
-    {
-        if (!data)
+        T data;
+        file.seekg(0, std::ios::end);
+        if (file.tellg() > 0)
         {
             file.seekg(0, std::ios::beg);
             data = Deserialize<T>(file);
@@ -74,11 +66,58 @@ public:
         return data;
     }
 
-private:
+    void Put(T value)
+    {
+        file.seekp(0, std::ios::beg);
+        std::string element_as_string = Serialize<T>(value);
+        file << element_as_string;
+        file.flush();
+    }
 
-    T data;
+private:
 
     std::fstream file;
 };
+
+
+template <typename T>
+class Field
+{
+public:
+
+    Field(std::shared_ptr<Storage<T>> store_)
+        : store(store_)
+    {
+    }
+
+    Field& operator=(T&& value)
+    {
+        store->Put(value);
+        return *this;
+    }
+
+    Field& operator=(T& value)
+    {
+        store->Put(value);
+        return *this;
+    }
+
+    T Value()
+    {
+        return store->Get();
+    }
+
+private:
+
+    std::shared_ptr<Storage<T>> store;
+};
+
+
+using PersistentDecree = PersistentStorage<Decree>;
+
+using VolatileDecree = VolatileStorage<Decree>;
+
+using DecreeField = Field<Decree>;
+
 
 #endif

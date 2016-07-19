@@ -153,7 +153,7 @@ HandlePrepare(
     std::shared_ptr<Sender> sender)
 {
     LOG(LogLevel::Info) << "HandlePrepare | " << Serialize(message);
-    if (IsDecreeHigher(message.decree, context->promised_decree))
+    if (IsDecreeHigher(message.decree, context->promised_decree.Value()))
     {
         context->promised_decree = message.decree;
         sender->Reply(Response(message, MessageType::PromiseMessage));
@@ -168,9 +168,9 @@ HandleAccept(
     std::shared_ptr<Sender> sender)
 {
     LOG(LogLevel::Info) << "HandleAccept  | " << Serialize(message);
-    if (IsDecreeHigherOrEqual(message.decree, context->promised_decree))
+    if (IsDecreeHigherOrEqual(message.decree, context->promised_decree.Value()))
     {
-        if (IsDecreeHigher(message.decree, context->accepted_decree))
+        if (IsDecreeHigher(message.decree, context->accepted_decree.Value()))
         {
             context->accepted_decree = message.decree;
         }

@@ -67,6 +67,15 @@ std::shared_ptr<LearnerContext> createLearnerContext(std::initializer_list<std::
 }
 
 
+std::shared_ptr<AcceptorContext> createAcceptorContext()
+{
+    return std::make_shared<AcceptorContext>(
+        std::make_shared<VolatileDecree>(),
+        std::make_shared<VolatileDecree>()
+    );
+}
+
+
 bool WasMessageTypeSent(std::shared_ptr<FakeSender> sender, MessageType type)
 {
     bool was_sent = false;
@@ -177,14 +186,14 @@ TEST_F(AcceptorTest, testHandlePrepareWithHigherDecreeUpdatesPromisedDecree)
 {
     Message message(Decree("the_author", 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
 
-    std::shared_ptr<AcceptorContext> context(new AcceptorContext());
+    std::shared_ptr<AcceptorContext> context = createAcceptorContext();
     context->promised_decree = Decree("the_author", 0, "");
 
     std::shared_ptr<FakeSender> sender(new FakeSender());
 
     HandlePrepare(message, context, sender);
 
-    ASSERT_TRUE(IsDecreeEqual(message.decree, context->promised_decree));
+    ASSERT_TRUE(IsDecreeEqual(message.decree, context->promised_decree.Value()));
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PromiseMessage);
 }
 
@@ -193,14 +202,14 @@ TEST_F(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree
 {
     Message message(Decree("the_author", -1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
 
-    std::shared_ptr<AcceptorContext> context(new AcceptorContext());
+    std::shared_ptr<AcceptorContext> context = createAcceptorContext();
     context->promised_decree = Decree("the_author", 1, "");
 
     std::shared_ptr<FakeSender> sender(new FakeSender());
 
     HandlePrepare(message, context, sender);
 
-    ASSERT_TRUE(IsDecreeLower(message.decree, context->promised_decree));
+    ASSERT_TRUE(IsDecreeLower(message.decree, context->promised_decree.Value()));
 }
 
 
@@ -208,7 +217,7 @@ TEST_F(AcceptorTest, testHandlePrepareWithReplayedPrepareDoesNotSendAnotherPromi
 {
     Message message(Decree("the_author", 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
 
-    std::shared_ptr<AcceptorContext> context(new AcceptorContext());
+    std::shared_ptr<AcceptorContext> context = createAcceptorContext();
     context->promised_decree = Decree("the_author", 1, "");
 
     std::shared_ptr<FakeSender> sender(new FakeSender());
@@ -223,7 +232,7 @@ TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 {
     Message message(Decree("the_author", -1, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 
-    std::shared_ptr<AcceptorContext> context(new AcceptorContext());
+    std::shared_ptr<AcceptorContext> context = createAcceptorContext();
     context->promised_decree = Decree("the_author", 1, "");
     context->accepted_decree = Decree("the_author", 1, "");
 
@@ -231,7 +240,7 @@ TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 
     HandleAccept(message, context, sender);
 
-    ASSERT_TRUE(IsDecreeLower(message.decree, context->accepted_decree));
+    ASSERT_TRUE(IsDecreeLower(message.decree, context->accepted_decree.Value()));
 }
 
 
@@ -239,7 +248,7 @@ TEST_F(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
 {
     Message message(Decree("the_author", 1, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 
-    std::shared_ptr<AcceptorContext> context(new AcceptorContext());
+    std::shared_ptr<AcceptorContext> context = createAcceptorContext();
     context->promised_decree = Decree("the_author", 1, "");
     context->accepted_decree = Decree("the_author", 1, "");
 
@@ -247,7 +256,7 @@ TEST_F(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
 
     HandleAccept(message, context, sender);
 
-    ASSERT_TRUE(IsDecreeLowerOrEqual(message.decree, context->accepted_decree));
+    ASSERT_TRUE(IsDecreeLowerOrEqual(message.decree, context->accepted_decree.Value()));
 }
 
 
@@ -255,7 +264,7 @@ TEST_F(AcceptorTest, testHandleAcceptWithHigherDecreeDoesUpdateAcceptedDecree)
 {
     Message message(Decree("the_author", 2, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 
-    std::shared_ptr<AcceptorContext> context(new AcceptorContext());
+    std::shared_ptr<AcceptorContext> context = createAcceptorContext();
     context->promised_decree = Decree("the_author", 1, "");
     context->accepted_decree = Decree("the_author", 1, "");
 
@@ -263,7 +272,7 @@ TEST_F(AcceptorTest, testHandleAcceptWithHigherDecreeDoesUpdateAcceptedDecree)
 
     HandleAccept(message, context, sender);
 
-    ASSERT_TRUE(IsDecreeEqual(message.decree, context->accepted_decree));
+    ASSERT_TRUE(IsDecreeEqual(message.decree, context->accepted_decree.Value()));
 }
 
 
