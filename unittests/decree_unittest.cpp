@@ -297,7 +297,7 @@ TEST(DecreeUnitTest, testIsDecreeOrderedWithHigherDecreeAuthorOnRightHandSide)
     Decree lower("an_author_1", 1, "");
     Decree higher("an_author_2", 1, "");
 
-    ASSERT_TRUE(IsDecreeOrdered(lower, higher));
+    ASSERT_FALSE(IsDecreeOrdered(lower, higher));
 }
 
 

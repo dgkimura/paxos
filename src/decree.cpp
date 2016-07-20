@@ -48,5 +48,5 @@ IsDecreeLowerOrEqual(Decree lhs, Decree rhs)
 bool
 IsDecreeOrdered(Decree lhs, Decree rhs)
 {
-    return CompareDecrees(lhs, rhs) == -1;
+    return lhs.number - rhs.number == -1;
 }
