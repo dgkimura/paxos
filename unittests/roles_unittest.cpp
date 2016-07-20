@@ -375,3 +375,33 @@ TEST_F(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
     ASSERT_EQ(context->ledger->Size(), 0);
 }
 
+
+TEST_F(LearnerTest, testProclaimHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLedgerIsOutOfOrder)
+{
+    auto context = createLearnerContext({"A"});
+    auto sender = std::make_shared<FakeSender>();
+
+    HandleProclaim(
+        Message(
+            Decree("A", 1, ""),
+            Replica("A"), Replica("A"),
+            MessageType::AcceptedMessage
+        ),
+        context,
+        sender
+    );
+
+    // Missing decrees 2-9 so don't write to ledger yet.
+    HandleProclaim(
+        Message(
+            Decree("A", 10, ""),
+            Replica("A"), Replica("A"),
+            MessageType::AcceptedMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_EQ(context->ledger->Size(), 1);
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::UpdateMessage);
+}

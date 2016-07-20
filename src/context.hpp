@@ -71,6 +71,7 @@ struct LearnerContext : public Context
     std::shared_ptr<ReplicaSet> replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> accepted_map;
     std::shared_ptr<LedgerType> ledger;
+    std::vector<Decree> tracked_future_decrees;
 
     LearnerContext()
         : LearnerContext(

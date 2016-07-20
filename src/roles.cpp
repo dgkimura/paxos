@@ -201,7 +201,23 @@ HandleProclaim(
 
     if (accepted_quorum >= minimum_quorum)
     {
-        context->ledger->Append(message.decree);
+        if (IsDecreeOrdered(context->ledger->Tail(), message.decree))
+        {
+            // Append the decree iff the decree is in order with the last
+            // decree recorded in our ledger.
+
+            context->ledger->Append(message.decree);
+        }
+        else
+        {
+            // If the decree is not in order with the last decree recorded in
+            // our ledger then there must be holes in our ledger.
+
+            context->tracked_future_decrees.push_back(message.decree);
+            Message response = Response(message, MessageType::UpdateMessage);
+            response.decree = context->ledger->Tail();
+            sender->Reply(response);
+        }
     }
 }
 
