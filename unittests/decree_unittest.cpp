@@ -281,3 +281,57 @@ TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithIdenticalDecrees)
 
     ASSERT_TRUE(IsDecreeLowerOrEqual(higher, lower));
 }
+
+
+TEST(DecreeUnitTest, testIsDecreeOrderedWithHigherDecreeNumberOnRightHandSide)
+{
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
+
+    ASSERT_TRUE(IsDecreeOrdered(lower, higher));
+}
+
+
+TEST(DecreeUnitTest, testIsDecreeOrderedWithHigherDecreeAuthorOnRightHandSide)
+{
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
+
+    ASSERT_TRUE(IsDecreeOrdered(lower, higher));
+}
+
+
+TEST(DecreeUnitTest, testIsDecreeOrderedWithMuchHigherDecreeNumberOnRightHandSide)
+{
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 99, "");
+
+    ASSERT_FALSE(IsDecreeOrdered(lower, higher));
+}
+
+
+TEST(DecreeUnitTest, testIsDecreeOrderedWithHigherDecreeNumberOnLeftHandSide)
+{
+    Decree lower("an_author", 1, "");
+    Decree higher("an_author", 2, "");
+
+    ASSERT_FALSE(IsDecreeOrdered(higher, lower));
+}
+
+
+TEST(DecreeUnitTest, testIsDecreeOrderedWithHigherDecreeAuthorOnLeftHandSide)
+{
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_2", 1, "");
+
+    ASSERT_FALSE(IsDecreeOrdered(higher, lower));
+}
+
+
+TEST(DecreeUnitTest, testIsDecreeOrderedWithIdenticalDecrees)
+{
+    Decree lower("an_author_1", 1, "");
+    Decree higher("an_author_1", 1, "");
+
+    ASSERT_FALSE(IsDecreeOrdered(higher, lower));
+}

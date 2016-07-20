@@ -43,3 +43,10 @@ IsDecreeLowerOrEqual(Decree lhs, Decree rhs)
 {
     return CompareDecrees(lhs, rhs) <= 0;
 }
+
+
+bool
+IsDecreeOrdered(Decree lhs, Decree rhs)
+{
+    return CompareDecrees(lhs, rhs) == -1;
+}
