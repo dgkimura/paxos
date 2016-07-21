@@ -55,14 +55,14 @@ private:
 
 std::shared_ptr<LearnerContext> createLearnerContext(std::initializer_list<std::string> authors)
 {
-    std::shared_ptr<ReplicaSet> replicaset(new ReplicaSet());
+    auto replicaset = std::make_shared<ReplicaSet>();
     for (auto a : authors)
     {
         Replica r(a);
         replicaset->Add(r);
     }
 
-    std::shared_ptr<VolatileLedger> ledger = std::make_shared<VolatileLedger>();
+    auto ledger = std::make_shared<VolatileLedger>();
     return std::make_shared<LearnerContext>(replicaset, ledger);
 }
 
@@ -122,8 +122,7 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromise
         Replica("to"),
         MessageType::PromiseMessage);
 
-    std::shared_ptr<ProposerContext> context(new ProposerContext(
-        std::make_shared<ReplicaSet>(), 0));
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
     context->highest_proposed_decree = Decree("the_author", 0, "");
 
     std::shared_ptr<FakeSender> sender(new FakeSender());
@@ -139,13 +138,12 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
 {
     Message message(Decree("host", 1, ""), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
-    std::shared_ptr<ProposerContext> context(new ProposerContext(
-        std::make_shared<ReplicaSet>(), 0));
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
     context->highest_proposed_decree = Decree("host", 0, "");
-    context->replicaset = std::shared_ptr<ReplicaSet>(new ReplicaSet());
+    context->replicaset = std::make_shared<ReplicaSet>();
     context->replicaset->Add(Replica("host"));
 
-    std::shared_ptr<FakeSender> sender(new FakeSender(context->replicaset));
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandlePromise(message, context, sender);
 
@@ -189,7 +187,7 @@ TEST_F(AcceptorTest, testHandlePrepareWithHigherDecreeUpdatesPromisedDecree)
     std::shared_ptr<AcceptorContext> context = createAcceptorContext();
     context->promised_decree = Decree("the_author", 0, "");
 
-    std::shared_ptr<FakeSender> sender(new FakeSender());
+    auto sender = std::make_shared<FakeSender>();
 
     HandlePrepare(message, context, sender);
 
@@ -202,10 +200,10 @@ TEST_F(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree
 {
     Message message(Decree("the_author", -1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
 
-    std::shared_ptr<AcceptorContext> context = createAcceptorContext();
+    auto context = createAcceptorContext();
     context->promised_decree = Decree("the_author", 1, "");
 
-    std::shared_ptr<FakeSender> sender(new FakeSender());
+    auto sender = std::make_shared<FakeSender>();
 
     HandlePrepare(message, context, sender);
 
@@ -217,10 +215,10 @@ TEST_F(AcceptorTest, testHandlePrepareWithReplayedPrepareDoesNotSendAnotherPromi
 {
     Message message(Decree("the_author", 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
 
-    std::shared_ptr<AcceptorContext> context = createAcceptorContext();
+    auto context = createAcceptorContext();
     context->promised_decree = Decree("the_author", 1, "");
 
-    std::shared_ptr<FakeSender> sender(new FakeSender());
+    auto sender = std::make_shared<FakeSender>();
 
     HandlePrepare(message, context, sender);
 
@@ -232,11 +230,11 @@ TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 {
     Message message(Decree("the_author", -1, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 
-    std::shared_ptr<AcceptorContext> context = createAcceptorContext();
+    auto context = createAcceptorContext();
     context->promised_decree = Decree("the_author", 1, "");
     context->accepted_decree = Decree("the_author", 1, "");
 
-    std::shared_ptr<FakeSender> sender(new FakeSender());
+    auto sender = std::make_shared<FakeSender>();
 
     HandleAccept(message, context, sender);
 
@@ -248,11 +246,11 @@ TEST_F(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
 {
     Message message(Decree("the_author", 1, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 
-    std::shared_ptr<AcceptorContext> context = createAcceptorContext();
+    auto context = createAcceptorContext();
     context->promised_decree = Decree("the_author", 1, "");
     context->accepted_decree = Decree("the_author", 1, "");
 
-    std::shared_ptr<FakeSender> sender(new FakeSender());
+    auto sender = std::make_shared<FakeSender>();
 
     HandleAccept(message, context, sender);
 
@@ -264,11 +262,11 @@ TEST_F(AcceptorTest, testHandleAcceptWithHigherDecreeDoesUpdateAcceptedDecree)
 {
     Message message(Decree("the_author", 2, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 
-    std::shared_ptr<AcceptorContext> context = createAcceptorContext();
+    auto context = createAcceptorContext();
     context->promised_decree = Decree("the_author", 1, "");
     context->accepted_decree = Decree("the_author", 1, "");
 
-    std::shared_ptr<FakeSender> sender(new FakeSender());
+    auto sender = std::make_shared<FakeSender>();
 
     HandleAccept(message, context, sender);
 
@@ -288,7 +286,7 @@ class LearnerTest: public testing::Test
 TEST_F(LearnerTest, testProclaimHandleWithSingleReplica)
 {
     Message message(Decree("A", 1, ""), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
-    std::shared_ptr<LearnerContext> context = createLearnerContext({"A"});
+    auto context = createLearnerContext({"A"});
 
     HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
@@ -299,7 +297,7 @@ TEST_F(LearnerTest, testProclaimHandleWithSingleReplica)
 TEST_F(LearnerTest, testProclaimHandleIgnoresMessagesFromUnknownReplica)
 {
     Message message(Decree("A", 1, ""), Replica("Unknown"), Replica("A"), MessageType::AcceptedMessage);
-    std::shared_ptr<LearnerContext> context = createLearnerContext({"A"});
+    auto context = createLearnerContext({"A"});
 
     HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
@@ -310,7 +308,7 @@ TEST_F(LearnerTest, testProclaimHandleIgnoresMessagesFromUnknownReplica)
 TEST_F(LearnerTest, testProclaimHandleReceivesOneAcceptedWithThreeReplicaSet)
 {
     Message message(Decree("A", 1, ""), Replica("A"), Replica("B"), MessageType::AcceptedMessage);
-    std::shared_ptr<LearnerContext> context = createLearnerContext({"A", "B", "C"});
+    auto context = createLearnerContext({"A", "B", "C"});
 
     HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
@@ -320,7 +318,7 @@ TEST_F(LearnerTest, testProclaimHandleReceivesOneAcceptedWithThreeReplicaSet)
 
 TEST_F(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
 {
-    std::shared_ptr<LearnerContext> context = createLearnerContext({"A", "B", "C"});
+    auto context = createLearnerContext({"A", "B", "C"});
 
     HandleProclaim(
         Message(
@@ -349,7 +347,7 @@ TEST_F(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
 
 TEST_F(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
 {
-    std::shared_ptr<LearnerContext> context = createLearnerContext({"A", "B", "C"});
+    auto context = createLearnerContext({"A", "B", "C"});
 
     HandleProclaim(
         Message(
