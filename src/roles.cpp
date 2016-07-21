@@ -203,16 +203,18 @@ HandleProclaim(
     {
         if (IsDecreeOrdered(context->ledger->Tail(), message.decree))
         {
+            //
             // Append the decree iff the decree is in order with the last
             // decree recorded in our ledger.
-
+            //
             context->ledger->Append(message.decree);
         }
         else
         {
+            //
             // If the decree is not in order with the last decree recorded in
             // our ledger then there must be holes in our ledger.
-
+            //
             context->tracked_future_decrees.push_back(message.decree);
             Message response = Response(message, MessageType::UpdateMessage);
             response.decree = context->ledger->Tail();
@@ -230,9 +232,38 @@ HandleUpdated(
 {
     LOG(LogLevel::Info) << "HandleUpdated| " << Serialize(message);
 
-    // 1. Check if message.decree == highest ledger entry + 1
-    // 2. If correct entry, then write to ledger
-    // 3. Reply with another UpdateMessage
+    if (IsDecreeOrdered(context->ledger->Tail(), message.decree))
+    {
+        //
+        // Append the decree iff the decree is in order with the last decree
+        // recorded in our ledger.
+        //
+        context->ledger->Append(message.decree);
+
+        Decree previous_decree = message.decree;
+        for (Decree current_decree : context->tracked_future_decrees)
+        {
+            //
+            // If there are tracked_future_decrees then we should check if they
+            // are now the next ordered decrees and append to the ledger
+            // accordingly.
+            //
+            if (IsDecreeOrdered(previous_decree, current_decree))
+            {
+                context->ledger->Append(current_decree);
+                previous_decree = current_decree;
+            }
+        }
+
+        if (IsDecreeEqual(message.decree, previous_decree))
+        {
+            //
+            // If the tracked_future_decrees did not contain the next ordered
+            // decree then ask the message sender to send us more updates.
+            //
+            sender->Reply(Response(message, MessageType::UpdateMessage));
+        }
+    }
 }
 
 

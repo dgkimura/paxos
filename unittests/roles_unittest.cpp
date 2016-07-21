@@ -405,3 +405,100 @@ TEST_F(LearnerTest, testProclaimHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLe
     ASSERT_EQ(context->ledger->Size(), 1);
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::UpdateMessage);
 }
+
+
+TEST_F(LearnerTest, testHandleUpdatedWithEmptyLedger)
+{
+    auto context = createLearnerContext({"A"});
+    auto sender = std::make_shared<FakeSender>();
+
+    // Missing decrees 1-9 so don't write to ledger yet.
+    HandleUpdated(
+        Message(
+            Decree("A", 10, ""),
+            Replica("A"), Replica("A"),
+            MessageType::UpdatedMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_EQ(context->ledger->Size(), 0);
+}
+
+
+TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecree)
+{
+    auto context = createLearnerContext({"A"});
+    auto sender = std::make_shared<FakeSender>();
+
+    // Last decree in ledger is 9.
+    context->ledger->Append(Decree("A", 9, ""));
+
+    // Receive next ordered decree 10.
+    HandleUpdated(
+        Message(
+            Decree("A", 10, ""),
+            Replica("A"), Replica("A"),
+            MessageType::UpdatedMessage
+        ),
+        context,
+        sender
+    );
+
+    // We should have appended 9 and 10 to our ledger.
+    ASSERT_EQ(context->ledger->Size(), 2);
+}
+
+
+TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrackedAdditionalOrderedDecrees)
+{
+    auto context = createLearnerContext({"A"});
+    auto sender = std::make_shared<FakeSender>();
+
+    // We have tracked decrees 2, 3.
+    context->tracked_future_decrees.push_back(Decree("A", 2, ""));
+    context->tracked_future_decrees.push_back(Decree("A", 3, ""));
+
+    // Receive next ordered decree 1.
+    HandleUpdated(
+        Message(
+            Decree("A", 1, ""),
+            Replica("A"), Replica("A"),
+            MessageType::UpdatedMessage
+        ),
+        context,
+        sender
+    );
+
+    // We should have appended 1, 2, and 3 to our ledger.
+    ASSERT_EQ(context->ledger->Size(), 3);
+}
+
+
+TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrackedAdditionalUnorderedDecrees)
+{
+    auto context = createLearnerContext({"A"});
+    auto sender = std::make_shared<FakeSender>();
+
+    // We have tracked decrees 2, 3.
+    context->tracked_future_decrees.push_back(Decree("A", 3, ""));
+    context->tracked_future_decrees.push_back(Decree("A", 4, ""));
+
+    // Receive next ordered decree 1.
+    HandleUpdated(
+        Message(
+            Decree("A", 1, ""),
+            Replica("A"), Replica("A"),
+            MessageType::UpdatedMessage
+        ),
+        context,
+        sender
+    );
+
+    // We appended 1 to our ledger, but are missing 2 so we can't add 3 and 4.
+    ASSERT_EQ(context->ledger->Size(), 1);
+
+    // Since we still have a hole we should send an update message.
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::UpdateMessage);
+}
