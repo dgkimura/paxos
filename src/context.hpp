@@ -95,6 +95,21 @@ struct LearnerContext : public Context
 
 struct UpdaterContext : public Context
 {
+    std::shared_ptr<LedgerType> ledger;
+
+    UpdaterContext()
+        : UpdaterContext(
+            std::make_shared<PersistentLedger>()
+          )
+    {
+    }
+
+    UpdaterContext(
+        std::shared_ptr<LedgerType> ledger_
+    )
+        : ledger(ledger_)
+    {
+    }
 };
 
 

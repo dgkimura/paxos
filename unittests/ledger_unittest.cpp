@@ -57,6 +57,17 @@ TEST_F(LedgerUnitTest, testEmptyTailReturnsDefaultDecree)
 }
 
 
+TEST_F(LedgerUnitTest, testEmptyNextWithFutureDecree)
+{
+    VolatileLedger ledger;
+    Decree expected, actual = ledger.Next(Decree("b_author", 2, "b_content"));
+
+    ASSERT_EQ(expected.author, actual.author);
+    ASSERT_EQ(expected.number, actual.number);
+    ASSERT_EQ(expected.content, actual.content);
+}
+
+
 TEST_F(LedgerUnitTest, testHeadWithMultipleDecrees)
 {
     VolatileLedger ledger;
@@ -78,6 +89,22 @@ TEST_F(LedgerUnitTest, testTailWithMultipleDecrees)
     ledger.Append(Decree("b_author", 2, "b_content"));
 
     Decree expected = Decree("b_author", 2, "b_content"), actual = ledger.Tail();
+
+    ASSERT_EQ(expected.author, actual.author);
+    ASSERT_EQ(expected.number, actual.number);
+    ASSERT_EQ(expected.content, actual.content);
+}
+
+
+TEST_F(LedgerUnitTest, testNextWithMultipleDecrees)
+{
+    VolatileLedger ledger;
+    ledger.Append(Decree("a_author", 1, "a_content"));
+    ledger.Append(Decree("b_author", 2, "b_content"));
+    ledger.Append(Decree("c_author", 3, "c_content"));
+
+    Decree expected = Decree("b_author", 2, "b_content"),
+           actual = ledger.Next(Decree("a_author", 1, "a_content"));
 
     ASSERT_EQ(expected.author, actual.author);
     ASSERT_EQ(expected.number, actual.number);

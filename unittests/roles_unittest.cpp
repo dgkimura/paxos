@@ -479,7 +479,7 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrac
     auto context = createLearnerContext({"A"});
     auto sender = std::make_shared<FakeSender>();
 
-    // We have tracked decrees 2, 3.
+    // We have tracked decrees 3, 4.
     context->tracked_future_decrees.push_back(Decree("A", 3, ""));
     context->tracked_future_decrees.push_back(Decree("A", 4, ""));
 
@@ -499,4 +499,57 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrac
 
     // Since we still have a hole we should send an update message.
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::UpdateMessage);
+}
+
+
+class UpdaterTest: public testing::Test
+{
+    virtual void SetUp()
+    {
+        DisableLogging();
+    }
+};
+
+
+TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndHasEmptyLedger)
+{
+    auto context = std::make_shared<UpdaterContext>(std::make_shared<VolatileLedger>());
+    auto sender = std::make_shared<FakeSender>();
+
+    HandleUpdate(
+        Message(
+            Decree("A", 1, ""),
+            Replica("A"), Replica("A"),
+            MessageType::UpdateMessage
+        ),
+        context,
+        sender
+    );
+
+    // Our ledger is empty so we shouldn't send an updated message.
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::UpdatedMessage);
+}
+
+
+TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndLedgerHasNextDecree)
+{
+    auto context = std::make_shared<UpdaterContext>(std::make_shared<VolatileLedger>());
+    auto sender = std::make_shared<FakeSender>();
+
+    context->ledger->Append(Decree("A", 1, ""));
+    context->ledger->Append(Decree("A", 2, ""));
+    context->ledger->Append(Decree("A", 3, ""));
+
+    HandleUpdate(
+        Message(
+            Decree("A", 1, ""),
+            Replica("A"), Replica("A"),
+            MessageType::UpdateMessage
+        ),
+        context,
+        sender
+    );
+
+    // Our ledger contained next decree so we shoul send an updated message.
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::UpdatedMessage);
 }

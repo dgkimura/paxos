@@ -19,6 +19,8 @@ public:
     virtual Decree Head() = 0;
 
     virtual Decree Tail() = 0;
+
+    virtual Decree Next(Decree previous) = 0;
 };
 
 
@@ -83,6 +85,20 @@ public:
             tail = d;
         }
         return tail;
+    }
+
+    Decree Next(Decree previous)
+    {
+        Decree next;
+        for (Decree current : decrees)
+        {
+            if (IsDecreeOrdered(previous, current))
+            {
+                next = current;
+                break;
+            }
+        }
+        return next;
     }
 
 private:

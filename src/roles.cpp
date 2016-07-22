@@ -275,6 +275,13 @@ HandleUpdate(
 {
     LOG(LogLevel::Info) << "HandleUpdate| " << Serialize(message);
 
-    // 1. Check message.decree and see if ledger contains message.decree + 1
-    // 2. Reply UpdatedMessage with message.decree + 1 or highest known decree
+    //
+    // Check if our ledger has the next logical ordered decree.
+    //
+    Decree next = context->ledger->Next(message.decree);
+
+    if (IsDecreeOrdered(message.decree, next))
+    {
+        sender->Reply(Response(message, MessageType::UpdatedMessage));
+    }
 }
