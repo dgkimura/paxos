@@ -100,19 +100,34 @@ HandlePromise(
     std::shared_ptr<Sender> sender)
 {
     LOG(LogLevel::Info) << "HandlePromise | " << Serialize(message);
+
     if (IsDecreeHigher(message.decree, context->highest_proposed_decree) &&
         context->replicaset->Contains(message.from))
     {
+        //
+        // If the messaged decree is higher than any previoiusly promised
+        // decree and the sender is a known sender in our replica set then
+        // remember the sent decree as the highest promised decree.
+        //
         context->highest_proposed_decree = message.decree;
+
     }
 
     if (context->promise_map.find(message.decree) == context->promise_map.end())
     {
-        context->promise_map[message.decree] = std::shared_ptr<ReplicaSet>(new ReplicaSet());
+        //
+        // If there is no entry for the messaged decree then make an entry.
+        //
+        context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
     }
 
     if (IsDecreeEqual(message.decree, context->highest_proposed_decree))
     {
+        //
+        // If the messaged decree is the highest promised decree then update
+        // our promised decree map and calculate if majority of replicas have
+        // sent promises for the decree.
+        //
         context->promise_map[message.decree]->Add(message.from);
 
         int minimum_quorum = context->replicaset->GetSize() / 2 + 1;
@@ -141,6 +156,7 @@ HandleAccepted(
     std::shared_ptr<Sender> sender)
 {
     LOG(LogLevel::Info) << "HandleAccepted| " << Serialize(message);
+
     context->promise_map.erase(message.decree);
     context->current_decree_number++;
 }
@@ -153,8 +169,13 @@ HandlePrepare(
     std::shared_ptr<Sender> sender)
 {
     LOG(LogLevel::Info) << "HandlePrepare | " << Serialize(message);
+
     if (IsDecreeHigher(message.decree, context->promised_decree.Value()))
     {
+        //
+        // If the messaged decree is higher than any decree seen before then
+        // save it on persistent storage and then send a promised message.
+        //
         context->promised_decree = message.decree;
         sender->Reply(Response(message, MessageType::PromiseMessage));
     }
@@ -168,6 +189,7 @@ HandleAccept(
     std::shared_ptr<Sender> sender)
 {
     LOG(LogLevel::Info) << "HandleAccept  | " << Serialize(message);
+
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree.Value()))
     {
         if (IsDecreeHigher(message.decree, context->accepted_decree.Value()))
@@ -186,6 +208,7 @@ HandleProclaim(
     std::shared_ptr<Sender> sender)
 {
     LOG(LogLevel::Info) << "HandleProclaim| " << Serialize(message);
+
     if (context->accepted_map.find(message.decree) == context->accepted_map.end())
     {
         context->accepted_map[message.decree] = std::shared_ptr<ReplicaSet>(
