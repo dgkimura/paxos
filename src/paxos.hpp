@@ -30,14 +30,6 @@ private:
     std::shared_ptr<Sender> sender;
 
     std::shared_ptr<Ledger> ledger;
-
-    std::shared_ptr<ProposerContext> proposer;
-
-    std::shared_ptr<AcceptorContext> acceptor;
-
-    std::shared_ptr<LearnerContext> learner;
-
-    std::shared_ptr<UpdaterContext> updater;
 };
 
 

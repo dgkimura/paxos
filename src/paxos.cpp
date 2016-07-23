@@ -6,14 +6,16 @@ Parliament::Parliament()
       receiver(std::make_shared<NetworkReceiver>()),
       sender(std::make_shared<NetworkSender>(legislators)),
       ledger(std::make_shared<Ledger>(
-          std::make_shared<PersistentQueue<Decree>>("paxos.ledger"))),
-      proposer(std::make_shared<ProposerContext>(
-          legislators,
-          ledger->Tail().number + 1)),
-      acceptor(std::make_shared<AcceptorContext>()),
-      learner(std::make_shared<LearnerContext>(legislators, ledger)),
-      updater(std::make_shared<UpdaterContext>())
+          std::make_shared<PersistentQueue<Decree>>("paxos.ledger")))
 {
+    auto proposer = std::make_shared<ProposerContext>(
+        legislators,
+        ledger->Tail().number + 1
+    );
+    auto acceptor = std::make_shared<AcceptorContext>();
+    auto learner = std::make_shared<LearnerContext>(legislators, ledger);
+    auto updater = std::make_shared<UpdaterContext>();
+
     RegisterProposer(
         receiver,
         sender,
