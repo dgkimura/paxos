@@ -24,5 +24,9 @@ include_directories(${DEPENDENCIES_boost_DIR}/include)
 add_dependencies(paxos Boost)
 
 set_property(TARGET paxos PROPERTY CXX_STANDARD 11)
+set_target_properties(paxos
+    PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+)
 
 set(paxos_DIR ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE)
