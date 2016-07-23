@@ -62,7 +62,7 @@ std::shared_ptr<LearnerContext> createLearnerContext(std::initializer_list<std::
         replicaset->Add(r);
     }
 
-    auto ledger = std::make_shared<VolatileLedger>();
+    auto ledger = std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>());
     return std::make_shared<LearnerContext>(replicaset, ledger);
 }
 
@@ -513,7 +513,11 @@ class UpdaterTest: public testing::Test
 
 TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndHasEmptyLedger)
 {
-    auto context = std::make_shared<UpdaterContext>(std::make_shared<VolatileLedger>());
+    auto context = std::make_shared<UpdaterContext>(
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
     auto sender = std::make_shared<FakeSender>();
 
     HandleUpdate(
@@ -533,7 +537,11 @@ TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndHasEmptyLedger)
 
 TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndLedgerHasNextDecree)
 {
-    auto context = std::make_shared<UpdaterContext>(std::make_shared<VolatileLedger>());
+    auto context = std::make_shared<UpdaterContext>(
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
     auto sender = std::make_shared<FakeSender>();
 
     context->ledger->Append(Decree("A", 1, ""));

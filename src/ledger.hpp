@@ -6,111 +6,32 @@
 #include <queue.hpp>
 
 
-class LedgerType
+class Ledger
 {
 public:
 
-    virtual void Append(Decree decree) = 0;
+    Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_);
 
-    virtual void Remove() = 0;
+    Ledger();
 
-    virtual int Size() = 0;
+    ~Ledger();
 
-    virtual Decree Head() = 0;
+    void Append(Decree decree);
 
-    virtual Decree Tail() = 0;
+    void Remove();
 
-    virtual Decree Next(Decree previous) = 0;
-};
+    int Size();
 
+    Decree Head();
 
-template <typename T>
-class Ledger : public LedgerType
-{
-public:
+    Decree Tail();
 
-    Ledger(std::string name)
-        : decrees(name)
-    {
-    }
-
-    Ledger()
-        : Ledger("paxos.ledger")
-    {
-    }
-
-    ~Ledger()
-    {
-    }
-
-    void Append(Decree decree)
-    {
-        Decree tail = Tail();
-        if (tail.number < decree.number)
-        {
-            decrees.Enqueue(decree);
-        } else
-        {
-            LOG(LogLevel::Warning) << "Out of order decree. Ledger: "
-                << tail.number << " Received: " << decree.number;
-        }
-    }
-
-    void Remove()
-    {
-        decrees.Dequeue();
-    }
-
-    int Size()
-    {
-        return decrees.Size();
-    }
-
-    Decree Head()
-    {
-        Decree head;
-        for (Decree d : decrees)
-        {
-            head = d;
-            break;
-        }
-        return head;
-    }
-
-    Decree Tail()
-    {
-        Decree tail;
-        for (Decree d : decrees)
-        {
-            tail = d;
-        }
-        return tail;
-    }
-
-    Decree Next(Decree previous)
-    {
-        Decree next;
-        for (Decree current : decrees)
-        {
-            if (IsDecreeOrdered(previous, current))
-            {
-                next = current;
-                break;
-            }
-        }
-        return next;
-    }
+    Decree Next(Decree previous);
 
 private:
 
-    T decrees;
+    std::shared_ptr<BaseQueue<Decree>> decrees;
 };
-
-
-using VolatileLedger = Ledger<VolatileQueue<Decree>>;
-
-
-using PersistentLedger = Ledger<PersistentQueue<Decree>>;
 
 
 #endif

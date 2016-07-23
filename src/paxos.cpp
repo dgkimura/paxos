@@ -5,7 +5,8 @@ Parliament::Parliament()
     : legislators(std::make_shared<ReplicaSet>()),
       receiver(std::make_shared<NetworkReceiver>()),
       sender(std::make_shared<NetworkSender>(legislators)),
-      ledger(std::make_shared<PersistentLedger>()),
+      ledger(std::make_shared<Ledger>(
+          std::make_shared<PersistentQueue<Decree>>("paxos.ledger"))),
       proposer(std::make_shared<ProposerContext>(
           legislators,
           ledger->Tail().number + 1)),

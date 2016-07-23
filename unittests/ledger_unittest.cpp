@@ -14,7 +14,7 @@ class LedgerUnitTest: public testing::Test
 
 TEST_F(LedgerUnitTest, testAppendIncrementsTheSize)
 {
-    VolatileLedger ledger;
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
 
     ASSERT_EQ(ledger.Size(), 0);
 
@@ -26,7 +26,7 @@ TEST_F(LedgerUnitTest, testAppendIncrementsTheSize)
 
 TEST_F(LedgerUnitTest, testRemoveDecrementsTheSize)
 {
-    VolatileLedger ledger;
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
 
     ledger.Append(Decree("an_author", 1, "decree_contents"));
     ledger.Remove();
@@ -37,7 +37,7 @@ TEST_F(LedgerUnitTest, testRemoveDecrementsTheSize)
 
 TEST_F(LedgerUnitTest, testEmptyHeadReturnsDefaultDecree)
 {
-    VolatileLedger ledger;
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
     Decree expected, actual = ledger.Head();
 
     ASSERT_EQ(expected.author, actual.author);
@@ -48,7 +48,7 @@ TEST_F(LedgerUnitTest, testEmptyHeadReturnsDefaultDecree)
 
 TEST_F(LedgerUnitTest, testEmptyTailReturnsDefaultDecree)
 {
-    VolatileLedger ledger;
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
     Decree expected, actual = ledger.Tail();
 
     ASSERT_EQ(expected.author, actual.author);
@@ -59,7 +59,7 @@ TEST_F(LedgerUnitTest, testEmptyTailReturnsDefaultDecree)
 
 TEST_F(LedgerUnitTest, testEmptyNextWithFutureDecree)
 {
-    VolatileLedger ledger;
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
     Decree expected, actual = ledger.Next(Decree("b_author", 2, "b_content"));
 
     ASSERT_EQ(expected.author, actual.author);
@@ -70,7 +70,7 @@ TEST_F(LedgerUnitTest, testEmptyNextWithFutureDecree)
 
 TEST_F(LedgerUnitTest, testHeadWithMultipleDecrees)
 {
-    VolatileLedger ledger;
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
     ledger.Append(Decree("a_author", 1, "a_content"));
     ledger.Append(Decree("b_author", 2, "b_content"));
 
@@ -84,7 +84,7 @@ TEST_F(LedgerUnitTest, testHeadWithMultipleDecrees)
 
 TEST_F(LedgerUnitTest, testTailWithMultipleDecrees)
 {
-    VolatileLedger ledger;
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
     ledger.Append(Decree("a_author", 1, "a_content"));
     ledger.Append(Decree("b_author", 2, "b_content"));
 
@@ -98,7 +98,7 @@ TEST_F(LedgerUnitTest, testTailWithMultipleDecrees)
 
 TEST_F(LedgerUnitTest, testNextWithMultipleDecrees)
 {
-    VolatileLedger ledger;
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
     ledger.Append(Decree("a_author", 1, "a_content"));
     ledger.Append(Decree("b_author", 2, "b_content"));
     ledger.Append(Decree("c_author", 3, "c_content"));
@@ -114,7 +114,7 @@ TEST_F(LedgerUnitTest, testNextWithMultipleDecrees)
 
 TEST_F(LedgerUnitTest, testAppendIgnoresOutOfOrderDecrees)
 {
-    VolatileLedger ledger;
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
     ledger.Append(Decree("b_author", 2, "b_content"));
     ledger.Append(Decree("a_author", 1, "a_content"));
 
@@ -124,7 +124,7 @@ TEST_F(LedgerUnitTest, testAppendIgnoresOutOfOrderDecrees)
 
 TEST_F(LedgerUnitTest, testAppendIgnoresDuplicateDecrees)
 {
-    VolatileLedger ledger;
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
     ledger.Append(Decree("a_author", 1, "a_content"));
     ledger.Append(Decree("a_author", 1, "a_content"));
 

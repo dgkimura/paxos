@@ -7,28 +7,34 @@
 
 
 template <typename T>
-class VolatileQueue
+class BaseQueue
 {
 private:
+
+    virtual T getElementAt(int index) = 0;
+
+    virtual int getElementSizeAt(int index) = 0;
+
+    virtual int getLastElementIndex() = 0;
 
     class Iterator
     {
     public:
 
-        Iterator(std::vector<T> data_, int index_)
-            : data(data_),
-              index(index_)
+        Iterator(BaseQueue<T> *queue_, int index_)
+            : queue(queue_), index(index_)
         {
         }
 
-        T& operator*()
+        T operator*()
         {
-            return data[index];
+            return queue->getElementAt(index);
         }
 
         Iterator& operator++()
         {
-            index += 1;
+            int size = queue->getElementSizeAt(index);
+            index += size;
             return *this;
         }
 
@@ -39,24 +45,35 @@ private:
 
     private:
 
+        BaseQueue<T> *queue;
+
         int index;
-
-        std::vector<T> data;
     };
-
-    std::vector<T> data;
 
 public:
 
-    VolatileQueue(std::string name)
-        : data()
+    virtual void Enqueue(T e) = 0;
+
+    virtual void Dequeue() = 0;
+
+    virtual int Size() = 0;
+
+    Iterator begin()
     {
+        return Iterator(this, 0);
     }
 
-    VolatileQueue()
-        : VolatileQueue("default-volatile-queue-name")
+    Iterator end()
     {
+        return Iterator(this, getLastElementIndex());
     }
+};
+
+
+template <typename T>
+class VolatileQueue : public BaseQueue<T>
+{
+public:
 
     void Enqueue(T e)
     {
@@ -76,75 +93,34 @@ public:
         return data.size();
     }
 
-    Iterator begin()
+private:
+
+    T getElementAt(int index)
     {
-        return Iterator(data, 0);
+        return data[index];
     }
 
-    Iterator end()
+    int getElementSizeAt(int index)
     {
-        return Iterator(data, data.size());
+        return 1;
     }
+
+    int getLastElementIndex()
+    {
+        return Size();
+    }
+
+    std::vector<T> data;
 };
 
 
 template <typename T>
-class PersistentQueue
+class PersistentQueue : public BaseQueue<T>
 {
-private:
-
-    class Iterator
-    {
-    public:
-
-        Iterator(Iterator&& other)
-            : file(other.file),
-              offset(other.offset)
-        {
-        }
-
-        Iterator(std::fstream& file_, int offset_)
-            : file(file_),
-              offset(offset_)
-        {
-        }
-
-        T operator*()
-        {
-            file.seekg(offset, std::ios::beg);
-            return Deserialize<T>(file);
-        }
-
-        Iterator& operator++()
-        {
-            file.seekg(offset, std::ios::beg);
-            offset += Serialize<T>(Deserialize<T>(file)).length();
-            return *this;
-        }
-
-        bool operator!=(const Iterator& iterator)
-        {
-            return offset != iterator.offset;
-        }
-
-    private:
-
-        int offset;
-
-        std::fstream& file;
-    };
-
-    std::fstream file;
-
 public:
 
     PersistentQueue(std::string name)
         : file(name, std::ios::out | std::ios::in | std::ios::app | std::ios::binary)
-    {
-    }
-
-    PersistentQueue()
-        : PersistentQueue("default-persistent-queue-name")
     {
     }
 
@@ -182,17 +158,27 @@ public:
         return size;
     }
 
-    Iterator begin()
+private:
+
+    T getElementAt(int index)
     {
-        return Iterator(file, 0);
+        file.seekg(index, std::ios::beg);
+        return Deserialize<T>(file);
     }
 
-    Iterator end()
+    int getElementSizeAt(int index)
+    {
+        file.seekg(index, std::ios::beg);
+        return Serialize<T>(Deserialize<T>(file)).length();
+    }
+
+    int getLastElementIndex()
     {
         file.seekg(0, std::ios::end);
-        int end = file.tellg();
-        return Iterator(file, file.tellg());
+        return file.tellg();
     }
+
+    std::fstream file;
 };
 
 

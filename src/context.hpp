@@ -70,20 +70,20 @@ struct LearnerContext : public Context
 {
     std::shared_ptr<ReplicaSet> replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> accepted_map;
-    std::shared_ptr<LedgerType> ledger;
+    std::shared_ptr<Ledger> ledger;
     std::vector<Decree> tracked_future_decrees;
 
     LearnerContext()
         : LearnerContext(
             std::make_shared<ReplicaSet>(),
-            std::make_shared<PersistentLedger>()
+            std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>())
           )
     {
     }
 
     LearnerContext(
         std::shared_ptr<ReplicaSet> replicaset_,
-        std::shared_ptr<LedgerType> ledger_
+        std::shared_ptr<Ledger> ledger_
     )
         : replicaset(replicaset_),
           accepted_map(),
@@ -95,17 +95,17 @@ struct LearnerContext : public Context
 
 struct UpdaterContext : public Context
 {
-    std::shared_ptr<LedgerType> ledger;
+    std::shared_ptr<Ledger> ledger;
 
     UpdaterContext()
         : UpdaterContext(
-            std::make_shared<PersistentLedger>()
+            std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>())
           )
     {
     }
 
     UpdaterContext(
-        std::shared_ptr<LedgerType> ledger_
+        std::shared_ptr<Ledger> ledger_
     )
         : ledger(ledger_)
     {
