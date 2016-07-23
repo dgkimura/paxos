@@ -12,8 +12,6 @@ public:
 
     Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_);
 
-    Ledger();
-
     ~Ledger();
 
     void Append(Decree decree);

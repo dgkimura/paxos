@@ -7,12 +7,6 @@ Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_)
 }
 
 
-Ledger::Ledger()
-    : Ledger(std::make_shared<PersistentQueue<Decree>>("paxos.ledger"))
-{
-}
-
-
 Ledger::~Ledger()
 {
 }

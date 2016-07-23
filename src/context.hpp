@@ -26,12 +26,10 @@ struct ProposerContext : public Context
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> promise_map;
     std::vector<std::string> requested_values;
 
-    ProposerContext()
-        : ProposerContext(std::make_shared<ReplicaSet>(), 1)
-    {
-    }
-
-    ProposerContext(std::shared_ptr<ReplicaSet> replicaset_, int current_decree_number_)
+    ProposerContext(
+        std::shared_ptr<ReplicaSet> replicaset_,
+        int current_decree_number_
+    )
         : current_decree_number(current_decree_number_),
           highest_proposed_decree(),
           replicaset(replicaset_),
@@ -47,10 +45,10 @@ struct AcceptorContext : public Context
     Field<Decree> promised_decree;
     Field<Decree> accepted_decree;
 
-    AcceptorContext()
+    AcceptorContext(std::string dirname)
         : AcceptorContext(
-            std::make_shared<PersistentDecree>("promised_decree"),
-            std::make_shared<PersistentDecree>("accepted_decree")
+            std::make_shared<PersistentDecree>(dirname, "promised_decree"),
+            std::make_shared<PersistentDecree>(dirname, "accepted_decree")
           )
     {
     }
@@ -73,14 +71,6 @@ struct LearnerContext : public Context
     std::shared_ptr<Ledger> ledger;
     std::vector<Decree> tracked_future_decrees;
 
-    LearnerContext()
-        : LearnerContext(
-            std::make_shared<ReplicaSet>(),
-            std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>())
-          )
-    {
-    }
-
     LearnerContext(
         std::shared_ptr<ReplicaSet> replicaset_,
         std::shared_ptr<Ledger> ledger_
@@ -96,13 +86,6 @@ struct LearnerContext : public Context
 struct UpdaterContext : public Context
 {
     std::shared_ptr<Ledger> ledger;
-
-    UpdaterContext()
-        : UpdaterContext(
-            std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>())
-          )
-    {
-    }
 
     UpdaterContext(
         std::shared_ptr<Ledger> ledger_

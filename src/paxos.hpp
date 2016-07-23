@@ -13,7 +13,7 @@ class Parliament
 {
 public:
 
-    Parliament();
+    Parliament(std::string dirname=".");
 
     void AddLegislator(Replica replica);
 
