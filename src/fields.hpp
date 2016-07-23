@@ -3,7 +3,11 @@
 
 #include <fstream>
 
-#include <serialization.hpp>
+#include <boost/filesystem.hpp>
+
+#include "serialization.hpp"
+
+namespace fs = boost::filesystem;
 
 
 template <typename T>
@@ -43,8 +47,13 @@ class PersistentStorage : public Storage<T>
 {
 public:
 
-    PersistentStorage(std::string fieldname)
-        : file(fieldname,
+    PersistentStorage(std::string filename)
+        : PersistentStorage(".", filename)
+    {
+    }
+
+    PersistentStorage(std::string dirname, std::string filename)
+        : file((fs::path(dirname) / fs::path(filename)).string(),
                std::ios::out |
                std::ios::in |
                std::ios::trunc |

@@ -3,7 +3,11 @@
 
 #include <fstream>
 
+#include <boost/filesystem.hpp>
+
 #include "serialization.hpp"
+
+namespace fs = boost::filesystem;
 
 
 template <typename T>
@@ -119,8 +123,14 @@ class PersistentQueue : public BaseQueue<T>
 {
 public:
 
-    PersistentQueue(std::string name)
-        : file(name, std::ios::out | std::ios::in | std::ios::app | std::ios::binary)
+    PersistentQueue(std::string filename)
+        : PersistentQueue(".", filename)
+    {
+    }
+
+    PersistentQueue(std::string dirname, std::string filename)
+        : file((fs::path(dirname) / fs::path(filename)).string(),
+               std::ios::out | std::ios::in | std::ios::app | std::ios::binary)
     {
     }
 
