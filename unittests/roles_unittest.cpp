@@ -171,6 +171,44 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotU
 }
 
 
+TEST_F(ProposerTest, testHandleAcceptIncrementsCurrentDecreeNumber)
+{
+    Message message(
+        Decree("from", 5, "content"),
+        Replica("from"),
+        Replica("to"),
+        MessageType::AcceptMessage);
+
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    context->replicaset->Add(Replica("from"));
+
+    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+
+    // Decree in message was 5, after accepted the current decree is 6
+    ASSERT_EQ(context->current_decree_number, 6);
+}
+
+
+TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
+{
+    Message message(
+        Decree("A", 1, "content"),
+        Replica("from"),
+        Replica("to"),
+        MessageType::AcceptMessage);
+
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
+    context->promise_map[message.decree]->Add(message.from);
+
+    ASSERT_EQ(context->promise_map.size(), 1);
+
+    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+
+    ASSERT_EQ(context->promise_map.size(), 0);
+}
+
+
 class AcceptorTest: public testing::Test
 {
     virtual void SetUp()

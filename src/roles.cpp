@@ -110,7 +110,6 @@ HandlePromise(
         // remember the sent decree as the highest promised decree.
         //
         context->highest_proposed_decree = message.decree;
-
     }
 
     if (context->promise_map.find(message.decree) == context->promise_map.end())
@@ -157,8 +156,19 @@ HandleAccepted(
 {
     LOG(LogLevel::Info) << "HandleAccepted| " << Serialize(message);
 
-    context->promise_map.erase(message.decree);
-    context->current_decree_number++;
+    if (context->promise_map.find(message.decree) != context->promise_map.end()
+        && context->promise_map[message.decree]
+                  ->Intersection(context->replicaset)
+                  ->GetSize() >= context->replicaset->GetSize())
+    {
+        //
+        // If we have received an accepted message from every replica in the
+        // replicaset for the given decree, then we are unlikely to receive
+        // them again. Therefore we will reclaim memory.
+        //
+        context->promise_map.erase(message.decree);
+    }
+    context->current_decree_number = message.decree.number + 1;
 }
 
 
