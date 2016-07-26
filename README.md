@@ -30,9 +30,14 @@ int main(void)
     Parliament p;
 
     //
-    // Add voting replicas to the parliament group.
+    // Add voting legislators to the parliament group.
     //
-    p.AddLegislator(Replica("127.0.0.1", 8081));
+    p.AddLegislator("1.1.1.1", 8081);
+
+    //
+    // Set our voting legislator in the parliament group.
+    //
+    p.SetLegislator("127.0.0.1", 8081);
 
     //
     // Create a proposal to vote on.

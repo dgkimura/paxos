@@ -26,7 +26,7 @@ class NetworkReceiver : public Receiver
 {
 public:
 
-    NetworkReceiver(short port=8081);
+    NetworkReceiver(std::string address, short port);
 
     ~NetworkReceiver();
 

@@ -5,7 +5,7 @@
 using boost::asio::ip::tcp;
 
 
-NetworkReceiver::NetworkReceiver(short port)
+NetworkReceiver::NetworkReceiver(std::string address, short port)
     : io_service_(),
       acceptor_(io_service_, tcp::endpoint(tcp::v4(), port)),
       socket_(io_service_),

@@ -1,18 +1,33 @@
 #include <paxos.hpp>
 
 
-Parliament::Parliament(std::string dirname)
-    : legislators(std::make_shared<ReplicaSet>()),
-      receiver(std::make_shared<NetworkReceiver>()),
-      sender(std::make_shared<NetworkSender>(legislators)),
+Parliament::Parliament(std::string location_)
+    : location(location_),
+      legislators(std::make_shared<ReplicaSet>()),
       ledger(std::make_shared<Ledger>(
-          std::make_shared<PersistentQueue<Decree>>(dirname, "paxos.ledger")))
+          std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger")))
 {
+}
+
+
+void
+Parliament::AddLegislator(std::string address, short port)
+{
+    legislators->Add(Replica(address, port));
+}
+
+
+void
+Parliament::SetLegislator(std::string address, short port)
+{
+    receiver = std::make_shared<NetworkReceiver>(address, port);
+    sender = std::make_shared<NetworkSender>(legislators);
+
     auto proposer = std::make_shared<ProposerContext>(
         legislators,
         ledger->Tail().number + 1
     );
-    auto acceptor = std::make_shared<AcceptorContext>(dirname);
+    auto acceptor = std::make_shared<AcceptorContext>(location);
     auto learner = std::make_shared<LearnerContext>(legislators, ledger);
     auto updater = std::make_shared<UpdaterContext>(ledger);
 
@@ -36,13 +51,8 @@ Parliament::Parliament(std::string dirname)
         sender,
         updater
     );
-}
 
-
-void
-Parliament::AddLegislator(Replica replica)
-{
-    legislators->Add(replica);
+    legislators->Add(Replica(address, port));
 }
 
 

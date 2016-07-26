@@ -13,9 +13,11 @@ class Parliament
 {
 public:
 
-    Parliament(std::string dirname=".");
+    Parliament(std::string location_=".");
 
-    void AddLegislator(Replica replica);
+    void AddLegislator(std::string address, short port);
+
+    void SetLegislator(std::string address, short port);
 
     void RemoveLegislator(Replica replica);
 
@@ -30,6 +32,8 @@ private:
     std::shared_ptr<Sender> sender;
 
     std::shared_ptr<Ledger> ledger;
+
+    std::string location;
 };
 
 
