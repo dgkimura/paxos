@@ -13,6 +13,12 @@
 #include <serialization.hpp>
 
 
+/*
+ * Registrator functions will setup appropriate handler to the given sender and
+ * receiver. After registering, the receiver will send forward all incoming
+ * messages to the appropriate handler.
+ */
+
 void RegisterProposer(
     std::shared_ptr<Receiver> receiver,
     std::shared_ptr<Sender> sender,
@@ -42,6 +48,11 @@ void HandleRequest(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender);
 
+
+/*
+ * Handlers are called after the message of interest arrives. Context is a way
+ * to save state between calls to the handler.
+ */
 
 void HandlePromise(
     Message message,
