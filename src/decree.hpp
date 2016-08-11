@@ -4,12 +4,29 @@
 #include <string>
 
 
+/*
+ * Decree contains information about a proposal. Each decree is uniquely
+ * definied by the author and number.
+ */
+
 struct Decree
 {
+
+    //
+    // Author defines the origin of the proposal. It identifies the legislator.
+    //
     std::string author;
 
+    //
+    // Number is a monotimically increasing value that can be used to identify
+    // each round of paxos.
+    //
     int number;
 
+    //
+    // Content is the entry which would be added to every ledger if the decree
+    // comes to pass.
+    //
     std::string content;
 
     Decree()
