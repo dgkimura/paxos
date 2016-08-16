@@ -1,7 +1,7 @@
 #ifndef __PAXOS_HPP_INCLUDED__
 #define __PAXOS_HPP_INCLUDED__
 
-
+#include <functional>
 #include <memory>
 
 #include <replicaset.hpp>
@@ -9,11 +9,15 @@
 #include <sender.hpp>
 
 
+using DecreeHandler = std::function<void(std::string entry)>;
+
+
 class Parliament
 {
 public:
 
-    Parliament(std::string location_=".");
+    Parliament(std::string location_=".",
+               DecreeHandler decree_handler=[](std::string entry){});
 
     void AddLegislator(std::string address, short port);
 

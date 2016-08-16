@@ -1,11 +1,12 @@
 #include <paxos.hpp>
 
 
-Parliament::Parliament(std::string location_)
+Parliament::Parliament(std::string location_, DecreeHandler decree_handler)
     : location(location_),
       legislators(std::make_shared<ReplicaSet>()),
       ledger(std::make_shared<Ledger>(
-          std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger")))
+          std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"),
+          decree_handler))
 {
 }
 
