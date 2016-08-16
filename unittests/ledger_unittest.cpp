@@ -130,3 +130,16 @@ TEST_F(LedgerUnitTest, testAppendIgnoresDuplicateDecrees)
 
     ASSERT_EQ(ledger.Size(), 1);
 }
+
+
+TEST_F(LedgerUnitTest, testDecreeHandlerOnAppend)
+{
+    std::string concatenated_content;
+    auto handler = [&](std::string entry) { concatenated_content += entry; };
+
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>(), handler);
+    ledger.Append(Decree("a_author", 1, "AAAAA"));
+    ledger.Append(Decree("b_author", 2, "BBBBB"));
+
+    ASSERT_EQ(concatenated_content, "AAAAABBBBB");
+}

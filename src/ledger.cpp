@@ -2,7 +2,15 @@
 
 
 Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_)
-    : decrees(decrees_)
+    : Ledger(decrees_, [](std::string entry){})
+{
+}
+
+
+Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_,
+               std::function<void(std::string entry)> decree_handler_)
+    : decrees(decrees_),
+      decree_handler(decree_handler_)
 {
 }
 
@@ -18,6 +26,7 @@ Ledger::Append(Decree decree)
     Decree tail = Tail();
     if (tail.number < decree.number)
     {
+        decree_handler(decree.content);
         decrees->Enqueue(decree);
     } else
     {
