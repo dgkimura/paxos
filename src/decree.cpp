@@ -4,9 +4,7 @@
 int
 CompareDecrees(Decree lhs, Decree rhs)
 {
-    return lhs.number != rhs.number ?
-        lhs.number - rhs.number :
-        lhs.author.compare(rhs.author);
+    return lhs.number - rhs.number;
 }
 
 
@@ -48,5 +46,5 @@ IsDecreeLowerOrEqual(Decree lhs, Decree rhs)
 bool
 IsDecreeOrdered(Decree lhs, Decree rhs)
 {
-    return lhs.number - rhs.number == -1;
+    return CompareDecrees(lhs, rhs) == -1;
 }

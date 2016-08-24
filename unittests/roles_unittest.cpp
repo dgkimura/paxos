@@ -264,6 +264,25 @@ TEST_F(AcceptorTest, testHandlePrepareWithReplayedPrepareDoesNotSendAnotherPromi
 }
 
 
+TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromMultipleReplicasSendsSinglePromise)
+{
+    Message author_a(Decree("author_a", 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+    Message author_b(Decree("author_b", 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+
+    auto context = createAcceptorContext();
+    context->promised_decree = Decree("the_author", 0, "");
+
+    auto sender = std::make_shared<FakeSender>();
+
+    HandlePrepare(author_a, context, sender);
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PromiseMessage);
+
+    // We send 1 accept message since we've seen 1 unique decree number despite unique authors.
+    ASSERT_EQ(1, sender->sentMessages().size());
+}
+
+
 TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 {
     Message message(Decree("the_author", -1, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
