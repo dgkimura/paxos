@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "serialization.hpp"
+#include "paxos/serialization.hpp"
 
 
 TEST(SerializationUnitTest, testDecreeIsSerializableAndDeserializable)

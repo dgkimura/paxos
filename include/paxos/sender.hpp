@@ -8,8 +8,8 @@
 
 #include <boost/asio.hpp>
 
-#include <messages.hpp>
-#include <replicaset.hpp>
+#include "paxos/messages.hpp"
+#include "paxos/replicaset.hpp"
 
 class Sender
 {

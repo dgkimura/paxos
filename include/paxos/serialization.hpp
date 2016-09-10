@@ -7,9 +7,9 @@
 #include "boost/archive/text_iarchive.hpp"
 #include "boost/archive/text_oarchive.hpp"
 
-#include <decree.hpp>
-#include <messages.hpp>
-#include <replicaset.hpp>
+#include "paxos/decree.hpp"
+#include "paxos/messages.hpp"
+#include "paxos/replicaset.hpp"
 
 
 template <typename Archive>

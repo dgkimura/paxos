@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "fields.hpp"
+#include "paxos/fields.hpp"
 
 
 TEST(FieldsTest, testCanCreateFieldWithVolatileStore)

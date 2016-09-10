@@ -3,9 +3,9 @@
 
 #include <functional>
 
-#include <decree.hpp>
-#include <logging.hpp>
-#include <queue.hpp>
+#include "paxos/decree.hpp"
+#include "paxos/logging.hpp"
+#include "paxos/queue.hpp"
 
 
 class Ledger

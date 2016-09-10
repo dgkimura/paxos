@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "decree.hpp"
+#include "paxos/decree.hpp"
 
 
 TEST(DecreeUnitTest, testDecreeDefaultConstructor)

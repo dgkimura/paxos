@@ -3,7 +3,7 @@
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/utility/setup.hpp>
 
-#include <logging.hpp>
+#include <paxos/logging.hpp>
 
 
 BOOST_LOG_GLOBAL_LOGGER_INIT(global_logger, boost::log::sources::severity_logger_mt)

@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "replicaset.hpp"
+#include "paxos/replicaset.hpp"
 
 
 TEST(ReplicaSetUnittest, testReplicaSetSizeInitializedToZero)

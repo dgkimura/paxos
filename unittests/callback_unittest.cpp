@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-#include "callback.hpp"
+#include "paxos/callback.hpp"
 
 
 TEST(CallbackTest, testCallbackWithLambdaExpression)

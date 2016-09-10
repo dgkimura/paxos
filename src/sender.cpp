@@ -1,5 +1,5 @@
-#include <sender.hpp>
-#include <serialization.hpp>
+#include "paxos/sender.hpp"
+#include "paxos/serialization.hpp"
 
 #include <boost/asio/io_service.hpp>
 

@@ -7,10 +7,10 @@
 #include <memory>
 #include <vector>
 
-#include <decree.hpp>
-#include <fields.hpp>
-#include <ledger.hpp>
-#include <replicaset.hpp>
+#include "paxos/decree.hpp"
+#include "paxos/fields.hpp"
+#include "paxos/ledger.hpp"
+#include "paxos/replicaset.hpp"
 
 
 struct Context

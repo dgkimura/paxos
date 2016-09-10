@@ -20,7 +20,7 @@ $ make && ./unittests/all_unittests
 #### Usage
 
 ```cpp
-#include <paxos.hpp>
+#include <paxos/parliament.hpp>
 
 int main(void)
 {

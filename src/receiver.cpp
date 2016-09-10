@@ -1,5 +1,5 @@
-#include <receiver.hpp>
-#include <serialization.hpp>
+#include "paxos/receiver.hpp"
+#include "paxos/serialization.hpp"
 
 
 using boost::asio::ip::tcp;

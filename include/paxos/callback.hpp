@@ -4,8 +4,8 @@
 
 #include <functional>
 
-#include <context.hpp>
-#include <messages.hpp>
+#include "paxos/context.hpp"
+#include "paxos/messages.hpp"
 
 
 using MessageHandler = std::function<void(Message message)>;

@@ -4,9 +4,9 @@
 #include <functional>
 #include <memory>
 
-#include <replicaset.hpp>
-#include <roles.hpp>
-#include <sender.hpp>
+#include <paxos/replicaset.hpp>
+#include <paxos/roles.hpp>
+#include <paxos/sender.hpp>
 
 
 using DecreeHandler = std::function<void(std::string entry)>;

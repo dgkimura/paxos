@@ -1,4 +1,4 @@
-#include <paxos.hpp>
+#include "paxos/parliament.hpp"
 
 
 Parliament::Parliament(std::string location_, DecreeHandler decree_handler)

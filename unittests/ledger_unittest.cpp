@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "ledger.hpp"
+#include "paxos/ledger.hpp"
 
 
 class LedgerUnitTest: public testing::Test

@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-#include "queue.hpp"
+#include "paxos/queue.hpp"
 
 
 TEST(QueueTest, testThatVolatileQueueCanEnqueueAnElement)

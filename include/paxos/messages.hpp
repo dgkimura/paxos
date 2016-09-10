@@ -1,8 +1,8 @@
 #ifndef __MESSAGES_HPP_INCLUDED__
 #define __MESSAGES_HPP_INCLUDED__
 
-#include <decree.hpp>
-#include <replicaset.hpp>
+#include "paxos/decree.hpp"
+#include "paxos/replicaset.hpp"
 
 
 enum class MessageType

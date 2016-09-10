@@ -1,5 +1,5 @@
-#include <logging.hpp>
-#include <roles.hpp>
+#include "paxos/logging.hpp"
+#include "paxos/roles.hpp"
 
 
 void

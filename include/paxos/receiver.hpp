@@ -10,8 +10,8 @@
 
 #include <boost/asio.hpp>
 
-#include <callback.hpp>
-#include <messages.hpp>
+#include "paxos/callback.hpp"
+#include "paxos/messages.hpp"
 
 
 class Receiver

@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "messages.hpp"
+#include "paxos/messages.hpp"
 
 
 TEST(MessageTest, testMessageResponseUpdatesSenderAndReceiver)

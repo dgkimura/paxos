@@ -5,12 +5,12 @@
 #include <map>
 #include <memory>
 
-#include <callback.hpp>
-#include <context.hpp>
-#include <messages.hpp>
-#include <receiver.hpp>
-#include <sender.hpp>
-#include <serialization.hpp>
+#include "paxos/callback.hpp"
+#include "paxos/context.hpp"
+#include "paxos/messages.hpp"
+#include "paxos/receiver.hpp"
+#include "paxos/sender.hpp"
+#include "paxos/serialization.hpp"
 
 
 /*
