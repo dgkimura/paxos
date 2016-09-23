@@ -16,7 +16,7 @@ set(SOURCES
 
 add_library(paxos SHARED ${SOURCES})
 target_link_libraries(paxos
-    PRIVATE
+    PUBLIC
         ${boost_STATIC_LIB}
 )
 include_directories(${DEPENDENCIES_boost_DIR}/include)
