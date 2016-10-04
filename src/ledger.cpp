@@ -45,14 +45,14 @@ Ledger::Remove()
 }
 
 int
-Ledger::Size()
+Ledger::Size() const
 {
     return decrees->Size();
 }
 
 
 Decree
-Ledger::Head()
+Ledger::Head() const
 {
     Decree head;
     for (Decree d : *decrees)
@@ -65,7 +65,7 @@ Ledger::Head()
 
 
 Decree
-Ledger::Tail()
+Ledger::Tail() const
 {
     Decree tail;
     for (Decree d : *decrees)
@@ -77,7 +77,7 @@ Ledger::Tail()
 
 
 Decree
-Ledger::Next(Decree previous)
+Ledger::Next(Decree previous) const
 {
     Decree next;
     for (Decree current : *decrees)

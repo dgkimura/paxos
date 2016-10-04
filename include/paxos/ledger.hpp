@@ -23,13 +23,13 @@ public:
 
     void Remove();
 
-    int Size();
+    int Size() const;
 
-    Decree Head();
+    Decree Head() const;
 
-    Decree Tail();
+    Decree Tail() const;
 
-    Decree Next(Decree previous);
+    Decree Next(Decree previous) const;
 
 private:
 
