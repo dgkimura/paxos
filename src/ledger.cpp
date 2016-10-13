@@ -26,6 +26,12 @@ Ledger::Append(Decree decree)
     Decree tail = Tail();
     if (tail.number < decree.number)
     {
+        //
+        // Execute handler before appending a decree thereby allowing the
+        // handler to guard against ledger corruption. This can prevent
+        // possible proliferation of a bad ledger to another replica.
+        // It is safe because we require that the handler is idempotent.
+        //
         decree_handler(decree.content);
         decrees->Enqueue(decree);
     } else
