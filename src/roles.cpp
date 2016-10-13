@@ -254,6 +254,14 @@ HandleProclaim(
             sender->Reply(response);
         }
     }
+
+    if (accepted_quorum == context->replicaset->GetSize())
+    {
+        //
+        // All votes for decree have been accounted for. Now clean up memory.
+        //
+        context->accepted_map.erase(message.decree);
+    }
 }
 
 

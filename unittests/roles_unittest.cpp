@@ -402,6 +402,52 @@ TEST_F(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
 }
 
 
+TEST_F(LearnerTest, testProclaimHandleCleansUpAcceptedMapAfterAllVotesReceived)
+{
+    auto context = createLearnerContext({"A", "B", "C"});
+    Decree decree("A", 1, "");
+
+    HandleProclaim(
+        Message(
+            decree,
+            Replica("A"),
+            Replica("B"),
+            MessageType::AcceptedMessage
+        ),
+        context,
+        std::shared_ptr<FakeSender>(new FakeSender())
+    );
+
+    ASSERT_FALSE(context->accepted_map.find(decree) == context->accepted_map.end());
+
+    HandleProclaim(
+        Message(
+            decree,
+            Replica("B"),
+            Replica("B"),
+            MessageType::AcceptedMessage
+        ),
+        context,
+        std::shared_ptr<FakeSender>(new FakeSender())
+    );
+
+    ASSERT_FALSE(context->accepted_map.find(decree) == context->accepted_map.end());
+
+    HandleProclaim(
+        Message(
+            decree,
+            Replica("C"),
+            Replica("B"),
+            MessageType::AcceptedMessage
+        ),
+        context,
+        std::shared_ptr<FakeSender>(new FakeSender())
+    );
+
+    ASSERT_TRUE(context->accepted_map.find(decree) == context->accepted_map.end());
+}
+
+
 TEST_F(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
 {
     auto context = createLearnerContext({"A", "B", "C"});
