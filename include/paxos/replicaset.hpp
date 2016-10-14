@@ -56,6 +56,8 @@ public:
 
     std::shared_ptr<ReplicaSet> Intersection(std::shared_ptr<ReplicaSet> other);
 
+    std::shared_ptr<ReplicaSet> Difference(std::shared_ptr<ReplicaSet> other);
+
     using iterator = std::set<Replica, compare_replica>::iterator;
 
     using const_iterator = std::set<Replica, compare_replica>::const_iterator;

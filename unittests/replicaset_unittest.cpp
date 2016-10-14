@@ -106,6 +106,25 @@ TEST(ReplicaSetUnittest, testIntersectionBetweenReplicaSets)
 }
 
 
+TEST(ReplicaSetUnittest, testDifferenceBetweenReplicaSets)
+{
+    auto set_a = std::make_shared<ReplicaSet>();
+    set_a->Add(Replica("A"));
+    set_a->Add(Replica("B"));
+    set_a->Add(Replica("C"));
+
+    auto set_b = std::make_shared<ReplicaSet>();
+    set_b->Add(Replica("B"));
+    set_b->Add(Replica("C"));
+
+    auto set_c = set_a->Difference(set_b);
+
+    ASSERT_TRUE(set_c->Contains(Replica("A")));
+    ASSERT_FALSE(set_c->Contains(Replica("B")));
+    ASSERT_FALSE(set_c->Contains(Replica("C")));
+}
+
+
 TEST(ReplicaTest, testReplicaFields)
 {
     Replica r("host", 1234);

@@ -50,7 +50,7 @@ ReplicaSet::Clear()
 std::shared_ptr<ReplicaSet>
 ReplicaSet::Intersection(std::shared_ptr<ReplicaSet> other)
 {
-    std::shared_ptr<ReplicaSet> intersection = std::make_shared<ReplicaSet>();
+    auto intersection = std::make_shared<ReplicaSet>();
     for (auto r : *other)
     {
         if (Contains(r))
@@ -59,6 +59,21 @@ ReplicaSet::Intersection(std::shared_ptr<ReplicaSet> other)
         }
     }
     return intersection;
+}
+
+
+std::shared_ptr<ReplicaSet>
+ReplicaSet::Difference(std::shared_ptr<ReplicaSet> other)
+{
+    auto difference = std::make_shared<ReplicaSet>();
+    for (auto r : replicaset)
+    {
+        if (!other->Contains(r))
+        {
+            difference->Add(r);
+        }
+    }
+    return difference;
 }
 
 
