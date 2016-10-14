@@ -448,6 +448,42 @@ TEST_F(LearnerTest, testProclaimHandleCleansUpAcceptedMapAfterAllVotesReceived)
 }
 
 
+TEST_F(LearnerTest, testProclaimHandleIgnoresPreviouslyAcceptedMessagesFromReplicasRemovedFromReplicaSet)
+{
+    auto context = createLearnerContext({"A", "B", "C"});
+    Decree decree("A", 1, "");
+
+    // Accepted from replica A.
+    HandleProclaim(
+        Message(
+            decree,
+            Replica("A"),
+            Replica("B"),
+            MessageType::AcceptedMessage
+        ),
+        context,
+        std::shared_ptr<FakeSender>(new FakeSender())
+    );
+
+    // Remove replica A from replicaset.
+    context->replicaset->Remove(Replica("A"));
+
+    HandleProclaim(
+        Message(
+            decree,
+            Replica("B"),
+            Replica("B"),
+            MessageType::AcceptedMessage
+        ),
+        context,
+        std::shared_ptr<FakeSender>(new FakeSender())
+    );
+
+    // We should not have written to ledger since replica A was removed from replicaset.
+    ASSERT_EQ(context->ledger->Size(), 0);
+}
+
+
 TEST_F(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
 {
     auto context = createLearnerContext({"A", "B", "C"});
