@@ -24,13 +24,13 @@ Parliament::SetLegislator(std::string address, short port)
     receiver = std::make_shared<NetworkReceiver>(address, port);
     sender = std::make_shared<NetworkSender>(legislators);
 
-    auto proposer = std::make_shared<ProposerContext>(
+    proposer = std::make_shared<ProposerContext>(
         legislators,
         ledger->Tail().number + 1
     );
-    auto acceptor = std::make_shared<AcceptorContext>(location);
-    auto learner = std::make_shared<LearnerContext>(legislators, ledger);
-    auto updater = std::make_shared<UpdaterContext>(ledger);
+    acceptor = std::make_shared<AcceptorContext>(location);
+    learner = std::make_shared<LearnerContext>(legislators, ledger);
+    updater = std::make_shared<UpdaterContext>(ledger);
 
     RegisterProposer(
         receiver,
@@ -80,4 +80,23 @@ Parliament::CreateProposal(std::string entry)
         sender->Reply(m);
         break;
     }
+}
+
+
+AbsenteeBallots
+Parliament::GetAbsenteeBallots(int max_ballots)
+{
+    std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> ballots;
+
+    int current = 0;
+    for (auto vote : learner->accepted_map)
+    {
+        if (current >= learner->accepted_map.size() - max_ballots)
+        {
+            ballots[vote.first] = learner->replicaset->Difference(vote.second);
+        }
+        current += 1;
+    }
+    return ballots;
+
 }

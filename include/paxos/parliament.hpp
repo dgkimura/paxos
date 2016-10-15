@@ -2,14 +2,27 @@
 #define __PAXOS_HPP_INCLUDED__
 
 #include <functional>
+#include <map>
 #include <memory>
 
+#include <paxos/decree.hpp>
 #include <paxos/replicaset.hpp>
 #include <paxos/roles.hpp>
 #include <paxos/sender.hpp>
 
 
+//
+// Handler that will be executed after a decree has been accepted. It
+// is expected to be idempotent.
+//
 using DecreeHandler = std::function<void(std::string entry)>;
+
+
+//
+// Map of a decree ballots.
+//
+using AbsenteeBallots = std::map<Decree, std::shared_ptr<ReplicaSet>,
+                                 compare_decree>;
 
 
 class Parliament
@@ -27,6 +40,8 @@ public:
 
     void CreateProposal(std::string entry);
 
+    AbsenteeBallots GetAbsenteeBallots(int max_ballots);
+
 private:
 
     std::shared_ptr<ReplicaSet> legislators;
@@ -36,6 +51,14 @@ private:
     std::shared_ptr<Sender> sender;
 
     std::shared_ptr<Ledger> ledger;
+
+    std::shared_ptr<ProposerContext> proposer;
+
+    std::shared_ptr<AcceptorContext> acceptor;
+
+    std::shared_ptr<LearnerContext> learner;
+
+    std::shared_ptr<UpdaterContext> updater;
 
     std::string location;
 };
