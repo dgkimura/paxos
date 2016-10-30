@@ -65,7 +65,7 @@ Parliament::RemoveLegislator(Replica replica)
 
 
 void
-Parliament::CreateProposal(std::string entry)
+Parliament::SendProposal(std::string entry)
 {
     Decree d;
     d.content = entry;

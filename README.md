@@ -40,9 +40,9 @@ int main(void)
     p.SetLegislator("127.0.0.1", 8081);
 
     //
-    // Create a proposal to vote on.
+    // Sends a proposal to vote on.
     //
-    p.CreateProposal("Pinky says, 'Narf!'");
+    p.SendProposal("Pinky says, 'Narf!'");
 }
 ```
 

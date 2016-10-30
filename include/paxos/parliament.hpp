@@ -38,7 +38,7 @@ public:
 
     void RemoveLegislator(Replica replica);
 
-    void CreateProposal(std::string entry);
+    void SendProposal(std::string entry);
 
     AbsenteeBallots GetAbsenteeBallots(int max_ballots);
 
