@@ -23,6 +23,11 @@ enum class MessageType
     PromiseMessage,
 
     //
+    // NackMessage sent as a negative response to prepare.
+    //
+    NackMessage,
+
+    //
     // AcceptMessage sent if quorum has elected a leader.
     //
     AcceptMessage,

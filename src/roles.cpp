@@ -19,6 +19,10 @@ RegisterProposer(
         MessageType::PromiseMessage
     );
     receiver->RegisterCallback(
+        Callback(std::bind(HandleNack, _1, context, sender)),
+        MessageType::NackMessage
+    );
+    receiver->RegisterCallback(
         Callback(std::bind(HandleAccepted, _1, context, sender)),
         MessageType::AcceptedMessage
     );
@@ -149,6 +153,16 @@ HandlePromise(
 
 
 void
+HandleNack(
+    Message message,
+    std::shared_ptr<ProposerContext> context,
+    std::shared_ptr<Sender> sender)
+{
+    LOG(LogLevel::Info) << "HandleNack    | " << Serialize(message);
+}
+
+
+void
 HandleAccepted(
     Message message,
     std::shared_ptr<ProposerContext> context,
@@ -188,6 +202,15 @@ HandlePrepare(
         //
         context->promised_decree = message.decree;
         sender->Reply(Response(message, MessageType::PromiseMessage));
+    }
+    else if (IsDecreeEqual(message.decree, context->promised_decree.Value()))
+    {
+        //
+        // If the messaged decree is equal to current promised decree then
+        // there may be dueling proposers. Send a NACK and let the proposer
+        // handle it.
+        //
+        sender->Reply(Response(message, MessageType::NackMessage));
     }
 }
 

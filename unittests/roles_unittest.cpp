@@ -275,11 +275,13 @@ TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromMultipleReplicasS
     auto sender = std::make_shared<FakeSender>();
 
     HandlePrepare(author_a, context, sender);
+    HandlePrepare(author_b, context, sender);
 
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PromiseMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::NackMessage);
 
-    // We send 1 accept message since we've seen 1 unique decree number despite unique authors.
-    ASSERT_EQ(1, sender->sentMessages().size());
+    // We send 1 accept message and 1 nack message.
+    ASSERT_EQ(2, sender->sentMessages().size());
 }
 
 
