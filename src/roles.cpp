@@ -90,10 +90,13 @@ HandleRequest(
 {
     context->requested_values.push_back(message.decree.content);
 
-    Message response = Response(message, MessageType::PrepareMessage);
-    response.decree.number = context->current_decree_number;
-    response.decree.content = "";
-    sender->ReplyAll(response);
+    if (!context->in_progress.test_and_set())
+    {
+        Message response = Response(message, MessageType::PrepareMessage);
+        response.decree.number = context->current_decree_number;
+        response.decree.content = "";
+        sender->ReplyAll(response);
+    }
 }
 
 
@@ -159,6 +162,7 @@ HandleNack(
     std::shared_ptr<Sender> sender)
 {
     LOG(LogLevel::Info) << "HandleNack    | " << Serialize(message);
+    std::atomic_flag_clear(&context->in_progress);
 }
 
 
@@ -183,6 +187,7 @@ HandleAccepted(
         context->promise_map.erase(message.decree);
     }
     context->current_decree_number = message.decree.number + 1;
+    std::atomic_flag_clear(&context->in_progress);
 }
 
 

@@ -114,6 +114,48 @@ class ProposerTest: public testing::Test
 };
 
 
+TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneInProgressProposal)
+{
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    context->replicaset->Add(Replica("host"));
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleRequest(
+        Message(
+            Decree("host", -1, "first"),
+            Replica("host"),
+            Replica("B"),
+            MessageType::RequestMessage
+        ),
+        context,
+        sender
+    );
+    HandleRequest(
+        Message(
+            Decree("host", -1, "second"),
+            Replica("host"),
+            Replica("B"),
+            MessageType::RequestMessage
+        ),
+        context,
+        sender
+    );
+    HandleRequest(
+        Message(
+            Decree("host", -1, "third"),
+            Replica("host"),
+            Replica("B"),
+            MessageType::RequestMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_EQ(1, sender->sentMessages().size());
+}
+
+
 TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromisedDecree)
 {
     Message message(

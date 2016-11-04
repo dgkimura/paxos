@@ -21,6 +21,7 @@ struct Context
 struct ProposerContext : public Context
 {
     std::atomic<int> current_decree_number;
+    std::atomic_flag in_progress;
     Decree highest_proposed_decree;
     std::shared_ptr<ReplicaSet> replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> promise_map;
@@ -36,6 +37,7 @@ struct ProposerContext : public Context
           promise_map(),
           requested_values()
     {
+        std::atomic_flag_clear(&in_progress);
     }
 };
 
