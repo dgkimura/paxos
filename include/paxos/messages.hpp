@@ -13,9 +13,19 @@ enum class MessageType
     RequestMessage,
 
     //
+    // RetryRequestMessage sent to retry a previous proposal.
+    //
+    RetryRequestMessage,
+
+    //
     // PrepareMessage sent to signal beginning of a round of paxos.
     //
     PrepareMessage,
+
+    //
+    // RetryPrepareMessage sent to conditionally undo last promise.
+    //
+    RetryPrepareMessage,
 
     //
     // PromiseMessage sent to acknowledge a prepare.

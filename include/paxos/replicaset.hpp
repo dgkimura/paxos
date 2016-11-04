@@ -27,11 +27,15 @@ struct Replica
 };
 
 
+bool IsReplicaEqual(const Replica& lhs, const Replica& rhs);
+
+
 struct compare_replica
 {
     bool operator()(const Replica& lhs, const Replica& rhs) const
     {
-        return lhs.hostname < rhs.hostname;
+        return lhs.hostname != rhs.hostname ?
+               lhs.hostname < rhs.hostname : lhs.port < rhs.port;
     }
 };
 

@@ -1,6 +1,13 @@
 #include "paxos/replicaset.hpp"
 
 
+bool
+IsReplicaEqual(const Replica& lhs, const Replica& rhs)
+{
+    return lhs.hostname == rhs.hostname && lhs.port == rhs.port;
+}
+
+
 ReplicaSet::ReplicaSet()
     : replicaset()
 {

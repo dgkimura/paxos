@@ -5,9 +5,10 @@
 
 TEST(MessageTest, testMessageResponseUpdatesSenderAndReceiver)
 {
-    Decree the_decree("an_author", 1, "");
     Replica from("from_hostname");
     Replica to("to_hostname");
+
+    Decree the_decree(from, 1, "");
     Message m(the_decree, from, to, MessageType::RequestMessage);
 
     Message response = Response(m, MessageType::PromiseMessage);

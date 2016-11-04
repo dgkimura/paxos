@@ -43,16 +43,22 @@ void RegisterUpdater(
     std::shared_ptr<UpdaterContext> context);
 
 
+/*
+ * Handlers are called after the message of interest arrives. Context is a way
+ * to save state between calls to the handler.
+ */
+
 void HandleRequest(
     Message message,
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender);
 
 
-/*
- * Handlers are called after the message of interest arrives. Context is a way
- * to save state between calls to the handler.
- */
+void HandleRetryRequest(
+    Message message,
+    std::shared_ptr<ProposerContext> context,
+    std::shared_ptr<Sender> sender);
+
 
 void HandlePromise(
     Message message,
@@ -73,6 +79,12 @@ void HandleAccepted(
 
 
 void HandlePrepare(
+    Message message,
+    std::shared_ptr<AcceptorContext> context,
+    std::shared_ptr<Sender> sender);
+
+
+void HandleRetryPrepare(
     Message message,
     std::shared_ptr<AcceptorContext> context,
     std::shared_ptr<Sender> sender);

@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "paxos/replicaset.hpp"
+
 
 /*
  * Decree contains information about a proposal. Each decree is uniquely
@@ -15,7 +17,7 @@ struct Decree
     //
     // Author defines the origin of the proposal. It identifies the legislator.
     //
-    std::string author;
+    Replica author;
 
     //
     // Number is a monotimically increasing value that can be used to identify
@@ -34,7 +36,7 @@ struct Decree
     {
     }
 
-    Decree(std::string a, int n, std::string c)
+    Decree(Replica a, int n, std::string c)
         : author(a), number(n), content(c)
     {
     }

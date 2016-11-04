@@ -5,12 +5,13 @@
 
 TEST(SerializationUnitTest, testDecreeIsSerializableAndDeserializable)
 {
-    Decree expected("an_author_1", 1, "the_decree_contents"), actual;
+    Decree expected(Replica("an_author_1"), 1, "the_decree_contents"), actual;
 
     std::string string_obj = Serialize(expected);
     actual = Deserialize<Decree>(string_obj);
 
-    ASSERT_EQ(expected.author, actual.author);
+    ASSERT_EQ(expected.author.hostname, actual.author.hostname);
+    ASSERT_EQ(expected.author.port, actual.author.port);
     ASSERT_EQ(expected.content, actual.content);
     ASSERT_EQ(expected.number, actual.number);
 }
@@ -31,7 +32,7 @@ TEST(SerializationUnitTest, testReplicaIsSerializableAndDeserializable)
 TEST(SerializationUnitTest, testMessageIsSerializableAndDeserializable)
 {
     Message expected(
-        Decree("author", 1, "the_decree_contents"),
+        Decree(Replica("author-hostname", 0), 1, "the_decree_contents"),
         Replica("hostname-A", 111),
         Replica("hostname-B", 111),
         MessageType::PrepareMessage),
@@ -40,7 +41,8 @@ TEST(SerializationUnitTest, testMessageIsSerializableAndDeserializable)
     std::string string_obj = Serialize(expected);
     actual = Deserialize<Message>(string_obj);
 
-    ASSERT_EQ(expected.decree.author, actual.decree.author);
+    ASSERT_EQ(expected.decree.author.hostname, actual.decree.author.hostname);
+    ASSERT_EQ(expected.decree.author.port, actual.decree.author.port);
     ASSERT_EQ(expected.decree.number, actual.decree.number);
     ASSERT_EQ(expected.decree.content, actual.decree.content);
     ASSERT_EQ(expected.from.hostname, actual.from.hostname);
@@ -53,14 +55,15 @@ TEST(SerializationUnitTest, testMessageIsSerializableAndDeserializable)
 
 TEST(SerializationUnitTest, testSerializationWithPaddedFluffOnTheEndOfTheBuffer)
 {
-    Decree expected("an_author_1", 1, "the_decree_contents"), actual;
+    Decree expected(Replica("an_author_1", 0), 1, "the_decree_contents"), actual;
 
     actual = Deserialize<Decree>(
-        "22 serialization::archive 11 0 0 11 an_author_1 "
-        "1 19 the_decree_contents THIS IS FLUFF!!!"
+        "22 serialization::archive 11 0 0 0 0 11 an_author_1 "
+        "0 1 19 the_decree_contents THIS IS FLUFF!!!"
     );
 
-    ASSERT_EQ(expected.author, actual.author);
+    ASSERT_EQ(expected.author.hostname, actual.author.hostname);
+    ASSERT_EQ(expected.author.port, actual.author.port);
     ASSERT_EQ(expected.content, actual.content);
     ASSERT_EQ(expected.number, actual.number);
 }
@@ -68,12 +71,13 @@ TEST(SerializationUnitTest, testSerializationWithPaddedFluffOnTheEndOfTheBuffer)
 
 TEST(SerializationUnitTest, testSerializationWithUniversalReferenceValues)
 {
-    Decree expected("an_author_1", 1, "the_decree_contents"), actual;
+    Decree expected(Replica("an_author_1", 0), 1, "the_decree_contents"), actual;
 
-    std::string string_obj = Serialize(Decree("an_author_1", 1, "the_decree_contents"));
+    std::string string_obj = Serialize(Decree(Replica("an_author_1", 0), 1, "the_decree_contents"));
     actual = Deserialize<Decree>(string_obj);
 
-    ASSERT_EQ(expected.author, actual.author);
+    ASSERT_EQ(expected.author.hostname, actual.author.hostname);
+    ASSERT_EQ(expected.author.port, actual.author.port);
     ASSERT_EQ(expected.content, actual.content);
     ASSERT_EQ(expected.number, actual.number);
 }

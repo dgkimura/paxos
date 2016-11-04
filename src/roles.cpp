@@ -26,6 +26,10 @@ RegisterProposer(
         Callback(std::bind(HandleAccepted, _1, context, sender)),
         MessageType::AcceptedMessage
     );
+    receiver->RegisterCallback(
+        Callback(std::bind(HandleRetryRequest, _1, context, sender)),
+        MessageType::RetryRequestMessage
+    );
 }
 
 
@@ -40,6 +44,10 @@ RegisterAcceptor(
     receiver->RegisterCallback(
         Callback(std::bind(HandlePrepare, _1, context, sender)),
         MessageType::PrepareMessage
+    );
+    receiver->RegisterCallback(
+        Callback(std::bind(HandleRetryPrepare, _1, context, sender)),
+        MessageType::RetryPrepareMessage
     );
     receiver->RegisterCallback(
         Callback(std::bind(HandleAccept, _1, context, sender)),
@@ -88,15 +96,33 @@ HandleRequest(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    context->requested_values.push_back(message.decree.content);
+    if (!message.decree.content.empty())
+    {
+        context->requested_values.push_back(message.decree.content);
+    }
 
     if (!context->in_progress.test_and_set())
     {
         Message response = Response(message, MessageType::PrepareMessage);
         response.decree.number = context->current_decree_number;
         response.decree.content = "";
+
+        context->current_decree_number += 1;
+
         sender->ReplyAll(response);
     }
+}
+
+
+void
+HandleRetryRequest(
+    Message message,
+    std::shared_ptr<ProposerContext> context,
+    std::shared_ptr<Sender> sender)
+{
+    Message response = Response(message, MessageType::PrepareMessage);
+    response.decree = message.decree;
+    sender->ReplyAll(response);
 }
 
 
@@ -162,7 +188,24 @@ HandleNack(
     std::shared_ptr<Sender> sender)
 {
     LOG(LogLevel::Info) << "HandleNack    | " << Serialize(message);
-    std::atomic_flag_clear(&context->in_progress);
+
+    //
+    // If replica voted for itself then remove vote on the contentious decree.
+    //
+    context->promise_map[message.decree]->Remove(message.to);
+
+    //
+    // If replica promised itself then remove promise of the contentious
+    // decree.
+    //
+    sender->Reply(
+        Message(
+            message.decree,
+            message.to,
+            message.to,
+            MessageType::RetryPrepareMessage
+        )
+    );
 }
 
 
@@ -186,8 +229,23 @@ HandleAccepted(
         //
         context->promise_map.erase(message.decree);
     }
-    context->current_decree_number = message.decree.number + 1;
+
     std::atomic_flag_clear(&context->in_progress);
+
+    if (context->requested_values.size() > 0)
+    {
+        //
+        // Setup next round for pending proposals.
+        //
+        sender->Reply(
+            Message(
+                Decree(),
+                message.to,
+                message.to,
+                MessageType::RequestMessage
+            )
+        );
+    }
 }
 
 
@@ -216,6 +274,44 @@ HandlePrepare(
         // handle it.
         //
         sender->Reply(Response(message, MessageType::NackMessage));
+    }
+}
+
+
+void
+HandleRetryPrepare(
+    Message message,
+    std::shared_ptr<AcceptorContext> context,
+    std::shared_ptr<Sender> sender)
+{
+    if (IsReplicaEqual(context->promised_decree.Value().author, message.to))
+    {
+        //
+        // If the promised decree was authored by this replica then we can undo
+        // the promise. This is only safe because we have adjusted the promise
+        // count on the proposer.
+        //
+        if (!IsDecreeEqual(context->promised_decree.Value(),
+                           context->accepted_decree.Value()))
+        {
+            //
+            // If the promised decree and accepted decree are unique then
+            // rollback the promised decree and retry the request.
+            //
+            context->promised_decree = context->accepted_decree;
+
+            //
+            // Wait for some amount of exponential backoff time before sending.
+            //
+            sender->Reply(
+                Message(
+                    message.decree,
+                    message.to,
+                    message.to,
+                    MessageType::RetryRequestMessage
+                )
+            );
+        }
     }
 }
 
