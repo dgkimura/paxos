@@ -390,6 +390,46 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
 }
 
 
+TEST_F(ProposerTest, testHandleAcceptedIncrementsCurrentDecreeWhenCurrentDecreeAuthoredByAnotherRepicaWasAccepted)
+{
+    Message message(
+        Decree(Replica("A"), 2, "content"),
+        Replica("from"),
+        Replica("to"),
+        MessageType::AcceptMessage);
+
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
+    context->promise_map[message.decree]->Add(message.from);
+    context->current_decree_number = 1;
+
+    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+
+    // Update current decree number.
+    ASSERT_EQ(context->current_decree_number, 2);
+}
+
+
+TEST_F(ProposerTest, testHandleAcceptedDoesNotIncrementCurrentDecreeWhenReplicaIsTooFarBehind)
+{
+    Message message(
+        Decree(Replica("A"), 200, "content"),
+        Replica("from"),
+        Replica("to"),
+        MessageType::AcceptMessage);
+
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
+    context->promise_map[message.decree]->Add(message.from);
+    context->current_decree_number = 1;
+
+    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+
+    // Replica is behind by 199 decrees so we cannot increment the current decree.
+    ASSERT_EQ(context->current_decree_number, 1);
+}
+
+
 class AcceptorTest: public testing::Test
 {
     virtual void SetUp()

@@ -230,6 +230,17 @@ HandleAccepted(
         context->promise_map.erase(message.decree);
     }
 
+    if (context->current_decree_number + 1 == message.decree.number)
+    {
+        //
+        // Update our current decree iff it is one behind a higher accepted
+        // decree. This is expected when a decree is passed that was authored
+        // by another replica. We must not do this if the replica is more than
+        // 1 decree behind as it will create holes in our ledger.
+        //
+        context->current_decree_number = message.decree.number;
+    }
+
     std::atomic_flag_clear(&context->in_progress);
 
     if (context->requested_values.size() > 0)
