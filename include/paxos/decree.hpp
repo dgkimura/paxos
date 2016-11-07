@@ -50,6 +50,8 @@ bool IsDecreeHigherOrEqual(Decree lhs, Decree rhs);
 
 bool IsDecreeEqual(Decree lhs, Decree rhs);
 
+bool IsDecreeIdentical(Decree lhs, Decree rhs);
+
 bool IsDecreeLower(Decree lhs, Decree rhs);
 
 bool IsDecreeLowerOrEqual(Decree lhs, Decree rhs);

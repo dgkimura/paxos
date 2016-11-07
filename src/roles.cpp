@@ -268,21 +268,24 @@ HandlePrepare(
 {
     LOG(LogLevel::Info) << "HandlePrepare | " << Serialize(message);
 
-    if (IsDecreeHigher(message.decree, context->promised_decree.Value()))
+    if (IsDecreeHigher(message.decree, context->promised_decree.Value()) ||
+        IsDecreeIdentical(message.decree, context->promised_decree.Value()))
     {
         //
-        // If the messaged decree is higher than any decree seen before then
-        // save it on persistent storage and then send a promised message.
+        // If the messaged decree is higher than any decree seen before or the
+        // messaged decree is identical to the current promised decree then
+        // save it on persistent storage and send a promised message.
         //
         context->promised_decree = message.decree;
         sender->Reply(Response(message, MessageType::PromiseMessage));
     }
     else if (IsDecreeEqual(message.decree, context->promised_decree.Value()))
+
     {
         //
-        // If the messaged decree is equal to current promised decree then
-        // there may be dueling proposers. Send a NACK and let the proposer
-        // handle it.
+        // If the messaged decree is equal to current promised decree and
+        // sent from a different replica then there may be dueling
+        // proposers. Send a NACK and let the proposer handle it.
         //
         sender->Reply(Response(message, MessageType::NackMessage));
     }

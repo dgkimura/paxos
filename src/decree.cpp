@@ -30,6 +30,14 @@ IsDecreeEqual(Decree lhs, Decree rhs)
 
 
 bool
+IsDecreeIdentical(Decree lhs, Decree rhs)
+{
+    return CompareDecrees(lhs, rhs) == 0 &&
+           IsReplicaEqual(lhs.author, rhs.author);
+}
+
+
+bool
 IsDecreeLower(Decree lhs, Decree rhs)
 {
     return CompareDecrees(lhs, rhs) < 0;

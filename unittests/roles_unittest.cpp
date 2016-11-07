@@ -470,21 +470,6 @@ TEST_F(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree
 }
 
 
-TEST_F(AcceptorTest, testHandlePrepareWithReplayedPrepareDoesNotSendAnotherPromise)
-{
-    Message message(Decree(Replica("the_author"), 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
-
-    auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 1, "");
-
-    auto sender = std::make_shared<FakeSender>();
-
-    HandlePrepare(message, context, sender);
-
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::PromiseMessage);
-}
-
-
 TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromMultipleReplicasSendsSinglePromise)
 {
     Message author_a(Decree(Replica("author_a"), 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
@@ -502,6 +487,26 @@ TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromMultipleReplicasS
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::NackMessage);
 
     // We send 1 accept message and 1 nack message.
+    ASSERT_EQ(2, sender->sentMessages().size());
+}
+
+
+TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromSingleReplicasResendsPromise)
+{
+    Message message(Decree(Replica("the_author"), 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+
+    auto context = createAcceptorContext();
+    context->promised_decree = Decree(Replica("the_author"), 0, "");
+
+    auto sender = std::make_shared<FakeSender>();
+
+    HandlePrepare(message, context, sender);
+    HandlePrepare(message, context, sender);
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PromiseMessage);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::NackMessage);
+
+    // We send 2 accept messages.
     ASSERT_EQ(2, sender->sentMessages().size());
 }
 
