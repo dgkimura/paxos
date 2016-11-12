@@ -58,9 +58,9 @@ Parliament::SetLegislator(std::string address, short port)
 
 
 void
-Parliament::RemoveLegislator(Replica replica)
+Parliament::RemoveLegislator(std::string address, short port)
 {
-    legislators->Remove(replica);
+    legislators->Remove(Replica(address, port));
 }
 
 
