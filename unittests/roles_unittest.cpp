@@ -286,6 +286,36 @@ TEST_F(ProposerTest, testHandleNackRemovesReplicaFromPromisedMapAndSendsRetryPre
 }
 
 
+TEST_F(ProposerTest, testHandleNackWithoutDecreeInPromiseMap)
+{
+    auto replica = Replica("host");
+    auto decree = Decree(replica, -1, "first");
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+
+    // Add replica to known replicas.
+    context->replicaset->Add(replica);
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNack(
+        Message(
+            decree,
+            replica,
+            replica,
+            MessageType::NackMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::RetryPrepareMessage);
+
+    // XXX: The decree is not in the promise map. This can happen in the case
+    //      where the replica is behind. The replica sends a prepare, but
+    //      before could promised itself, it promised another replica.
+}
+
+
 TEST_F(ProposerTest, testHandleNackDoesntSendRetryPrepareUntilMajorityNack)
 {
     auto replica_1 = Replica("host-1");

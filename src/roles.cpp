@@ -206,15 +206,20 @@ HandleNack(
     if (received_nacks > maximum_allowed_nacks)
     {
         //
-        // Reset nack map
+        // If exceeded maximum nacks then it is impossible for our proposed
+        // decree to be elected. Here we setup to retry the prepare.
         //
         context->nack_map[message.decree] = std::make_shared<ReplicaSet>();
 
-        //
-        // If replica voted for itself then remove vote on the contentious
-        // decree.
-        //
-        context->promise_map[message.decree]->Remove(message.to);
+        if (context->promise_map.find(message.decree) !=
+            context->promise_map.end())
+        {
+            //
+            // If replica voted for itself then remove vote on the contentious
+            // decree.
+            //
+            context->promise_map[message.decree]->Remove(message.to);
+        }
 
         //
         // If replica promised itself then remove promise of the contentious
