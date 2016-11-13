@@ -189,23 +189,46 @@ HandleNack(
 {
     LOG(LogLevel::Info) << "HandleNack    | " << Serialize(message);
 
-    //
-    // If replica voted for itself then remove vote on the contentious decree.
-    //
-    context->promise_map[message.decree]->Remove(message.to);
+    if (context->nack_map.find(message.decree) == context->nack_map.end())
+    {
+        //
+        // If there is no entry for the messaged decree then make an entry.
+        //
+        context->nack_map[message.decree] = std::make_shared<ReplicaSet>();
+    }
+    context->nack_map[message.decree]->Add(message.from);
 
-    //
-    // If replica promised itself then remove promise of the contentious
-    // decree.
-    //
-    sender->Reply(
-        Message(
-            message.decree,
-            message.to,
-            message.to,
-            MessageType::RetryPrepareMessage
-        )
-    );
+    int maximum_allowed_nacks = context->replicaset->GetSize() / 2;
+    int received_nacks = context->nack_map[message.decree]
+                                ->Intersection(context->replicaset)
+                                ->GetSize();
+
+    if (received_nacks > maximum_allowed_nacks)
+    {
+        //
+        // Reset nack map
+        //
+        context->nack_map[message.decree] = std::make_shared<ReplicaSet>();
+
+        //
+        // If replica voted for itself then remove vote on the contentious
+        // decree.
+        //
+        context->promise_map[message.decree]->Remove(message.to);
+
+        //
+        // If replica promised itself then remove promise of the contentious
+        // decree.
+        //
+        sender->Reply(
+            Message(
+                message.decree,
+                message.to,
+                message.to,
+                MessageType::RetryPrepareMessage
+            )
+        );
+    }
 }
 
 

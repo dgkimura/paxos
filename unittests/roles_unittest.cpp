@@ -275,8 +275,48 @@ TEST_F(ProposerTest, testHandleNackRemovesReplicaFromPromisedMapAndSendsRetryPre
         sender
     );
 
-    ASSERT_FALSE(context->promise_map[decree]->Contains(replica));
+    // Our replicaset is size 1, so we reached maximum nack and must send retry
+    // prepare.
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::RetryPrepareMessage);
+    // We must also remove our promise to the decree.
+    ASSERT_FALSE(context->promise_map[decree]->Contains(replica));
+
+    // Nack map should be cleared after sending retry prepare.
+    ASSERT_EQ(0, context->nack_map[decree]->GetSize());
+}
+
+
+TEST_F(ProposerTest, testHandleNackDoesntSendRetryPrepareUntilMajorityNack)
+{
+    auto replica_1 = Replica("host-1");
+    auto replica_2 = Replica("host-2");
+    auto replica_3 = Replica("host-3");
+
+    auto decree = Decree(replica_1, -1, "first");
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+
+    context->replicaset->Add(replica_1);
+    context->replicaset->Add(replica_2);
+    context->replicaset->Add(replica_3);
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNack(
+        Message(
+            decree,
+            replica_1,
+            replica_1,
+            MessageType::NackMessage
+        ),
+        context,
+        sender
+    );
+
+    // Not yet maximim nack, so no retry prepare is sent.
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::RetryPrepareMessage);
+
+    // Nack map should not be cleared since we haven't reached maximum nack.
+    ASSERT_EQ(1, context->nack_map[decree]->GetSize());
 }
 
 
