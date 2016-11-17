@@ -34,8 +34,6 @@ public:
 
     void AddLegislator(std::string address, short port);
 
-    void SetLegislator(std::string address, short port);
-
     void RemoveLegislator(std::string address, short port);
 
     void SendProposal(std::string entry);

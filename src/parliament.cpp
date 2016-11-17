@@ -14,44 +14,46 @@ Parliament::Parliament(std::string location_, DecreeHandler decree_handler)
 void
 Parliament::AddLegislator(std::string address, short port)
 {
-    legislators->Add(Replica(address, port));
-}
+    try
+    {
+        receiver = std::make_shared<NetworkReceiver>(address, port);
+        sender = std::make_shared<NetworkSender>(legislators);
 
+        proposer = std::make_shared<ProposerContext>(
+            legislators,
+            ledger->Tail().number + 1
+        );
+        acceptor = std::make_shared<AcceptorContext>(location);
+        learner = std::make_shared<LearnerContext>(legislators, ledger);
+        updater = std::make_shared<UpdaterContext>(ledger);
 
-void
-Parliament::SetLegislator(std::string address, short port)
-{
-    receiver = std::make_shared<NetworkReceiver>(address, port);
-    sender = std::make_shared<NetworkSender>(legislators);
-
-    proposer = std::make_shared<ProposerContext>(
-        legislators,
-        ledger->Tail().number + 1
-    );
-    acceptor = std::make_shared<AcceptorContext>(location);
-    learner = std::make_shared<LearnerContext>(legislators, ledger);
-    updater = std::make_shared<UpdaterContext>(ledger);
-
-    RegisterProposer(
-        receiver,
-        sender,
-        proposer
-    );
-    RegisterAcceptor(
-        receiver,
-        sender,
-        acceptor
-    );
-    RegisterLearner(
-        receiver,
-        sender,
-        learner
-    );
-    RegisterUpdater(
-        receiver,
-        sender,
-        updater
-    );
+        RegisterProposer(
+            receiver,
+            sender,
+            proposer
+        );
+        RegisterAcceptor(
+            receiver,
+            sender,
+            acceptor
+        );
+        RegisterLearner(
+            receiver,
+            sender,
+            learner
+        );
+        RegisterUpdater(
+            receiver,
+            sender,
+            updater
+        );
+    }
+    catch (
+        boost::exception_detail::clone_impl<
+            boost::exception_detail::error_info_injector<
+                boost::system::system_error>>& e)
+    {
+    }
 
     legislators->Add(Replica(address, port));
 }

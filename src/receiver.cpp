@@ -6,21 +6,23 @@ using boost::asio::ip::tcp;
 
 
 NetworkReceiver::NetworkReceiver(std::string address, short port)
-    : io_service_(),
-      acceptor_(io_service_, tcp::endpoint(tcp::v4(), port)),
-      socket_(io_service_),
+    : io_service(),
+      acceptor(
+          io_service,
+          tcp::endpoint(boost::asio::ip::address::from_string(address), port)),
+      socket(io_service),
       registered_map()
 {
     do_accept();
 
-    std::thread([&]() { io_service_.run(); }).detach();
+    std::thread([&]() { io_service.run(); }).detach();
 }
 
 
 NetworkReceiver::~NetworkReceiver()
 {
-    io_service_.stop();
-    acceptor_.close();
+    io_service.stop();
+    acceptor.close();
 }
 
 
@@ -41,12 +43,12 @@ NetworkReceiver::RegisterCallback(Callback&& callback, MessageType type)
 void
 NetworkReceiver::do_accept()
 {
-    acceptor_.async_accept(socket_,
+    acceptor.async_accept(socket,
         [this](boost::system::error_code ec_accept)
         {
             if (!ec_accept)
             {
-                std::make_shared<Session>(std::move(socket_), registered_map)->Start();
+                std::make_shared<Session>(std::move(socket), registered_map)->Start();
             }
             do_accept();
         });
@@ -60,7 +62,7 @@ NetworkReceiver::Session::Session(
         std::vector<Callback>,
         MessageTypeHash> registered_map
 )
-    : socket_(std::move(socket)),
+    : socket(std::move(socket)),
       registered_map_(registered_map)
 {
 }
@@ -70,7 +72,7 @@ void
 NetworkReceiver::Session::Start()
 {
     auto self(shared_from_this());
-    socket_.async_read_some(boost::asio::buffer(data_, max_length),
+    socket.async_read_some(boost::asio::buffer(data_, max_length),
         [this, self](boost::system::error_code ec, std::size_t length)
         {
             if (!ec)

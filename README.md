@@ -32,12 +32,7 @@ int main(void)
     //
     // Add voting legislators to the parliament group.
     //
-    p.AddLegislator("1.1.1.1", 8081);
-
-    //
-    // Set our voting legislator in the parliament group.
-    //
-    p.SetLegislator("127.0.0.1", 8081);
+    p.AddLegislator("127.0.0.1", 8081);
 
     //
     // Sends a proposal to vote on.

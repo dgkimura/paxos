@@ -21,11 +21,9 @@ public:
     virtual void RegisterCallback(Callback&& callback, MessageType type) = 0;
 };
 
-
 class NetworkReceiver : public Receiver
 {
 public:
-
     NetworkReceiver(std::string address, short port);
 
     ~NetworkReceiver();
@@ -36,11 +34,11 @@ private:
 
     void do_accept();
 
-    boost::asio::io_service io_service_;
+    boost::asio::io_service io_service;
 
-    boost::asio::ip::tcp::acceptor acceptor_;
+    boost::asio::ip::tcp::acceptor acceptor;
 
-    boost::asio::ip::tcp::socket socket_;
+    boost::asio::ip::tcp::socket socket;
 
     std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map;
 
@@ -56,7 +54,7 @@ private:
 
     private:
 
-        boost::asio::ip::tcp::socket socket_;
+        boost::asio::ip::tcp::socket socket;
 
         std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map_;
 
