@@ -29,7 +29,7 @@ class Parliament
 {
 public:
 
-    Parliament(std::string location_=".",
+    Parliament(std::string location=".",
                DecreeHandler decree_handler=[](std::string entry){});
 
     void AddLegislator(std::string address, short port);
