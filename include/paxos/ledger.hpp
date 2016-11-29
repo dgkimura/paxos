@@ -2,6 +2,7 @@
 #define __LEDGER_HPP_INCLUDED__
 
 #include <functional>
+#include <mutex>
 
 #include "paxos/decree.hpp"
 #include "paxos/logging.hpp"
@@ -36,6 +37,8 @@ private:
     std::shared_ptr<BaseQueue<Decree>> decrees;
 
     std::function<void(std::string entry)> decree_handler;
+
+    std::mutex mutex;
 };
 
 

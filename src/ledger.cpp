@@ -23,6 +23,12 @@ Ledger::~Ledger()
 void
 Ledger::Append(Decree decree)
 {
+    //
+    // A lock must be acquired before executing decree_handler in order to
+    // help prevent out of order decrees.
+    //
+    std::lock_guard<std::mutex> lock(mutex);
+
     Decree tail = Tail();
     if (tail.number < decree.number)
     {
