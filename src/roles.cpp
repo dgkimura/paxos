@@ -404,13 +404,25 @@ HandleProclaim(
     {
         if (IsDecreeOrdered(context->ledger->Tail(), message.decree))
         {
-            //
-            // Append the decree iff the decree is in order with the last
-            // decree recorded in our ledger.
-            //
-            context->ledger->Append(message.decree);
+            if (!context->is_observer)
+            {
+                //
+                // Append the decree iff the decree is in order with the last
+                // decree recorded in our ledger and we are not an observer.
+                //
+                context->ledger->Append(message.decree);
+            }
+            else
+            {
+                //
+                // Save the decree in memory iff the decree is in order with
+                // the last decree recorded in our ledger, but we are in
+                // observer mode and do not want to write to ledge yet.
+                //
+                context->tracked_future_decrees.push_back(message.decree);
+            }
         }
-        else
+        else if (IsDecreeLower(context->ledger->Tail(), message.decree))
         {
             //
             // If the decree is not in order with the last decree recorded in

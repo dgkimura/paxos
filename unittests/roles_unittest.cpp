@@ -900,6 +900,40 @@ TEST_F(LearnerTest, testProclaimHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLe
 }
 
 
+TEST_F(LearnerTest, testProclaimHandleTracksFutureDecreesIfReceivedOutOfOrder)
+{
+    Message message(Decree(Replica("A"), 1, ""), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
+    auto context = createLearnerContext({"A"});
+    context->is_observer = true;
+
+    HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+
+    // Mode is_observer should not write to ledger.
+    ASSERT_EQ(context->ledger->Size(), 0);
+    ASSERT_EQ(context->tracked_future_decrees.size(), 1);
+}
+
+
+TEST_F(LearnerTest, testProclaimHandleDoesNotTrackPastDecrees)
+{
+    Decree past_decree(Replica("A"), 1, "");
+    Decree future_decree(Replica("A"), 1, "");
+
+    Message message(past_decree, Replica("A"), Replica("A"), MessageType::AcceptedMessage);
+    auto context = createLearnerContext({"A"});
+    context->is_observer = true;
+    context->ledger->Append(future_decree);
+
+    HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+
+    // Mode is_observer shouldn't write next passed decree to ledger.
+    ASSERT_EQ(context->ledger->Size(), 1);
+
+    // Decree is in the past so shouldn't add to tracked decrees.
+    ASSERT_EQ(context->tracked_future_decrees.size(), 0);
+}
+
+
 TEST_F(LearnerTest, testHandleUpdatedWithEmptyLedger)
 {
     auto context = createLearnerContext({"A"});

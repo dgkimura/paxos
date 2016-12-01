@@ -74,14 +74,18 @@ struct LearnerContext : public Context
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> accepted_map;
     std::shared_ptr<Ledger> ledger;
     std::vector<Decree> tracked_future_decrees;
+    bool is_observer;
 
     LearnerContext(
         std::shared_ptr<ReplicaSet> replicaset_,
-        std::shared_ptr<Ledger> ledger_
+        std::shared_ptr<Ledger> ledger_,
+        bool is_observer=false
     )
         : replicaset(replicaset_),
           accepted_map(),
-          ledger(ledger_)
+          ledger(ledger_),
+          tracked_future_decrees(),
+          is_observer(is_observer)
     {
     }
 };
