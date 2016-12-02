@@ -102,3 +102,17 @@ Parliament::GetAbsenteeBallots(int max_ballots)
     return ballots;
 
 }
+
+
+void
+Parliament::SetActive()
+{
+    learner->is_observer = false;
+}
+
+
+void
+Parliament::SetInactive()
+{
+    learner->is_observer = true;
+}

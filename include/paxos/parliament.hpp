@@ -38,6 +38,10 @@ public:
 
     void SendProposal(std::string entry);
 
+    void SetActive();
+
+    void SetInactive();
+
     AbsenteeBallots GetAbsenteeBallots(int max_ballots);
 
 private:
