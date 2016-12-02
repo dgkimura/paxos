@@ -5,6 +5,7 @@
 #include <atomic>
 #include <map>
 #include <memory>
+#include <queue>
 #include <vector>
 
 #include "paxos/decree.hpp"
@@ -73,7 +74,7 @@ struct LearnerContext : public Context
     std::shared_ptr<ReplicaSet> replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> accepted_map;
     std::shared_ptr<Ledger> ledger;
-    std::vector<Decree> tracked_future_decrees;
+    std::priority_queue<Decree, std::vector<Decree>, ascending_decree> tracked_future_decrees;
     bool is_observer;
 
     LearnerContext(

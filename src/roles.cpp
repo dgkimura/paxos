@@ -419,7 +419,7 @@ HandleProclaim(
                 // the last decree recorded in our ledger, but we are in
                 // observer mode and do not want to write to ledge yet.
                 //
-                context->tracked_future_decrees.push_back(message.decree);
+                context->tracked_future_decrees.push(message.decree);
             }
         }
         else if (IsDecreeLower(context->ledger->Tail(), message.decree))
@@ -428,7 +428,7 @@ HandleProclaim(
             // If the decree is not in order with the last decree recorded in
             // our ledger then there must be holes in our ledger.
             //
-            context->tracked_future_decrees.push_back(message.decree);
+            context->tracked_future_decrees.push(message.decree);
             Message response = Response(message, MessageType::UpdateMessage);
             response.decree = context->ledger->Tail();
             sender->Reply(response);
@@ -461,18 +461,28 @@ HandleUpdated(
         //
         context->ledger->Append(message.decree);
 
-        Decree previous_decree = message.decree;
-        for (Decree current_decree : context->tracked_future_decrees)
+        Decree current_decree, previous_decree = message.decree;
+        while (context->tracked_future_decrees.size() > 0)
         {
-            //
-            // If there are tracked_future_decrees then we should check if they
-            // are now the next ordered decrees and append to the ledger
-            // accordingly.
-            //
+            current_decree = context->tracked_future_decrees.top();
+
             if (IsDecreeOrdered(previous_decree, current_decree))
             {
+                //
+                // If tracked_future_decrees contains the next ordered decree
+                // then append to the ledger.
+                //
                 context->ledger->Append(current_decree);
                 previous_decree = current_decree;
+                context->tracked_future_decrees.pop();
+            }
+            else
+            {
+                //
+                // Else tracked_future_decrees doesn't contain any more decrees
+                // of interest.
+                //
+                break;
             }
         }
 

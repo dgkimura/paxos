@@ -66,5 +66,13 @@ struct compare_decree
     }
 };
 
+struct ascending_decree
+{
+    bool operator()(const Decree& lhs, const Decree& rhs) const
+    {
+        return IsDecreeHigher(lhs, rhs);
+    }
+};
+
 
 #endif

@@ -984,8 +984,8 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrac
     auto sender = std::make_shared<FakeSender>();
 
     // We have tracked decrees 2, 3.
-    context->tracked_future_decrees.push_back(Decree(Replica("A"), 2, ""));
-    context->tracked_future_decrees.push_back(Decree(Replica("A"), 3, ""));
+    context->tracked_future_decrees.push(Decree(Replica("A"), 2, ""));
+    context->tracked_future_decrees.push(Decree(Replica("A"), 3, ""));
 
     // Receive next ordered decree 1.
     HandleUpdated(
@@ -1009,8 +1009,8 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrac
     auto sender = std::make_shared<FakeSender>();
 
     // We have tracked decrees 3, 4.
-    context->tracked_future_decrees.push_back(Decree(Replica("A"), 3, ""));
-    context->tracked_future_decrees.push_back(Decree(Replica("A"), 4, ""));
+    context->tracked_future_decrees.push(Decree(Replica("A"), 3, ""));
+    context->tracked_future_decrees.push(Decree(Replica("A"), 4, ""));
 
     // Receive next ordered decree 1.
     HandleUpdated(
