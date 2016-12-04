@@ -402,33 +402,51 @@ HandleProclaim(
 
     if (accepted_quorum >= minimum_quorum)
     {
-        if (IsDecreeOrdered(context->ledger->Tail(), message.decree))
+        if (IsDecreeLower(context->ledger->Tail(), message.decree))
         {
-            if (!context->is_observer)
+            //
+            // Save the decree in memory if the decree is a future decree that
+            // has not yet been written to our ledger.
+            //
+            context->tracked_future_decrees.push(message.decree);
+        }
+        if (context->tracked_future_decrees.size() > 0 &&
+            IsDecreeOrdered(context->ledger->Tail(),
+                            context->tracked_future_decrees.top()) &&
+            !context->is_observer)
+        {
+            Decree current_decree, previous_decree = context->ledger->Tail();
+            while (context->tracked_future_decrees.size() > 0)
             {
-                //
-                // Append the decree iff the decree is in order with the last
-                // decree recorded in our ledger and we are not an observer.
-                //
-                context->ledger->Append(message.decree);
-            }
-            else
-            {
-                //
-                // Save the decree in memory iff the decree is in order with
-                // the last decree recorded in our ledger, but we are in
-                // observer mode and do not want to write to ledge yet.
-                //
-                context->tracked_future_decrees.push(message.decree);
+                current_decree = context->tracked_future_decrees.top();
+                if (IsDecreeOrdered(previous_decree, current_decree))
+                {
+                    //
+                    // If tracked_future_decrees contains the next ordered
+                    // decree then append to the ledger.
+                    //
+                    context->ledger->Append(current_decree);
+                    previous_decree = current_decree;
+                    context->tracked_future_decrees.pop();
+                }
+                else
+                {
+                    //
+                    // Else tracked_future_decrees doesn't contain any more
+                    // decrees of interest.
+                    //
+                    break;
+                }
             }
         }
-        else if (IsDecreeLower(context->ledger->Tail(), message.decree))
+        else if (context->tracked_future_decrees.size() > 0 &&
+                 !IsDecreeOrdered(context->ledger->Tail(),
+                                  context->tracked_future_decrees.top()))
         {
             //
             // If the decree is not in order with the last decree recorded in
             // our ledger then there must be holes in our ledger.
             //
-            context->tracked_future_decrees.push(message.decree);
             Message response = Response(message, MessageType::UpdateMessage);
             response.decree = context->ledger->Tail();
             sender->Reply(response);

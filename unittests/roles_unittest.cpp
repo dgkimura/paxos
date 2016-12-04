@@ -934,6 +934,22 @@ TEST_F(LearnerTest, testProclaimHandleDoesNotTrackPastDecrees)
 }
 
 
+TEST_F(LearnerTest, testProclaimHandleAppendsTrackedFutureDecreesToLedgerWhenTheyFillInHoles)
+{
+    Decree past_decree(Replica("A"), 1, "");
+    Decree current_decree(Replica("A"), 2, "");
+
+    Message message(current_decree, Replica("A"), Replica("A"), MessageType::AcceptedMessage);
+    auto context = createLearnerContext({"A"});
+    context->tracked_future_decrees.push(past_decree);
+
+    HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+
+    // Past decree from tracked future decrees and current decree are both appended to ledger.
+    ASSERT_EQ(context->ledger->Size(), 2);
+}
+
+
 TEST_F(LearnerTest, testHandleUpdatedWithEmptyLedger)
 {
     auto context = createLearnerContext({"A"});
