@@ -12,13 +12,6 @@
 
 
 //
-// Handler that will be executed after a decree has been accepted. It
-// is expected to be idempotent.
-//
-using DecreeHandler = std::function<void(std::string entry)>;
-
-
-//
 // Map of a decree ballots.
 //
 using AbsenteeBallots = std::map<Decree, std::shared_ptr<ReplicaSet>,

@@ -9,6 +9,13 @@
 #include "paxos/queue.hpp"
 
 
+//
+// Handler that will be executed after a decree has been accepted. It
+// is expected to be idempotent.
+//
+using DecreeHandler = std::function<void(std::string entry)>;
+
+
 class Ledger
 {
 public:
@@ -16,7 +23,7 @@ public:
     Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_);
 
     Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_,
-           std::function<void(std::string entry)> decree_handler_);
+           DecreeHandler decree_handler_);
 
     ~Ledger();
 
@@ -36,7 +43,7 @@ private:
 
     std::shared_ptr<BaseQueue<Decree>> decrees;
 
-    std::function<void(std::string entry)> decree_handler;
+    DecreeHandler decree_handler;
 
     std::mutex mutex;
 };
