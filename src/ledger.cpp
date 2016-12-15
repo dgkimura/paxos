@@ -2,13 +2,13 @@
 
 
 Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_)
-    : Ledger(decrees_, [](std::string entry){})
+    : Ledger(decrees_, DecreeHandler())
 {
 }
 
 
 Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_,
-               std::function<void(std::string entry)> decree_handler_)
+               DecreeHandler decree_handler_)
     : decrees(decrees_),
       decree_handler(decree_handler_)
 {

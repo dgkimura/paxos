@@ -5,15 +5,9 @@
 #include <mutex>
 
 #include "paxos/decree.hpp"
+#include "paxos/handler.hpp"
 #include "paxos/logging.hpp"
 #include "paxos/queue.hpp"
-
-
-//
-// Handler that will be executed after a decree has been accepted. It
-// is expected to be idempotent.
-//
-using DecreeHandler = std::function<void(std::string entry)>;
 
 
 class Ledger

@@ -4,6 +4,7 @@ project(paxos.src)
 set(SOURCES
     callback.cpp
     decree.cpp
+    handler.cpp
     ledger.cpp
     logging.cpp
     messages.cpp

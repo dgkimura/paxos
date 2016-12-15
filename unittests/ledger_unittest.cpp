@@ -143,7 +143,7 @@ TEST_F(LedgerUnitTest, testDecreeHandlerOnAppend)
     std::string concatenated_content;
     auto handler = [&](std::string entry) { concatenated_content += entry; };
 
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>(), handler);
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>(), DecreeHandler(handler));
     ledger.Append(Decree(Replica("a_author"), 1, "AAAAA"));
     ledger.Append(Decree(Replica("b_author"), 2, "BBBBB"));
 

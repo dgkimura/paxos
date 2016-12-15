@@ -16,6 +16,7 @@ set(SOURCES
     context_unittest.cpp
     decree_unittest.cpp
     fields_unittest.cpp
+    handler_unittest.cpp
     ledger_unittest.cpp
     messages_unittest.cpp
     queue_unittest.cpp
