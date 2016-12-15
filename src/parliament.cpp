@@ -3,58 +3,60 @@
 
 Parliament::Parliament(std::string location, DecreeHandler decree_handler)
     : location(location),
-      legislators(std::make_shared<ReplicaSet>()),
+      legislators(LoadReplicaSet(location)),
       ledger(std::make_shared<Ledger>(
           std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"),
           decree_handler))
 {
+    for (auto l : *legislators)
+    {
+        try
+        {
+            receiver = std::make_shared<NetworkReceiver>(l.hostname, l.port);
+            sender = std::make_shared<NetworkSender>(legislators);
+
+            proposer = std::make_shared<ProposerContext>(
+                legislators,
+                ledger->Tail().number + 1
+            );
+            acceptor = std::make_shared<AcceptorContext>(location);
+            learner = std::make_shared<LearnerContext>(legislators, ledger);
+            updater = std::make_shared<UpdaterContext>(ledger);
+
+            RegisterProposer(
+                receiver,
+                sender,
+                proposer
+            );
+            RegisterAcceptor(
+                receiver,
+                sender,
+                acceptor
+            );
+            RegisterLearner(
+                receiver,
+                sender,
+                learner
+            );
+            RegisterUpdater(
+                receiver,
+                sender,
+                updater
+            );
+        }
+        catch (
+            boost::exception_detail::clone_impl<
+                boost::exception_detail::error_info_injector<
+                    boost::system::system_error>>& e)
+        {
+        }
+    }
 }
 
 
 void
 Parliament::AddLegislator(std::string address, short port)
 {
-    try
-    {
-        receiver = std::make_shared<NetworkReceiver>(address, port);
-        sender = std::make_shared<NetworkSender>(legislators);
-
-        proposer = std::make_shared<ProposerContext>(
-            legislators,
-            ledger->Tail().number + 1
-        );
-        acceptor = std::make_shared<AcceptorContext>(location);
-        learner = std::make_shared<LearnerContext>(legislators, ledger);
-        updater = std::make_shared<UpdaterContext>(ledger);
-
-        RegisterProposer(
-            receiver,
-            sender,
-            proposer
-        );
-        RegisterAcceptor(
-            receiver,
-            sender,
-            acceptor
-        );
-        RegisterLearner(
-            receiver,
-            sender,
-            learner
-        );
-        RegisterUpdater(
-            receiver,
-            sender,
-            updater
-        );
-    }
-    catch (
-        boost::exception_detail::clone_impl<
-            boost::exception_detail::error_info_injector<
-                boost::system::system_error>>& e)
-    {
-    }
-
     legislators->Add(Replica(address, port));
 }
 

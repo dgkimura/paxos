@@ -76,4 +76,8 @@ private:
 };
 
 
+std::shared_ptr<ReplicaSet>
+LoadReplicaSet(std::string directory);
+
+
 #endif

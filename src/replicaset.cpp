@@ -1,4 +1,12 @@
 #include "paxos/replicaset.hpp"
+#include <fstream>
+#include <vector>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include "paxos/replicaset.hpp"
 
 
 bool
@@ -95,4 +103,31 @@ ReplicaSet::iterator
 ReplicaSet::end() const
 {
     return replicaset.end();
+}
+
+
+std::shared_ptr<ReplicaSet> LoadReplicaSet(std::string directory)
+{
+    auto replicaset =   std::make_shared<ReplicaSet>();
+    boost::filesystem::path replicasetfile(directory);
+    replicasetfile /= "replicaset";
+
+
+    if (boost::filesystem::exists(replicasetfile))
+    {
+        std::fstream s(replicasetfile.string());
+        std::string line;
+        while (std::getline(s, line))
+        {
+            std::vector<std::string> hostport;
+            split(hostport, line, boost::is_any_of(":"));
+            replicaset->Add(
+                Replica(
+                    hostport[0],
+                    boost::lexical_cast<short>(hostport[1])
+                )
+            );
+        }
+    }
+    return replicaset;
 }
