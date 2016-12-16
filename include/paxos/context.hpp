@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <queue>
+#include <tuple>
 #include <vector>
 
 #include "paxos/decree.hpp"
@@ -27,7 +28,7 @@ struct ProposerContext : public Context
     std::shared_ptr<ReplicaSet> replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> promise_map;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> nack_map;
-    std::vector<std::string> requested_values;
+    std::vector<std::tuple<std::string, DecreeType>> requested_values;
 
     ProposerContext(
         std::shared_ptr<ReplicaSet> replicaset_,

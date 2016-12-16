@@ -98,7 +98,8 @@ HandleRequest(
 {
     if (!message.decree.content.empty())
     {
-        context->requested_values.push_back(message.decree.content);
+        context->requested_values.push_back(
+            std::make_tuple(message.decree.content, message.decree.type));
     }
 
     if (!context->in_progress.test_and_set())
@@ -171,7 +172,8 @@ HandlePromise(
         {
             if (message.decree.content.empty() && !context->requested_values.empty())
             {
-                message.decree.content = context->requested_values[0];
+                message.decree.content = std::get<0>(context->requested_values[0]);
+                message.decree.type = std::get<1>(context->requested_values[0]);
                 context->requested_values.erase(context->requested_values.begin());
             }
             sender->ReplyAll(Response(message, MessageType::AcceptMessage));

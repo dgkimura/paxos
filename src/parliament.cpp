@@ -73,10 +73,13 @@ Parliament::AddLegislator(std::string address, short port)
 {
     Decree d;
     d.type = DecreeType::SystemDecree;
-    d.content = Serialize(SystemDecree(
-        SystemOperation::AddReplica,
-        0,
-        address));
+    d.content = Serialize(
+        SystemDecree(
+            SystemOperation::AddReplica,
+            0,
+            Serialize(Replica(address, port))
+        )
+    );
     send_decree(d);
 }
 
@@ -86,10 +89,13 @@ Parliament::RemoveLegislator(std::string address, short port)
 {
     Decree d;
     d.type = DecreeType::SystemDecree;
-    d.content = Serialize(SystemDecree(
-        SystemOperation::RemoveReplica,
-        0,
-        address));
+    d.content = Serialize(
+        SystemDecree(
+            SystemOperation::RemoveReplica,
+            0,
+            Serialize(Replica(address, port))
+        )
+    );
     send_decree(d);
 }
 
