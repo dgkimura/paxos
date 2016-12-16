@@ -18,7 +18,7 @@ TEST_F(LedgerUnitTest, testAppendIncrementsTheSize)
 
     ASSERT_EQ(ledger.Size(), 0);
 
-    ledger.Append(Decree(Replica("an_author"), 1, "decree_contents"));
+    ledger.Append(Decree(Replica("an_author"), 1, "decree_contents", DecreeType::UserDecree));
 
     ASSERT_EQ(ledger.Size(), 1);
 }
@@ -28,7 +28,7 @@ TEST_F(LedgerUnitTest, testRemoveDecrementsTheSize)
 {
     Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
 
-    ledger.Append(Decree(Replica("an_author"), 1, "decree_contents"));
+    ledger.Append(Decree(Replica("an_author"), 1, "decree_contents", DecreeType::UserDecree));
     ledger.Remove();
 
     ASSERT_EQ(ledger.Size(), 0);
@@ -62,7 +62,7 @@ TEST_F(LedgerUnitTest, testEmptyTailReturnsDefaultDecree)
 TEST_F(LedgerUnitTest, testEmptyNextWithFutureDecree)
 {
     Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
-    Decree expected, actual = ledger.Next(Decree(Replica("b_author"), 2, "b_content"));
+    Decree expected, actual = ledger.Next(Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree));
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
     ASSERT_EQ(expected.author.port, actual.author.port);
@@ -74,10 +74,10 @@ TEST_F(LedgerUnitTest, testEmptyNextWithFutureDecree)
 TEST_F(LedgerUnitTest, testHeadWithMultipleDecrees)
 {
     Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
-    ledger.Append(Decree(Replica("a_author"), 1, "a_content"));
-    ledger.Append(Decree(Replica("b_author"), 2, "b_content"));
+    ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
+    ledger.Append(Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree));
 
-    Decree expected = Decree(Replica("a_author"), 1, "a_content"), actual = ledger.Head();
+    Decree expected = Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree), actual = ledger.Head();
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
     ASSERT_EQ(expected.author.port, actual.author.port);
@@ -89,10 +89,10 @@ TEST_F(LedgerUnitTest, testHeadWithMultipleDecrees)
 TEST_F(LedgerUnitTest, testTailWithMultipleDecrees)
 {
     Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
-    ledger.Append(Decree(Replica("a_author"), 1, "a_content"));
-    ledger.Append(Decree(Replica("b_author"), 2, "b_content"));
+    ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
+    ledger.Append(Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree));
 
-    Decree expected = Decree(Replica("b_author"), 2, "b_content"), actual = ledger.Tail();
+    Decree expected = Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree), actual = ledger.Tail();
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
     ASSERT_EQ(expected.author.port, actual.author.port);
@@ -104,12 +104,12 @@ TEST_F(LedgerUnitTest, testTailWithMultipleDecrees)
 TEST_F(LedgerUnitTest, testNextWithMultipleDecrees)
 {
     Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
-    ledger.Append(Decree(Replica("a_author"), 1, "a_content"));
-    ledger.Append(Decree(Replica("b_author"), 2, "b_content"));
-    ledger.Append(Decree(Replica("c_author"), 3, "c_content"));
+    ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
+    ledger.Append(Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree));
+    ledger.Append(Decree(Replica("c_author"), 3, "c_content", DecreeType::UserDecree));
 
-    Decree expected = Decree(Replica("b_author"), 2, "b_content"),
-           actual = ledger.Next(Decree(Replica("a_author"), 1, "a_content"));
+    Decree expected = Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree),
+           actual = ledger.Next(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
     ASSERT_EQ(expected.author.port, actual.author.port);
@@ -121,8 +121,8 @@ TEST_F(LedgerUnitTest, testNextWithMultipleDecrees)
 TEST_F(LedgerUnitTest, testAppendIgnoresOutOfOrderDecrees)
 {
     Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
-    ledger.Append(Decree(Replica("b_author"), 2, "b_content"));
-    ledger.Append(Decree(Replica("a_author"), 1, "a_content"));
+    ledger.Append(Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree));
+    ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
 
     ASSERT_EQ(ledger.Size(), 1);
 }
@@ -131,8 +131,8 @@ TEST_F(LedgerUnitTest, testAppendIgnoresOutOfOrderDecrees)
 TEST_F(LedgerUnitTest, testAppendIgnoresDuplicateDecrees)
 {
     Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
-    ledger.Append(Decree(Replica("a_author"), 1, "a_content"));
-    ledger.Append(Decree(Replica("a_author"), 1, "a_content"));
+    ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
+    ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
 
     ASSERT_EQ(ledger.Size(), 1);
 }
@@ -143,9 +143,12 @@ TEST_F(LedgerUnitTest, testDecreeHandlerOnAppend)
     std::string concatenated_content;
     auto handler = [&](std::string entry) { concatenated_content += entry; };
 
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>(), DecreeHandler(handler));
-    ledger.Append(Decree(Replica("a_author"), 1, "AAAAA"));
-    ledger.Append(Decree(Replica("b_author"), 2, "BBBBB"));
+    Ledger ledger(
+        std::make_shared<VolatileQueue<Decree>>(),
+        DecreeHandler(handler),
+        DecreeHandler());
+    ledger.Append(Decree(Replica("a_author"), 1, "AAAAA", DecreeType::UserDecree));
+    ledger.Append(Decree(Replica("b_author"), 2, "BBBBB", DecreeType::UserDecree));
 
     ASSERT_EQ(concatenated_content, "AAAAABBBBB");
 }

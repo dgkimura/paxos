@@ -17,6 +17,7 @@ void serialize(Archive& ar, Decree& obj, const unsigned int version)
 {
     ar & obj.author;
     ar & obj.number;
+    ar & obj.type;
     ar & obj.content;
 }
 

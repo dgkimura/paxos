@@ -8,7 +8,7 @@ TEST(MessageTest, testMessageResponseUpdatesSenderAndReceiver)
     Replica from("from_hostname");
     Replica to("to_hostname");
 
-    Decree the_decree(from, 1, "");
+    Decree the_decree(from, 1, "", DecreeType::UserDecree);
     Message m(the_decree, from, to, MessageType::RequestMessage);
 
     Message response = Response(m, MessageType::PromiseMessage);

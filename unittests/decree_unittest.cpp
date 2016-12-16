@@ -16,8 +16,8 @@ TEST(DecreeUnitTest, testDecreeDefaultConstructor)
 
 TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_TRUE(CompareDecrees(lower, higher) < 0);
 }
@@ -25,8 +25,8 @@ TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeNumberOnRightHandSide)
 
 TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_TRUE(CompareDecrees(higher, lower) > 0);
 }
@@ -34,8 +34,8 @@ TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeNumberOnLeftHandSide)
 
 TEST(DecreeUnitTest, testCompareDecreesWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "");
-    Decree higher(Replica("an_author_1"), 1, "");
+    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
 
     ASSERT_TRUE(CompareDecrees(higher, lower) == 0);
 }
@@ -43,8 +43,8 @@ TEST(DecreeUnitTest, testCompareDecreesWithIdenticalDecrees)
 
 TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_TRUE(IsDecreeLower(lower, higher));
 }
@@ -52,8 +52,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeNumberOnRightHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_FALSE(IsDecreeLower(higher, lower));
 }
@@ -61,8 +61,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeNumberOnLeftHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeLowerWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "");
-    Decree higher(Replica("an_author_1"), 1, "");
+    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
 
     ASSERT_FALSE(IsDecreeLower(higher, lower));
 }
@@ -70,8 +70,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerWithIdenticalDecrees)
 
 TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_FALSE(IsDecreeEqual(lower, higher));
 }
@@ -79,8 +79,8 @@ TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeNumberOnRightHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_FALSE(IsDecreeEqual(higher, lower));
 }
@@ -88,8 +88,8 @@ TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeNumberOnLeftHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeEqualWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "");
-    Decree higher(Replica("an_author_1"), 1, "");
+    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
 
     ASSERT_TRUE(IsDecreeEqual(higher, lower));
 }
@@ -97,8 +97,8 @@ TEST(DecreeUnitTest, testIsDecreeEqualWithIdenticalDecrees)
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_FALSE(IsDecreeHigher(lower, higher));
 }
@@ -106,8 +106,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeNumberOnRightHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_TRUE(IsDecreeHigher(higher, lower));
 }
@@ -115,8 +115,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeNumberOnLeftHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "");
-    Decree higher(Replica("an_author_1"), 1, "");
+    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
 
     ASSERT_FALSE(IsDecreeHigher(higher, lower));
 }
@@ -124,8 +124,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherWithIdenticalDecrees)
 
 TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_FALSE(IsDecreeHigherOrEqual(lower, higher));
 }
@@ -133,8 +133,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeNumberOnRightHandS
 
 TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_TRUE(IsDecreeHigherOrEqual(higher, lower));
 }
@@ -142,8 +142,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeNumberOnLeftHandSi
 
 TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "");
-    Decree higher(Replica("an_author_1"), 1, "");
+    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
 
     ASSERT_TRUE(IsDecreeHigherOrEqual(higher, lower));
 }
@@ -151,8 +151,8 @@ TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithIdenticalDecrees)
 
 TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_TRUE(IsDecreeLowerOrEqual(lower, higher));
 }
@@ -160,8 +160,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeNumberOnRightHandSi
 
 TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_FALSE(IsDecreeLowerOrEqual(higher, lower));
 }
@@ -169,8 +169,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeNumberOnLeftHandSid
 
 TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "");
-    Decree higher(Replica("an_author_1"), 1, "");
+    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
 
     ASSERT_TRUE(IsDecreeLowerOrEqual(higher, lower));
 }
@@ -178,8 +178,8 @@ TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithIdenticalDecrees)
 
 TEST(DecreeUnitTest, testIsDecreeOrderedWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_TRUE(IsDecreeOrdered(lower, higher));
 }
@@ -187,8 +187,8 @@ TEST(DecreeUnitTest, testIsDecreeOrderedWithHigherDecreeNumberOnRightHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeOrderedWithMuchHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 99, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 99, "", DecreeType::UserDecree);
 
     ASSERT_FALSE(IsDecreeOrdered(lower, higher));
 }
@@ -196,8 +196,8 @@ TEST(DecreeUnitTest, testIsDecreeOrderedWithMuchHigherDecreeNumberOnRightHandSid
 
 TEST(DecreeUnitTest, testIsDecreeOrderedWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "");
-    Decree higher(Replica("an_author"), 2, "");
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
 
     ASSERT_FALSE(IsDecreeOrdered(higher, lower));
 }
@@ -205,8 +205,8 @@ TEST(DecreeUnitTest, testIsDecreeOrderedWithHigherDecreeNumberOnLeftHandSide)
 
 TEST(DecreeUnitTest, testIsDecreeOrderedWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "");
-    Decree higher(Replica("an_author_1"), 1, "");
+    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
 
     ASSERT_FALSE(IsDecreeOrdered(higher, lower));
 }

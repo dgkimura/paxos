@@ -5,7 +5,7 @@
 
 TEST(SerializationUnitTest, testDecreeIsSerializableAndDeserializable)
 {
-    Decree expected(Replica("an_author_1"), 1, "the_decree_contents"), actual;
+    Decree expected(Replica("an_author_1"), 1, "the_decree_contents", DecreeType::UserDecree), actual;
 
     std::string string_obj = Serialize(expected);
     actual = Deserialize<Decree>(string_obj);
@@ -32,7 +32,7 @@ TEST(SerializationUnitTest, testReplicaIsSerializableAndDeserializable)
 TEST(SerializationUnitTest, testMessageIsSerializableAndDeserializable)
 {
     Message expected(
-        Decree(Replica("author-hostname", 0), 1, "the_decree_contents"),
+        Decree(Replica("author-hostname", 0), 1, "the_decree_contents", DecreeType::UserDecree),
         Replica("hostname-A", 111),
         Replica("hostname-B", 111),
         MessageType::PrepareMessage),
@@ -55,11 +55,11 @@ TEST(SerializationUnitTest, testMessageIsSerializableAndDeserializable)
 
 TEST(SerializationUnitTest, testSerializationWithPaddedFluffOnTheEndOfTheBuffer)
 {
-    Decree expected(Replica("an_author_1", 0), 1, "the_decree_contents"), actual;
+    Decree expected(Replica("an_author_1", 0), 1, "the_decree_contents", DecreeType::UserDecree), actual;
 
     actual = Deserialize<Decree>(
         "22 serialization::archive 11 0 0 0 0 11 an_author_1 "
-        "0 1 19 the_decree_contents THIS IS FLUFF!!!"
+        "0 1 0 19 the_decree_contents THIS IS FLUFF!!!"
     );
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
@@ -71,9 +71,9 @@ TEST(SerializationUnitTest, testSerializationWithPaddedFluffOnTheEndOfTheBuffer)
 
 TEST(SerializationUnitTest, testSerializationWithUniversalReferenceValues)
 {
-    Decree expected(Replica("an_author_1", 0), 1, "the_decree_contents"), actual;
+    Decree expected(Replica("an_author_1", 0), 1, "the_decree_contents", DecreeType::UserDecree), actual;
 
-    std::string string_obj = Serialize(Decree(Replica("an_author_1", 0), 1, "the_decree_contents"));
+    std::string string_obj = Serialize(Decree(Replica("an_author_1", 0), 1, "the_decree_contents", DecreeType::UserDecree));
     actual = Deserialize<Decree>(string_obj);
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);

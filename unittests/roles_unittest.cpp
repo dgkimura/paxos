@@ -123,7 +123,7 @@ TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneInProgressProposal)
 
     HandleRequest(
         Message(
-            Decree(Replica("host"), -1, "first"),
+            Decree(Replica("host"), -1, "first", DecreeType::UserDecree),
             Replica("host"),
             Replica("B"),
             MessageType::RequestMessage
@@ -133,7 +133,7 @@ TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneInProgressProposal)
     );
     HandleRequest(
         Message(
-            Decree(Replica("host"), -1, "second"),
+            Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
             Replica("host"),
             Replica("B"),
             MessageType::RequestMessage
@@ -143,7 +143,7 @@ TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneInProgressProposal)
     );
     HandleRequest(
         Message(
-            Decree(Replica("host"), -1, "third"),
+            Decree(Replica("host"), -1, "third", DecreeType::UserDecree),
             Replica("host"),
             Replica("B"),
             MessageType::RequestMessage
@@ -159,13 +159,13 @@ TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneInProgressProposal)
 TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromisedDecree)
 {
     Message message(
-        Decree(Replica("the_author"), -1, ""),
+        Decree(Replica("the_author"), -1, "", DecreeType::UserDecree),
         Replica("from"),
         Replica("to"),
         MessageType::PromiseMessage);
 
     auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
-    context->highest_proposed_decree = Decree(Replica("the_author"), 0, "");
+    context->highest_proposed_decree = Decree(Replica("the_author"), 0, "", DecreeType::UserDecree);
 
     std::shared_ptr<FakeSender> sender(new FakeSender());
 
@@ -178,10 +178,10 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromise
 
 TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecree)
 {
-    Message message(Decree(Replica("host"), 1, ""), Replica("host"), Replica("host"), MessageType::PromiseMessage);
+    Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
     auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
-    context->highest_proposed_decree = Decree(Replica("host"), 0, "");
+    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
     context->replicaset->Add(Replica("host"));
 
@@ -196,11 +196,11 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
 
 TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotUpdateHighestPromisedDecree)
 {
-    Message message(Decree(Replica("host"), 1, ""), Replica("unknown_host"), Replica("host"), MessageType::PromiseMessage);
+    Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("unknown_host"), Replica("host"), MessageType::PromiseMessage);
 
     auto context = std::make_shared<ProposerContext>(
         std::make_shared<ReplicaSet>(), 0);
-    context->highest_proposed_decree = Decree(Replica("host"), 0, "");
+    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::shared_ptr<ReplicaSet>(new ReplicaSet());
     context->replicaset->Add(Replica("host"));
 
@@ -223,7 +223,7 @@ TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressIncrementsCurrentDec
     // Increments current by one.
     HandleRequest(
         Message(
-            Decree(Replica("host"), -1, "first"),
+            Decree(Replica("host"), -1, "first", DecreeType::UserDecree),
             Replica("host"),
             Replica("B"),
             MessageType::RequestMessage
@@ -234,7 +234,7 @@ TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressIncrementsCurrentDec
     // Same round, do not increment.
     HandleRequest(
         Message(
-            Decree(Replica("host"), -1, "second"),
+            Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
             Replica("host"),
             Replica("B"),
             MessageType::RequestMessage
@@ -250,7 +250,7 @@ TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressIncrementsCurrentDec
 TEST_F(ProposerTest, testHandleNackRemovesReplicaFromPromisedMapAndSendsRetryPrepareMessage)
 {
     auto replica = Replica("host");
-    auto decree = Decree(replica, -1, "first");
+    auto decree = Decree(replica, -1, "first", DecreeType::UserDecree);
     auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
 
     // Add replica to known replicas.
@@ -289,7 +289,7 @@ TEST_F(ProposerTest, testHandleNackRemovesReplicaFromPromisedMapAndSendsRetryPre
 TEST_F(ProposerTest, testHandleNackWithoutDecreeInPromiseMap)
 {
     auto replica = Replica("host");
-    auto decree = Decree(replica, -1, "first");
+    auto decree = Decree(replica, -1, "first", DecreeType::UserDecree);
     auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
 
     // Add replica to known replicas.
@@ -322,7 +322,7 @@ TEST_F(ProposerTest, testHandleNackDoesntSendRetryPrepareUntilMajorityNack)
     auto replica_2 = Replica("host-2");
     auto replica_3 = Replica("host-3");
 
-    auto decree = Decree(replica_1, -1, "first");
+    auto decree = Decree(replica_1, -1, "first", DecreeType::UserDecree);
     auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
 
     context->replicaset->Add(replica_1);
@@ -360,7 +360,7 @@ TEST_F(ProposerTest, testHandleAcceptedThenHandleRequestIncrementsCurrentDecreeN
     // Increments current by one.
     HandleRequest(
         Message(
-            Decree(Replica("host"), -1, "second"),
+            Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
             Replica("host"),
             Replica("B"),
             MessageType::RequestMessage
@@ -371,7 +371,7 @@ TEST_F(ProposerTest, testHandleAcceptedThenHandleRequestIncrementsCurrentDecreeN
     // Signals round finished.
     HandleAccepted(
         Message(
-            Decree(Replica("host"), -1, "first"),
+            Decree(Replica("host"), -1, "first", DecreeType::UserDecree),
             Replica("host"),
             Replica("B"),
             MessageType::AcceptedMessage
@@ -382,7 +382,7 @@ TEST_F(ProposerTest, testHandleAcceptedThenHandleRequestIncrementsCurrentDecreeN
     // Next round, increments current by one.
     HandleRequest(
         Message(
-            Decree(Replica("host"), -1, "second"),
+            Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
             Replica("host"),
             Replica("B"),
             MessageType::RequestMessage
@@ -405,7 +405,7 @@ TEST_F(ProposerTest, testHandleRetryRequestNeverIncrementsCurrentDecreeNumber)
     // Retry doesn't increment.
     HandleRetryRequest(
         Message(
-            Decree(Replica("host"), -1, "second"),
+            Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
             Replica("host"),
             Replica("B"),
             MessageType::RequestMessage
@@ -416,7 +416,7 @@ TEST_F(ProposerTest, testHandleRetryRequestNeverIncrementsCurrentDecreeNumber)
     // Signals round finished.
     HandleAccepted(
         Message(
-            Decree(Replica("host"), -1, "first"),
+            Decree(Replica("host"), -1, "first", DecreeType::UserDecree),
             Replica("host"),
             Replica("B"),
             MessageType::AcceptedMessage
@@ -427,7 +427,7 @@ TEST_F(ProposerTest, testHandleRetryRequestNeverIncrementsCurrentDecreeNumber)
     // Next round, retry still doesn't increment.
     HandleRetryRequest(
         Message(
-            Decree(Replica("host"), -1, "second"),
+            Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
             Replica("host"),
             Replica("B"),
             MessageType::RequestMessage
@@ -443,7 +443,7 @@ TEST_F(ProposerTest, testHandleRetryRequestNeverIncrementsCurrentDecreeNumber)
 TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
 {
     Message message(
-        Decree(Replica("A"), 1, "content"),
+        Decree(Replica("A"), 1, "content", DecreeType::UserDecree),
         Replica("from"),
         Replica("to"),
         MessageType::AcceptMessage);
@@ -463,7 +463,7 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
 TEST_F(ProposerTest, testHandleAcceptedIncrementsCurrentDecreeWhenCurrentDecreeAuthoredByAnotherRepicaWasAccepted)
 {
     Message message(
-        Decree(Replica("A"), 2, "content"),
+        Decree(Replica("A"), 2, "content", DecreeType::UserDecree),
         Replica("from"),
         Replica("to"),
         MessageType::AcceptMessage);
@@ -483,7 +483,7 @@ TEST_F(ProposerTest, testHandleAcceptedIncrementsCurrentDecreeWhenCurrentDecreeA
 TEST_F(ProposerTest, testHandleAcceptedDoesNotIncrementCurrentDecreeWhenReplicaIsTooFarBehind)
 {
     Message message(
-        Decree(Replica("A"), 200, "content"),
+        Decree(Replica("A"), 200, "content", DecreeType::UserDecree),
         Replica("from"),
         Replica("to"),
         MessageType::AcceptMessage);
@@ -511,10 +511,10 @@ class AcceptorTest: public testing::Test
 
 TEST_F(AcceptorTest, testHandlePrepareWithHigherDecreeUpdatesPromisedDecree)
 {
-    Message message(Decree(Replica("the_author"), 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+    Message message(Decree(Replica("the_author"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
 
     std::shared_ptr<AcceptorContext> context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 0, "");
+    context->promised_decree = Decree(Replica("the_author"), 0, "", DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
@@ -527,10 +527,10 @@ TEST_F(AcceptorTest, testHandlePrepareWithHigherDecreeUpdatesPromisedDecree)
 
 TEST_F(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree)
 {
-    Message message(Decree(Replica("the_author"), -1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+    Message message(Decree(Replica("the_author"), -1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 1, "");
+    context->promised_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
@@ -542,11 +542,11 @@ TEST_F(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree
 
 TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromMultipleReplicasSendsSinglePromise)
 {
-    Message author_a(Decree(Replica("author_a"), 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
-    Message author_b(Decree(Replica("author_b"), 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+    Message author_a(Decree(Replica("author_a"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+    Message author_b(Decree(Replica("author_b"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 0, "");
+    context->promised_decree = Decree(Replica("the_author"), 0, "", DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
@@ -563,10 +563,10 @@ TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromMultipleReplicasS
 
 TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromSingleReplicasResendsPromise)
 {
-    Message message(Decree(Replica("the_author"), 1, ""), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+    Message message(Decree(Replica("the_author"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 0, "");
+    context->promised_decree = Decree(Replica("the_author"), 0, "", DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
@@ -584,8 +584,8 @@ TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromSingleReplicasRes
 TEST_F(AcceptorTest, testHandleRetryPrepareLastSelfishPromises)
 {
     auto replica = Replica("the_author");
-    auto current_decree = Decree(replica, 1, "");
-    auto past_decree = Decree(replica, 2, "");
+    auto current_decree = Decree(replica, 1, "", DecreeType::UserDecree);
+    auto past_decree = Decree(replica, 2, "", DecreeType::UserDecree);
 
     auto context = createAcceptorContext();
     context->promised_decree = current_decree;
@@ -613,8 +613,8 @@ TEST_F(AcceptorTest, testHandleRetryPrepareLastSelfishPromises)
 TEST_F(AcceptorTest, testHandleRetryPrepareHasNoEffectOnLastUnselfishPromise)
 {
     auto replica = Replica("the_author");
-    auto current_decree = Decree(Replica("another_author"), 1, "");
-    auto past_decree = Decree(replica, 2, "");
+    auto current_decree = Decree(Replica("another_author"), 1, "", DecreeType::UserDecree);
+    auto past_decree = Decree(replica, 2, "", DecreeType::UserDecree);
 
     auto context = createAcceptorContext();
     context->promised_decree = current_decree;
@@ -641,11 +641,11 @@ TEST_F(AcceptorTest, testHandleRetryPrepareHasNoEffectOnLastUnselfishPromise)
 
 TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 {
-    Message message(Decree(Replica("the_author"), -1, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
+    Message message(Decree(Replica("the_author"), -1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 1, "");
-    context->accepted_decree = Decree(Replica("the_author"), 1, "");
+    context->promised_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
+    context->accepted_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
@@ -657,11 +657,11 @@ TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 
 TEST_F(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
 {
-    Message message(Decree(Replica("the_author"), 1, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
+    Message message(Decree(Replica("the_author"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 1, "");
-    context->accepted_decree = Decree(Replica("the_author"), 1, "");
+    context->promised_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
+    context->accepted_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
@@ -673,11 +673,11 @@ TEST_F(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
 
 TEST_F(AcceptorTest, testHandleAcceptWithHigherDecreeDoesUpdateAcceptedDecree)
 {
-    Message message(Decree(Replica("the_author"), 2, ""), Replica("from"), Replica("to"), MessageType::AcceptMessage);
+    Message message(Decree(Replica("the_author"), 2, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 1, "");
-    context->accepted_decree = Decree(Replica("the_author"), 1, "");
+    context->promised_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
+    context->accepted_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
@@ -698,7 +698,7 @@ class LearnerTest: public testing::Test
 
 TEST_F(LearnerTest, testProclaimHandleWithSingleReplica)
 {
-    Message message(Decree(Replica("A"), 1, ""), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
+    Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
     auto context = createLearnerContext({"A"});
 
     HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
@@ -709,7 +709,7 @@ TEST_F(LearnerTest, testProclaimHandleWithSingleReplica)
 
 TEST_F(LearnerTest, testProclaimHandleIgnoresMessagesFromUnknownReplica)
 {
-    Message message(Decree(Replica("A"), 1, ""), Replica("Unknown"), Replica("A"), MessageType::AcceptedMessage);
+    Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("Unknown"), Replica("A"), MessageType::AcceptedMessage);
     auto context = createLearnerContext({"A"});
 
     HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
@@ -720,7 +720,7 @@ TEST_F(LearnerTest, testProclaimHandleIgnoresMessagesFromUnknownReplica)
 
 TEST_F(LearnerTest, testProclaimHandleReceivesOneAcceptedWithThreeReplicaSet)
 {
-    Message message(Decree(Replica("A"), 1, ""), Replica("A"), Replica("B"), MessageType::AcceptedMessage);
+    Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("A"), Replica("B"), MessageType::AcceptedMessage);
     auto context = createLearnerContext({"A", "B", "C"});
 
     HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
@@ -735,7 +735,7 @@ TEST_F(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
 
     HandleProclaim(
         Message(
-            Decree(Replica("A"), 1, ""),
+            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("A"),
             Replica("B"),
             MessageType::AcceptedMessage
@@ -745,7 +745,7 @@ TEST_F(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
     );
     HandleProclaim(
         Message(
-            Decree(Replica("A"), 1, ""),
+            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("B"),
             Replica("B"),
             MessageType::AcceptedMessage
@@ -761,7 +761,7 @@ TEST_F(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
 TEST_F(LearnerTest, testProclaimHandleCleansUpAcceptedMapAfterAllVotesReceived)
 {
     auto context = createLearnerContext({"A", "B", "C"});
-    Decree decree(Replica("A"), 1, "");
+    Decree decree(Replica("A"), 1, "", DecreeType::UserDecree);
 
     HandleProclaim(
         Message(
@@ -807,7 +807,7 @@ TEST_F(LearnerTest, testProclaimHandleCleansUpAcceptedMapAfterAllVotesReceived)
 TEST_F(LearnerTest, testProclaimHandleIgnoresPreviouslyAcceptedMessagesFromReplicasRemovedFromReplicaSet)
 {
     auto context = createLearnerContext({"A", "B", "C"});
-    Decree decree(Replica("A"), 1, "");
+    Decree decree(Replica("A"), 1, "", DecreeType::UserDecree);
 
     // Accepted from replica A.
     HandleProclaim(
@@ -846,7 +846,7 @@ TEST_F(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
 
     HandleProclaim(
         Message(
-            Decree(Replica("A"), 1, ""),
+            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("A"),
             Replica("B"),
             MessageType::AcceptedMessage
@@ -856,7 +856,7 @@ TEST_F(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
     );
     HandleProclaim(
         Message(
-            Decree(Replica("A"), 1, ""),
+            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("A"),
             Replica("B"),
             MessageType::AcceptedMessage
@@ -876,7 +876,7 @@ TEST_F(LearnerTest, testProclaimHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLe
 
     HandleProclaim(
         Message(
-            Decree(Replica("A"), 1, ""),
+            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("A"), Replica("A"),
             MessageType::AcceptedMessage
         ),
@@ -887,7 +887,7 @@ TEST_F(LearnerTest, testProclaimHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLe
     // Missing decrees 2-9 so don't write to ledger yet.
     HandleProclaim(
         Message(
-            Decree(Replica("A"), 10, ""),
+            Decree(Replica("A"), 10, "", DecreeType::UserDecree),
             Replica("A"), Replica("A"),
             MessageType::AcceptedMessage
         ),
@@ -902,7 +902,7 @@ TEST_F(LearnerTest, testProclaimHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLe
 
 TEST_F(LearnerTest, testProclaimHandleTracksFutureDecreesIfReceivedOutOfOrder)
 {
-    Message message(Decree(Replica("A"), 1, ""), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
+    Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
     auto context = createLearnerContext({"A"});
     context->is_observer = true;
 
@@ -916,8 +916,8 @@ TEST_F(LearnerTest, testProclaimHandleTracksFutureDecreesIfReceivedOutOfOrder)
 
 TEST_F(LearnerTest, testProclaimHandleDoesNotTrackPastDecrees)
 {
-    Decree past_decree(Replica("A"), 1, "");
-    Decree future_decree(Replica("A"), 1, "");
+    Decree past_decree(Replica("A"), 1, "", DecreeType::UserDecree);
+    Decree future_decree(Replica("A"), 1, "", DecreeType::UserDecree);
 
     Message message(past_decree, Replica("A"), Replica("A"), MessageType::AcceptedMessage);
     auto context = createLearnerContext({"A"});
@@ -936,8 +936,8 @@ TEST_F(LearnerTest, testProclaimHandleDoesNotTrackPastDecrees)
 
 TEST_F(LearnerTest, testProclaimHandleAppendsTrackedFutureDecreesToLedgerWhenTheyFillInHoles)
 {
-    Decree past_decree(Replica("A"), 1, "");
-    Decree current_decree(Replica("A"), 2, "");
+    Decree past_decree(Replica("A"), 1, "", DecreeType::UserDecree);
+    Decree current_decree(Replica("A"), 2, "", DecreeType::UserDecree);
 
     Message message(current_decree, Replica("A"), Replica("A"), MessageType::AcceptedMessage);
     auto context = createLearnerContext({"A"});
@@ -958,7 +958,7 @@ TEST_F(LearnerTest, testHandleUpdatedWithEmptyLedger)
     // Missing decrees 1-9 so don't write to ledger yet.
     HandleUpdated(
         Message(
-            Decree(Replica("A"), 10, ""),
+            Decree(Replica("A"), 10, "", DecreeType::UserDecree),
             Replica("A"), Replica("A"),
             MessageType::UpdatedMessage
         ),
@@ -976,12 +976,12 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecree)
     auto sender = std::make_shared<FakeSender>();
 
     // Last decree in ledger is 9.
-    context->ledger->Append(Decree(Replica("A"), 9, ""));
+    context->ledger->Append(Decree(Replica("A"), 9, "", DecreeType::UserDecree));
 
     // Receive next ordered decree 10.
     HandleUpdated(
         Message(
-            Decree(Replica("A"), 10, ""),
+            Decree(Replica("A"), 10, "", DecreeType::UserDecree),
             Replica("A"), Replica("A"),
             MessageType::UpdatedMessage
         ),
@@ -1000,13 +1000,13 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrac
     auto sender = std::make_shared<FakeSender>();
 
     // We have tracked decrees 2, 3.
-    context->tracked_future_decrees.push(Decree(Replica("A"), 2, ""));
-    context->tracked_future_decrees.push(Decree(Replica("A"), 3, ""));
+    context->tracked_future_decrees.push(Decree(Replica("A"), 2, "", DecreeType::UserDecree));
+    context->tracked_future_decrees.push(Decree(Replica("A"), 3, "", DecreeType::UserDecree));
 
     // Receive next ordered decree 1.
     HandleUpdated(
         Message(
-            Decree(Replica("A"), 1, ""),
+            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("A"), Replica("A"),
             MessageType::UpdatedMessage
         ),
@@ -1025,13 +1025,13 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrac
     auto sender = std::make_shared<FakeSender>();
 
     // We have tracked decrees 3, 4.
-    context->tracked_future_decrees.push(Decree(Replica("A"), 3, ""));
-    context->tracked_future_decrees.push(Decree(Replica("A"), 4, ""));
+    context->tracked_future_decrees.push(Decree(Replica("A"), 3, "", DecreeType::UserDecree));
+    context->tracked_future_decrees.push(Decree(Replica("A"), 4, "", DecreeType::UserDecree));
 
     // Receive next ordered decree 1.
     HandleUpdated(
         Message(
-            Decree(Replica("A"), 1, ""),
+            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("A"), Replica("A"),
             MessageType::UpdatedMessage
         ),
@@ -1067,7 +1067,7 @@ TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndHasEmptyLedger)
 
     HandleUpdate(
         Message(
-            Decree(Replica("A"), 1, ""),
+            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("A"), Replica("A"),
             MessageType::UpdateMessage
         ),
@@ -1089,13 +1089,13 @@ TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndLedgerHasNextDec
     );
     auto sender = std::make_shared<FakeSender>();
 
-    context->ledger->Append(Decree(Replica("A"), 1, ""));
-    context->ledger->Append(Decree(Replica("A"), 2, ""));
-    context->ledger->Append(Decree(Replica("A"), 3, ""));
+    context->ledger->Append(Decree(Replica("A"), 1, "", DecreeType::UserDecree));
+    context->ledger->Append(Decree(Replica("A"), 2, "", DecreeType::UserDecree));
+    context->ledger->Append(Decree(Replica("A"), 3, "", DecreeType::UserDecree));
 
     HandleUpdate(
         Message(
-            Decree(Replica("A"), 1, ""),
+            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("A"), Replica("A"),
             MessageType::UpdateMessage
         ),

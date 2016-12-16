@@ -14,10 +14,11 @@ class Ledger
 {
 public:
 
-    Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_);
+    Ledger(std::shared_ptr<BaseQueue<Decree>> decrees);
 
-    Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_,
-           DecreeHandler decree_handler_);
+    Ledger(std::shared_ptr<BaseQueue<Decree>> decrees,
+           DecreeHandler user_decree_handler,
+           DecreeHandler system_decree_handler);
 
     ~Ledger();
 
@@ -37,7 +38,9 @@ private:
 
     std::shared_ptr<BaseQueue<Decree>> decrees;
 
-    DecreeHandler decree_handler;
+    DecreeHandler user_decree_handler;
+
+    DecreeHandler system_decree_handler;
 
     std::mutex mutex;
 };

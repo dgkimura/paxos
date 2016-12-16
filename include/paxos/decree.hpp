@@ -6,6 +6,20 @@
 #include "paxos/replicaset.hpp"
 
 
+enum class DecreeType
+{
+    //
+    // User defined decree.
+    //
+    UserDecree,
+
+    //
+    // System defined decree.
+    //
+    SystemDecree
+};
+
+
 /*
  * Decree contains information about a proposal. Each decree is uniquely
  * definied by the author and number.
@@ -31,13 +45,15 @@ struct Decree
     //
     std::string content;
 
+    DecreeType type;
+
     Decree()
-        : author(), number(), content()
+        : author(), number(), content(), type()
     {
     }
 
-    Decree(Replica a, int n, std::string c)
-        : author(a), number(n), content(c)
+    Decree(Replica a, int n, std::string c, DecreeType dtype)
+        : author(a), number(n), content(c), type(dtype)
     {
     }
 };

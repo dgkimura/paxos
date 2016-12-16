@@ -12,9 +12,9 @@ TEST(ContextUnitTest, testLearnerContextTrackedFutureDecreeStoredInAscendingOrde
         std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>())
     );
 
-    context.tracked_future_decrees.push(Decree(Replica("A"), 2, ""));
-    context.tracked_future_decrees.push(Decree(Replica("A"), 1, ""));
-    context.tracked_future_decrees.push(Decree(Replica("A"), 3, ""));
+    context.tracked_future_decrees.push(Decree(Replica("A"), 2, "", DecreeType::UserDecree));
+    context.tracked_future_decrees.push(Decree(Replica("A"), 1, "", DecreeType::UserDecree));
+    context.tracked_future_decrees.push(Decree(Replica("A"), 3, "", DecreeType::UserDecree));
 
     ASSERT_EQ(context.tracked_future_decrees.top().number, 1);
 }

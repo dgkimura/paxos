@@ -1,16 +1,18 @@
 #include "paxos/ledger.hpp"
 
 
-Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_)
-    : Ledger(decrees_, DecreeHandler())
+Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees)
+    : Ledger(decrees, DecreeHandler(), DecreeHandler())
 {
 }
 
 
-Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees_,
-               DecreeHandler decree_handler_)
-    : decrees(decrees_),
-      decree_handler(decree_handler_)
+Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees,
+               DecreeHandler user_decree_handler,
+               DecreeHandler system_decree_handler)
+    : decrees(decrees),
+      user_decree_handler(user_decree_handler),
+      system_decree_handler(system_decree_handler)
 {
 }
 
@@ -38,7 +40,14 @@ Ledger::Append(Decree decree)
         // possible proliferation of a bad ledger to another replica.
         // It is safe because we require that the handler is idempotent.
         //
-        decree_handler(decree.content);
+        if (decree.type == DecreeType::UserDecree)
+        {
+            user_decree_handler(decree.content);
+        }
+        else if (decree.type == DecreeType::SystemDecree)
+        {
+            system_decree_handler(decree.content);
+        }
         decrees->Enqueue(decree);
     } else
     {

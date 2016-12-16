@@ -6,6 +6,7 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
       legislators(LoadReplicaSet(location)),
       ledger(std::make_shared<Ledger>(
           std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"),
+          decree_handler,
           decree_handler))
 {
     for (auto l : *legislators)
