@@ -1,4 +1,3 @@
-#include "paxos/replicaset.hpp"
 #include <fstream>
 #include <vector>
 
@@ -106,7 +105,8 @@ ReplicaSet::end() const
 }
 
 
-std::shared_ptr<ReplicaSet> LoadReplicaSet(std::string directory)
+std::shared_ptr<ReplicaSet>
+LoadReplicaSet(std::string directory)
 {
     auto replicaset =   std::make_shared<ReplicaSet>();
     boost::filesystem::path replicasetfile(directory);
@@ -130,4 +130,23 @@ std::shared_ptr<ReplicaSet> LoadReplicaSet(std::string directory)
         }
     }
     return replicaset;
+}
+
+
+void
+SaveReplicaSet(std::shared_ptr<ReplicaSet> replicaset, std::string directory)
+{
+    boost::filesystem::path replicasetfile(directory);
+    replicasetfile /= "replicaset";
+
+
+    if (boost::filesystem::exists(replicasetfile))
+    {
+        std::fstream s(
+            replicasetfile.string(),
+            std::ios::in | std::ios::out | std::ios::trunc);
+        for (auto r : *replicaset)
+        {
+        }
+    }
 }

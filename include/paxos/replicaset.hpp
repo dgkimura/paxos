@@ -80,4 +80,8 @@ std::shared_ptr<ReplicaSet>
 LoadReplicaSet(std::string directory);
 
 
+void
+SaveReplicaSet(std::shared_ptr<ReplicaSet> replicaset, std::string directory);
+
+
 #endif

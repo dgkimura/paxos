@@ -55,7 +55,7 @@ private:
 
     std::shared_ptr<UpdaterContext> updater;
 
-    std::string location;
+    void send_decree(Decree decree);
 };
 
 

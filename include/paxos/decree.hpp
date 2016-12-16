@@ -91,4 +91,38 @@ struct ascending_decree
 };
 
 
+enum class SystemOperation
+{
+    //
+    // Add replica to replicaset
+    //
+    AddReplica,
+
+    //
+    // Remove replica from replicaset.
+    //
+    RemoveReplica
+};
+
+
+struct SystemDecree
+{
+    SystemOperation operation;
+
+    int number;
+
+    std::string content;
+
+    SystemDecree()
+        : operation(), number(), content()
+    {
+    }
+
+    SystemDecree(SystemOperation op, int n, std::string c)
+        : operation(op), number(n), content(c)
+    {
+    }
+};
+
+
 #endif

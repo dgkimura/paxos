@@ -2,12 +2,25 @@
 
 
 Parliament::Parliament(std::string location, DecreeHandler decree_handler)
-    : location(location),
-      legislators(LoadReplicaSet(location)),
+    : legislators(LoadReplicaSet(location)),
       ledger(std::make_shared<Ledger>(
           std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"),
           decree_handler,
-          decree_handler))
+          DecreeHandler([this, location](std::string entry){
+              SystemDecree d = Deserialize<SystemDecree>(entry);
+              if (d.operation == SystemOperation::AddReplica)
+              {
+                  Replica r = Deserialize<Replica>(d.content);
+                  legislators->Add(r);
+                  SaveReplicaSet(legislators, location);
+              }
+              else if (d.operation == SystemOperation::RemoveReplica)
+              {
+                  Replica r = Deserialize<Replica>(d.content);
+                  legislators->Remove(r);
+                  SaveReplicaSet(legislators, location);
+              }
+          })))
 {
     for (auto l : *legislators)
     {
@@ -58,14 +71,26 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
 void
 Parliament::AddLegislator(std::string address, short port)
 {
-    legislators->Add(Replica(address, port));
+    Decree d;
+    d.type = DecreeType::SystemDecree;
+    d.content = Serialize(SystemDecree(
+        SystemOperation::AddReplica,
+        0,
+        address));
+    send_decree(d);
 }
 
 
 void
 Parliament::RemoveLegislator(std::string address, short port)
 {
-    legislators->Remove(Replica(address, port));
+    Decree d;
+    d.type = DecreeType::SystemDecree;
+    d.content = Serialize(SystemDecree(
+        SystemOperation::RemoveReplica,
+        0,
+        address));
+    send_decree(d);
 }
 
 
@@ -74,6 +99,13 @@ Parliament::SendProposal(std::string entry)
 {
     Decree d;
     d.content = entry;
+    send_decree(d);
+}
+
+
+void
+Parliament::send_decree(Decree d)
+{
     for (Replica r : *legislators)
     {
         Message m(
