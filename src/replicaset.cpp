@@ -147,6 +147,7 @@ SaveReplicaSet(std::shared_ptr<ReplicaSet> replicaset, std::string directory)
             std::ios::in | std::ios::out | std::ios::trunc);
         for (auto r : *replicaset)
         {
+            s << r.hostname << ":" << r.port << "\n";
         }
     }
 }
