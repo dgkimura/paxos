@@ -1,3 +1,4 @@
+#include "paxos/logging.hpp"
 #include "paxos/sender.hpp"
 #include "paxos/serialization.hpp"
 
@@ -46,6 +47,9 @@ NetworkSender::Reply(Message message)
 
     // 2. write message
     boost::asio::write(socket_, boost::asio::buffer(message_str.c_str(), message_str.size()));
+
+    // 3. close socket signals to server end of message
+    socket_.close();
 }
 
 

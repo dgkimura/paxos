@@ -11,23 +11,23 @@ RegisterProposer(
     using namespace std::placeholders;
 
     receiver->RegisterCallback(
-        Callback(std::bind(HandleRequest, _1, context, sender)),
+        Callback(std::bind(HandleRequest, std::placeholders::_1, context, sender)),
         MessageType::RequestMessage
     );
     receiver->RegisterCallback(
-        Callback(std::bind(HandlePromise, _1, context, sender)),
+        Callback(std::bind(HandlePromise, std::placeholders::_1, context, sender)),
         MessageType::PromiseMessage
     );
     receiver->RegisterCallback(
-        Callback(std::bind(HandleNack, _1, context, sender)),
+        Callback(std::bind(HandleNack, std::placeholders::_1, context, sender)),
         MessageType::NackMessage
     );
     receiver->RegisterCallback(
-        Callback(std::bind(HandleAccepted, _1, context, sender)),
+        Callback(std::bind(HandleAccepted, std::placeholders::_1, context, sender)),
         MessageType::AcceptedMessage
     );
     receiver->RegisterCallback(
-        Callback(std::bind(HandleRetryRequest, _1, context, sender)),
+        Callback(std::bind(HandleRetryRequest, std::placeholders::_1, context, sender)),
         MessageType::RetryRequestMessage
     );
 }
@@ -42,15 +42,15 @@ RegisterAcceptor(
     using namespace std::placeholders;
 
     receiver->RegisterCallback(
-        Callback(std::bind(HandlePrepare, _1, context, sender)),
+        Callback(std::bind(HandlePrepare, std::placeholders::_1, context, sender)),
         MessageType::PrepareMessage
     );
     receiver->RegisterCallback(
-        Callback(std::bind(HandleRetryPrepare, _1, context, sender)),
+        Callback(std::bind(HandleRetryPrepare, std::placeholders::_1, context, sender)),
         MessageType::RetryPrepareMessage
     );
     receiver->RegisterCallback(
-        Callback(std::bind(HandleAccept, _1, context, sender)),
+        Callback(std::bind(HandleAccept, std::placeholders::_1, context, sender)),
         MessageType::AcceptMessage
     );
 }
@@ -65,11 +65,11 @@ RegisterLearner(
     using namespace std::placeholders;
 
     receiver->RegisterCallback(
-        Callback(std::bind(HandleProclaim, _1, context, sender)),
+        Callback(std::bind(HandleProclaim, std::placeholders::_1, context, sender)),
         MessageType::AcceptedMessage
     );
     receiver->RegisterCallback(
-        Callback(std::bind(HandleUpdated, _1, context, sender)),
+        Callback(std::bind(HandleUpdated, std::placeholders::_1, context, sender)),
         MessageType::UpdatedMessage
     );
 }
@@ -84,7 +84,7 @@ RegisterUpdater(
     using namespace std::placeholders;
 
     receiver->RegisterCallback(
-        Callback(std::bind(HandleUpdate, _1, context, sender)),
+        Callback(std::bind(HandleUpdate, std::placeholders::_1, context, sender)),
         MessageType::UpdateMessage
     );
 }

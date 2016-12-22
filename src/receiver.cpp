@@ -48,7 +48,7 @@ NetworkReceiver::do_accept()
         {
             if (!ec_accept)
             {
-                std::make_shared<Session>(std::move(socket), registered_map)->Start();
+                boost::make_shared<Session>(std::move(socket), registered_map)->Start();
             }
             do_accept();
         });
@@ -71,19 +71,35 @@ NetworkReceiver::Session::Session(
 void
 NetworkReceiver::Session::Start()
 {
-    auto self(shared_from_this());
-    socket.async_read_some(boost::asio::buffer(data_, max_length),
-        [this, self](boost::system::error_code ec, std::size_t length)
-        {
-            if (!ec)
-            {
-                Message message = Deserialize<Message>(std::string(data_));
+    boost::asio::async_read(socket, response,
+        boost::asio::transfer_at_least(1),
+        boost::bind(&Session::handle_read_message, shared_from_this(),
+            boost::asio::placeholders::error));
+}
 
-                for (Callback callback : registered_map_[message.type])
-                {
-                    callback(message);
-                }
-            }
+
+void
+NetworkReceiver::Session::handle_read_message(
+    const boost::system::error_code& err)
+{
+    if (!err)
+    {
+        boost::asio::async_read(socket, response,
+            boost::asio::transfer_at_least(1),
+            boost::bind(&Session::handle_read_message, shared_from_this(),
+                boost::asio::placeholders::error));
+    }
+    if (err == boost::asio::error::eof)
+    {
+        boost::asio::streambuf::const_buffers_type bufs = response.data();
+        Message message = Deserialize<Message>(
+            std::string(
+                boost::asio::buffers_begin(bufs),
+                boost::asio::buffers_begin(bufs) + response.size()));
+
+        for (Callback callback : registered_map_[message.type])
+        {
+            callback(message);
         }
-    );
+    }
 }

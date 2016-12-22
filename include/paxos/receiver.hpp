@@ -9,6 +9,8 @@
 #include <vector>
 
 #include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #include "paxos/callback.hpp"
 #include "paxos/messages.hpp"
@@ -42,7 +44,7 @@ private:
 
     std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map;
 
-    class Session : public std::enable_shared_from_this<Session>
+    class Session : public boost::enable_shared_from_this<Session>
     {
     public:
         Session(
@@ -54,13 +56,13 @@ private:
 
     private:
 
+        void handle_read_message(const boost::system::error_code& err);
+
         boost::asio::ip::tcp::socket socket;
 
         std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map_;
 
-        enum {max_length = 8192};
-
-        char data_[max_length];
+        boost::asio::streambuf response;
     };
 };
 
