@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 
+#include <paxos/bootstrap.hpp>
 #include <paxos/decree.hpp>
 #include <paxos/replicaset.hpp>
 #include <paxos/roles.hpp>
