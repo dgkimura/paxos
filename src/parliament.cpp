@@ -58,6 +58,11 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
                 sender,
                 updater
             );
+
+            std::make_shared<BootstrapListener>(
+                l.hostname,
+                l.port + 1
+            );
         }
         catch (
             boost::exception_detail::clone_impl<
@@ -66,6 +71,7 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
         {
         }
     }
+
 }
 
 
