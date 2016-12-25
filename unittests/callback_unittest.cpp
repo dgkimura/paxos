@@ -24,7 +24,7 @@ TEST(CallbackTest, testCallbackWithBindExpression)
 
     using namespace std::placeholders;
 
-    Callback callback(std::bind([&](Message m, int a_number) { ran_callback = true; }, _1, 1234));
+    Callback callback(std::bind([&](Message m, int a_number) { ran_callback = true; }, std::placeholders::_1, 1234));
     callback(m);
 
     ASSERT_TRUE(ran_callback);

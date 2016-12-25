@@ -53,6 +53,21 @@ TEST(SerializationUnitTest, testMessageIsSerializableAndDeserializable)
 }
 
 
+TEST(SerializationUnitTest, testBootstrapFileIsSerializableAndDeserializable)
+{
+    BootstrapFile expected(
+        "the_filename",
+        "content of the bootstrap file."),
+    actual;
+
+    std::string string_obj = Serialize(expected);
+    actual = Deserialize<BootstrapFile>(string_obj);
+
+    ASSERT_EQ(expected.name, actual.name);
+    ASSERT_EQ(expected.content, actual.content);
+}
+
+
 TEST(SerializationUnitTest, testSerializationWithPaddedFluffOnTheEndOfTheBuffer)
 {
     Decree expected(Replica("an_author_1", 0), 1, "the_decree_contents", DecreeType::UserDecree), actual;

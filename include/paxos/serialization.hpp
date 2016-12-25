@@ -7,6 +7,7 @@
 #include "boost/archive/text_iarchive.hpp"
 #include "boost/archive/text_oarchive.hpp"
 
+#include "paxos/bootstrap.hpp"
 #include "paxos/decree.hpp"
 #include "paxos/messages.hpp"
 #include "paxos/replicaset.hpp"
@@ -46,6 +47,14 @@ void serialize(Archive& ar, Message& obj, const unsigned int version)
     ar & obj.to;
     ar & obj.type;
     ar & obj.decree;
+}
+
+
+template <typename Archive>
+void serialize(Archive& ar, BootstrapFile& obj, const unsigned int version)
+{
+    ar & obj.name;
+    ar & obj.content;
 }
 
 

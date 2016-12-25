@@ -11,6 +11,24 @@
 #include "paxos/replicaset.hpp"
 
 
+struct BootstrapFile
+{
+    std::string name;
+
+    std::string content;
+
+    BootstrapFile()
+        : name(), content()
+    {
+    }
+
+    BootstrapFile(std::string name, std::string content)
+        : name(name), content(content)
+    {
+    }
+};
+
+
 class BootstrapListener
 {
 public:
