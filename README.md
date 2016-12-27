@@ -17,7 +17,16 @@ $ make && ./unittests/all_unittests
 ```
 
 
+#### Setup
+Create a `replicaset` file in the directory where the parliament will run.
+
+```
+$ echo 127.0.0.1:8080 >> replicaset
+```
+
+
 #### Usage
+Create a parliament and then send proposals to vote upon.
 
 ```cpp
 #include <paxos/parliament.hpp>
@@ -30,15 +39,16 @@ int main(void)
     Parliament p;
 
     //
-    // Add voting legislators to the parliament group.
-    //
-    p.AddLegislator("127.0.0.1", 8081);
-
-    //
     // Sends a proposal to vote on.
     //
     p.SendProposal("Pinky says, 'Narf!'");
 }
+```
+
+Each passed proposal is appended into the `paxos.ledger`.
+```
+$ cat paxos.ledger
+22 serialization::archive 11 0 0 0 0 0  0 1 0 19 "Narf!", says Pinky
 ```
 
 

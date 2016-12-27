@@ -223,10 +223,6 @@ HandleNack(
             context->promise_map[message.decree]->Remove(message.to);
         }
 
-        //
-        // If replica promised itself then remove promise of the contentious
-        // decree.
-        //
         sender->Reply(
             Message(
                 message.decree,
