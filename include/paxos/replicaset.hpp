@@ -76,6 +76,12 @@ private:
 };
 
 
+//
+// File name where replica information is stored.
+//
+const std::string ReplicasetFilename = "replicaset";
+
+
 std::shared_ptr<ReplicaSet>
 LoadReplicaSet(std::string directory);
 

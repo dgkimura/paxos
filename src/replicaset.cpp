@@ -110,7 +110,7 @@ LoadReplicaSet(std::string directory)
 {
     auto replicaset =   std::make_shared<ReplicaSet>();
     boost::filesystem::path replicasetfile(directory);
-    replicasetfile /= "replicaset";
+    replicasetfile /= ReplicasetFilename;
 
 
     if (boost::filesystem::exists(replicasetfile))
@@ -137,7 +137,7 @@ void
 SaveReplicaSet(std::shared_ptr<ReplicaSet> replicaset, std::string directory)
 {
     boost::filesystem::path replicasetfile(directory);
-    replicasetfile /= "replicaset";
+    replicasetfile /= ReplicasetFilename;
 
 
     if (boost::filesystem::exists(replicasetfile))
