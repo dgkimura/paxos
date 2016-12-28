@@ -43,11 +43,10 @@ target_link_libraries(all_unittests
         paxos
         ${CMAKE_CURRENT_BINARY_DIR}/gtest-prefix/src/gtest-build/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX}
         ${CMAKE_CURRENT_BINARY_DIR}/gtest-prefix/src/gtest-build/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
-        ${boost_STATIC_LIB}
         Threads::Threads
         ${PLATFORM_LIBRARIES}
 )
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/gtest-prefix/src/gtest/include)
-include_directories(${paxos_INCLUDE})
-include_directories(${DEPENDENCIES_boost_DIR}/include)
+include_directories(${CMAKE_BINARY_DIR}/unittests/gtest-prefix/src/gtest/include)
+include_directories(${CMAKE_BINARY_DIR}/dependencies/boost/include)
+include_directories(${CMAKE_SOURCE_DIR}/include)
