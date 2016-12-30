@@ -2,7 +2,7 @@ paxos
 =====
 
 [![Build Status](https://travis-ci.org/dgkimura/paxos.svg?branch=master)](https://travis-ci.org/dgkimura/paxos)
-[![codecov](https://codecov.io/gh/dgkimura/paxos/branch/master/graph/badge.svg)](https://codecov.io/gh/dgkimura/paxos)
+[![Coverage Status](https://coveralls.io/repos/github/dgkimura/paxos/badge.svg?branch=master)](https://coveralls.io/github/dgkimura/paxos?branch=master)
 
 The paxos project is an implementation of the paxos consensus protocol. It
 provides a library for maintaining consistency within a distributed system.

@@ -1,3 +1,5 @@
+sudo: required
+dist: trusty
 language: cpp
 
 compiler:
@@ -10,26 +12,12 @@ before_script:
   - ./cmake-3.5.2-Linux-x86_64/bin/cmake -DCODE_COVERAGE=1 .
 
 install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20
-  - sudo update-alternatives --config gcc
-  - sudo update-alternatives --config g++
-  - pip install --user codecov
   - sudo apt-get install lcov
-
-addons:
- apt:
-   sources:
-   - ubuntu-toolchain-r-test
-   packages:
-   - gcc-4.8
-   - g++-4.8
+  - pip install --user cpp-coveralls
 
 script:
   - make
   - ./unittests/all_unittests
 
 after_success:
-  - lcov -c -d src -o code_coverage.info
-  - bash <(curl -s https://codecov.io/bash) -f code_coverage.info -X fix
+  - coveralls --include src --include include --gcov-options '\-lp'
