@@ -31,5 +31,5 @@ script:
   - ./unittests/all_unittests
 
 after_success:
-  - lcov -c -d . -o code_coverage.info
-  - bash <(curl -s https://codecov.io/bash) -f code_coverage.info -X fix -X gcov
+  - lcov -c -d src -o code_coverage.info
+  - bash <(curl -s https://codecov.io/bash) -f code_coverage.info -X fix
