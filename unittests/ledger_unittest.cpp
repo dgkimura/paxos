@@ -24,6 +24,18 @@ TEST_F(LedgerUnitTest, testAppendIncrementsTheSize)
 }
 
 
+TEST_F(LedgerUnitTest, testAppendSystemDecreeIncrementsTheSize)
+{
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+
+    ASSERT_EQ(ledger.Size(), 0);
+
+    ledger.Append(Decree(Replica("an_author"), 1, "decree_contents", DecreeType::SystemDecree));
+
+    ASSERT_EQ(ledger.Size(), 1);
+}
+
+
 TEST_F(LedgerUnitTest, testRemoveDecrementsTheSize)
 {
     Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
