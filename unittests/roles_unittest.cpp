@@ -1,4 +1,5 @@
 #include <initializer_list>
+#include <set>
 #include <string>
 
 #include "gtest/gtest.h"
@@ -50,6 +51,26 @@ private:
     std::vector<Message> sent_messages;
 
     std::shared_ptr<ReplicaSet> replicaset;
+};
+
+
+class FakeReceiver : public Receiver
+{
+public:
+
+    void RegisterCallback(Callback&& callback, MessageType type)
+    {
+        registered_set.insert(type);
+    }
+
+    bool IsMessageTypeRegister(MessageType type)
+    {
+        return registered_set.find(type) != registered_set.end();
+    }
+
+private:
+
+    std::set<MessageType> registered_set;
 };
 
 
@@ -112,6 +133,28 @@ class ProposerTest: public testing::Test
         DisableLogging();
     }
 };
+
+
+TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
+{
+    auto receiver = std::make_shared<FakeReceiver>();
+    auto sender = std::make_shared<FakeSender>();
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+
+    RegisterProposer(receiver, sender, context);
+
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::RetryRequestMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::NackMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
+
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RetryPrepareMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdateMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdatedMessage));
+}
 
 
 TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneInProgressProposal)
@@ -509,6 +552,28 @@ class AcceptorTest: public testing::Test
 };
 
 
+TEST_F(AcceptorTest, testRegisterAcceptorWillRegistereMessageTypes)
+{
+    auto receiver = std::make_shared<FakeReceiver>();
+    auto sender = std::make_shared<FakeSender>();
+    auto context = createAcceptorContext();
+
+    RegisterAcceptor(receiver, sender, context);
+
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::RetryPrepareMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
+
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RetryRequestMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdateMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdatedMessage));
+}
+
+
 TEST_F(AcceptorTest, testHandlePrepareWithHigherDecreeUpdatesPromisedDecree)
 {
     Message message(Decree(Replica("the_author"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
@@ -694,6 +759,28 @@ class LearnerTest: public testing::Test
         DisableLogging();
     }
 };
+
+
+TEST_F(LearnerTest, testRegisterLearnerWillRegistereMessageTypes)
+{
+    auto receiver = std::make_shared<FakeReceiver>();
+    auto sender = std::make_shared<FakeSender>();
+    auto context = createLearnerContext({});
+
+    RegisterLearner(receiver, sender, context);
+
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::UpdatedMessage));
+
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RetryRequestMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RetryPrepareMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdateMessage));
+}
 
 
 TEST_F(LearnerTest, testProclaimHandleWithSingleReplica)
@@ -1054,6 +1141,32 @@ class UpdaterTest: public testing::Test
         DisableLogging();
     }
 };
+
+
+TEST_F(UpdaterTest, testRegisterUpdaterWillRegistereMessageTypes)
+{
+    auto receiver = std::make_shared<FakeReceiver>();
+    auto sender = std::make_shared<FakeSender>();
+    auto context = std::make_shared<UpdaterContext>(
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
+
+    RegisterUpdater(receiver, sender, context);
+
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::UpdateMessage));
+
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RetryRequestMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RetryPrepareMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdatedMessage));
+}
 
 
 TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndHasEmptyLedger)
