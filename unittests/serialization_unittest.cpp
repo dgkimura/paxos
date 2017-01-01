@@ -17,6 +17,23 @@ TEST(SerializationUnitTest, testDecreeIsSerializableAndDeserializable)
 }
 
 
+TEST(SerializationUnitTest, testSystemDecreeIsSerializableAndDeserializable)
+{
+    int number = 3;
+    SystemOperation operation = SystemOperation::AddReplica;
+    std::string content("system decree contents");
+
+    SystemDecree expected(operation, number, content), actual;
+
+    std::string string_obj = Serialize(expected);
+    actual = Deserialize<SystemDecree>(string_obj);
+
+    ASSERT_EQ(expected.operation, actual.operation);
+    ASSERT_EQ(expected.number, actual.number);
+    ASSERT_EQ(expected.content, actual.content);
+}
+
+
 TEST(SerializationUnitTest, testReplicaIsSerializableAndDeserializable)
 {
     Replica expected("hostname", 123), actual;
