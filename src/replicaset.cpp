@@ -106,28 +106,21 @@ ReplicaSet::end() const
 
 
 std::shared_ptr<ReplicaSet>
-LoadReplicaSet(std::string directory)
+LoadReplicaSet(std::istream&& replicasetfile)
 {
     auto replicaset =   std::make_shared<ReplicaSet>();
-    boost::filesystem::path replicasetfile(directory);
-    replicasetfile /= ReplicasetFilename;
 
-
-    if (boost::filesystem::exists(replicasetfile))
+    std::string line;
+    while (std::getline(replicasetfile, line))
     {
-        std::fstream s(replicasetfile.string());
-        std::string line;
-        while (std::getline(s, line))
-        {
-            std::vector<std::string> hostport;
-            split(hostport, line, boost::is_any_of(":"));
-            replicaset->Add(
-                Replica(
-                    hostport[0],
-                    boost::lexical_cast<short>(hostport[1])
-                )
-            );
-        }
+        std::vector<std::string> hostport;
+        split(hostport, line, boost::is_any_of(":"));
+        replicaset->Add(
+            Replica(
+                hostport[0],
+                boost::lexical_cast<short>(hostport[1])
+            )
+        );
     }
     return replicaset;
 }

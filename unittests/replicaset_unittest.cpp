@@ -134,6 +134,22 @@ TEST(ReplicaTest, testReplicaFields)
 }
 
 
+TEST(ReplicaTest, testLoadReplicaSetReadsFromStream)
+{
+    auto set = LoadReplicaSet(std::stringstream("host1:80\nhost2:8080\n"));
+
+    ASSERT_EQ(2, set->GetSize());
+}
+
+
+TEST(ReplicaTest, testLoadReplicaSetReadsFromEmptyStream)
+{
+    auto set = LoadReplicaSet(std::stringstream(""));
+
+    ASSERT_EQ(0, set->GetSize());
+}
+
+
 TEST(ReplicaTest, testSaveReplicaSetWritesIntoStream)
 {
     Replica r("host", 1234);

@@ -2,7 +2,9 @@
 
 
 Parliament::Parliament(std::string location, DecreeHandler decree_handler)
-    : legislators(LoadReplicaSet(location)),
+    : legislators(LoadReplicaSet(
+          std::ifstream(
+              (fs::path(location) / fs::path(ReplicasetFilename)).string()))),
       ledger(std::make_shared<Ledger>(
           std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"),
           decree_handler,
@@ -14,8 +16,7 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
                   legislators->Add(r);
                   std::ofstream replicasetfile(
                       (fs::path(location) /
-                       fs::path(ReplicasetFilename)).string(),
-                      std::ios::out | std::ios::trunc | std::ios::binary);
+                       fs::path(ReplicasetFilename)).string());
                   SaveReplicaSet(legislators, replicasetfile);
                   SendBootstrap(r, location);
               }
@@ -25,8 +26,7 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
                   legislators->Remove(r);
                   std::ofstream replicasetfile(
                       (fs::path(location) /
-                       fs::path(ReplicasetFilename)).string(),
-                      std::ios::out | std::ios::trunc | std::ios::binary);
+                       fs::path(ReplicasetFilename)).string());
                   SaveReplicaSet(legislators, replicasetfile);
               }
           })))

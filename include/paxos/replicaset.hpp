@@ -83,7 +83,7 @@ const std::string ReplicasetFilename = "replicaset";
 
 
 std::shared_ptr<ReplicaSet>
-LoadReplicaSet(std::string directory);
+LoadReplicaSet(std::istream&& replicasetfile);
 
 
 void
