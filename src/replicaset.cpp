@@ -134,20 +134,11 @@ LoadReplicaSet(std::string directory)
 
 
 void
-SaveReplicaSet(std::shared_ptr<ReplicaSet> replicaset, std::string directory)
+SaveReplicaSet(std::shared_ptr<ReplicaSet> replicaset, std::ostream& replicasetfile)
 {
-    boost::filesystem::path replicasetfile(directory);
-    replicasetfile /= ReplicasetFilename;
-
-
-    if (boost::filesystem::exists(replicasetfile))
+    for (auto r : *replicaset)
     {
-        std::fstream s(
-            replicasetfile.string(),
-            std::ios::in | std::ios::out | std::ios::trunc);
-        for (auto r : *replicaset)
-        {
-            s << r.hostname << ":" << r.port << "\n";
-        }
+        replicasetfile << r.hostname << ":" << r.port << "\n";
     }
+    replicasetfile.flush();
 }

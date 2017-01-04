@@ -132,3 +132,17 @@ TEST(ReplicaTest, testReplicaFields)
     ASSERT_EQ(r.hostname, "host");
     ASSERT_EQ(r.port, 1234);
 }
+
+
+TEST(ReplicaTest, testSaveReplicaSetWritesIntoStream)
+{
+    Replica r("host", 1234);
+    std::stringstream replicasetstream;
+
+    auto set = std::make_shared<ReplicaSet>();
+    set->Add(Replica("host1", 80));
+    set->Add(Replica("host2", 8080));
+
+    SaveReplicaSet(set, replicasetstream);
+    ASSERT_EQ("host1:80\nhost2:8080\n", replicasetstream.str());
+}

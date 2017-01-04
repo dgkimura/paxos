@@ -12,14 +12,22 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
               {
                   Replica r = Deserialize<Replica>(d.content);
                   legislators->Add(r);
-                  SaveReplicaSet(legislators, location);
+                  std::ofstream replicasetfile(
+                      (fs::path(location) /
+                       fs::path(ReplicasetFilename)).string(),
+                      std::ios::out | std::ios::trunc | std::ios::binary);
+                  SaveReplicaSet(legislators, replicasetfile);
                   SendBootstrap(r, location);
               }
               else if (d.operation == SystemOperation::RemoveReplica)
               {
                   Replica r = Deserialize<Replica>(d.content);
                   legislators->Remove(r);
-                  SaveReplicaSet(legislators, location);
+                  std::ofstream replicasetfile(
+                      (fs::path(location) /
+                       fs::path(ReplicasetFilename)).string(),
+                      std::ios::out | std::ios::trunc | std::ios::binary);
+                  SaveReplicaSet(legislators, replicasetfile);
               }
           })))
 {

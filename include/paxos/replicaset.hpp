@@ -87,7 +87,7 @@ LoadReplicaSet(std::string directory);
 
 
 void
-SaveReplicaSet(std::shared_ptr<ReplicaSet> replicaset, std::string directory);
+SaveReplicaSet(std::shared_ptr<ReplicaSet> replicaset, std::ostream& replicasetfile);
 
 
 #endif
