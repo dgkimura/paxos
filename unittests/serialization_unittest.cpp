@@ -113,3 +113,17 @@ TEST(SerializationUnitTest, testSerializationWithUniversalReferenceValues)
     ASSERT_EQ(expected.content, actual.content);
     ASSERT_EQ(expected.number, actual.number);
 }
+
+
+TEST(SerializationUnitTest, testSerializationWithStreamValues)
+{
+    Decree expected(Replica("an_author_1", 0), 1, "the_decree_contents", DecreeType::UserDecree), actual;
+
+    std::istringstream stream_obj(Serialize(expected));
+    actual = Deserialize<Decree>(stream_obj);
+
+    ASSERT_EQ(expected.author.hostname, actual.author.hostname);
+    ASSERT_EQ(expected.author.port, actual.author.port);
+    ASSERT_EQ(expected.content, actual.content);
+    ASSERT_EQ(expected.number, actual.number);
+}

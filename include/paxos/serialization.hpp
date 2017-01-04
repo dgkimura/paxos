@@ -80,7 +80,7 @@ T Deserialize(std::string string_obj)
 
 
 template <typename T>
-T Deserialize(std::fstream& stream)
+T Deserialize(std::istream& stream)
 {
     T object;
     boost::archive::text_iarchive oa(stream);
