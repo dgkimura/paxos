@@ -16,14 +16,6 @@ NetworkSender::NetworkSender(std::shared_ptr<ReplicaSet> replicaset_)
 }
 
 
-NetworkSender::NetworkSender()
-    : io_service_(),
-      socket_(io_service_),
-      replicaset(new ReplicaSet())
-{
-}
-
-
 NetworkSender::~NetworkSender()
 {
     socket_.close();
