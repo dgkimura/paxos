@@ -58,18 +58,24 @@ public:
                std::ios::in |
                std::ios::trunc |
                std::ios::binary
-          )
+          ),
+          stream(file)
+    {
+    }
+
+    PersistentStorage(std::iostream& stream)
+        : stream(stream)
     {
     }
 
     T Get()
     {
         T data;
-        file.seekg(0, std::ios::end);
-        if (file.tellg() > 0)
+        stream.seekg(0, std::ios::end);
+        if (stream.tellg() > 0)
         {
-            file.seekg(0, std::ios::beg);
-            data = Deserialize<T>(file);
+            stream.seekg(0, std::ios::beg);
+            data = Deserialize<T>(stream);
         }
 
         return data;
@@ -77,15 +83,17 @@ public:
 
     void Put(T value)
     {
-        file.seekp(0, std::ios::beg);
+        stream.seekp(0, std::ios::beg);
         std::string element_as_string = Serialize<T>(value);
-        file << element_as_string;
-        file.flush();
+        stream << element_as_string;
+        stream.flush();
     }
 
 private:
 
     std::fstream file;
+
+    std::iostream& stream;
 };
 
 

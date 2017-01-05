@@ -18,7 +18,7 @@ TEST(FieldsTest, testCanAssignValueToField)
 }
 
 
-TEST(FieldsTest, testCanAssignLocatorValueToField)
+TEST(FieldsTest, testCanAssignLValueToField)
 {
     Field<int> field(std::make_shared<VolatileStorage<int>>());
     int a_number = 1;
@@ -66,4 +66,27 @@ TEST(FieldsTest, testCanUseConvenienceFieldMacros)
         {
         }
     };
+}
+
+
+TEST(FieldsTest, testCanAssignValueToPersistentStorageField)
+{
+    std::stringstream file;
+
+    Field<int> field(std::make_shared<PersistentStorage<int>>(file));
+    field = 1;
+
+    ASSERT_EQ(field.Value(), 1);
+}
+
+
+TEST(FieldsTest, testCanUpdateValueOfPersistentStorageField)
+{
+    std::stringstream file;
+
+    Field<int> field(std::make_shared<PersistentStorage<int>>(file));
+    field = 1;
+    field = 3;
+
+    ASSERT_EQ(field.Value(), 3);
 }
