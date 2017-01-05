@@ -3,6 +3,7 @@
 
 #include <fstream>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
 #include "serialization.hpp"
@@ -18,6 +19,8 @@ private:
     virtual T getElementAt(int index) = 0;
 
     virtual int getElementSizeAt(int index) = 0;
+
+    virtual int getFirstElementIndex() = 0;
 
     virtual int getLastElementIndex() = 0;
 
@@ -64,7 +67,7 @@ public:
 
     Iterator begin()
     {
-        return Iterator(this, 0);
+        return Iterator(this, getFirstElementIndex());
     }
 
     Iterator end()
@@ -109,6 +112,11 @@ private:
         return 1;
     }
 
+    int getFirstElementIndex()
+    {
+        return 0;
+    }
+
     int getLastElementIndex()
     {
         return Size();
@@ -130,32 +138,59 @@ public:
 
     PersistentQueue(std::string dirname, std::string filename)
         : file((fs::path(dirname) / fs::path(filename)).string(),
-               std::ios::out | std::ios::in | std::ios::app | std::ios::binary)
+               std::ios::out | std::ios::in | std::ios::app | std::ios::binary),
+          stream(file),
+          start_position(0)
     {
+    }
+
+    PersistentQueue(std::iostream& stream)
+        : stream(stream),
+          start_position(0)
+    {
+        stream.seekg(0, std::ios::end);
+        if (stream.tellg() < sizeof(int))
+        {
+            stream << std::setw(sizeof(int)) << sizeof(int);
+            start_position = sizeof(int);
+        }
+        else
+        {
+            stream.seekg(0, std::ios::beg);
+
+            std::string buffer;
+            stream.read(&buffer[0], sizeof(int));
+            boost::trim(buffer);
+            start_position = std::stoi(buffer);
+        }
+    }
+
+    ~PersistentQueue()
+    {
+        stream.flush();
     }
 
     void Enqueue(T e)
     {
-        file.seekp(0, std::ios::end);
+        stream.seekp(0, std::ios::end);
         std::string element_as_string = Serialize<T>(e);
-        file << element_as_string;
-        file.flush();
+        stream << element_as_string;
+        stream.flush();
     }
 
     void Dequeue()
     {
-        file.seekg(0, std::ios::beg);
-
-        T first_element = Deserialize<T>(file);
-        std::string first_element_serialized = Serialize<T>(first_element);
-        int offset = first_element_serialized.length();
-
-        std::fstream tmpfile("persistent-queue.tmp");
+        bool is_head = true;
         for (T element : *this)
         {
-            tmpfile << Serialize<T>(element);
+            if (is_head)
+            {
+                is_head = false;
+                start_position += Serialize<T>(element).length();
+                stream.seekp(0, std::ios::beg);
+                stream << std::setw(sizeof(int)) << start_position;
+            }
         }
-        file << tmpfile.rdbuf();
     }
 
     int Size()
@@ -172,23 +207,32 @@ private:
 
     T getElementAt(int index)
     {
-        file.seekg(index, std::ios::beg);
-        return Deserialize<T>(file);
+        stream.seekg(index, std::ios::beg);
+        return Deserialize<T>(stream);
     }
 
     int getElementSizeAt(int index)
     {
-        file.seekg(index, std::ios::beg);
-        return Serialize<T>(Deserialize<T>(file)).length();
+        stream.seekg(index, std::ios::beg);
+        return Serialize<T>(Deserialize<T>(stream)).length();
+    }
+
+    int getFirstElementIndex()
+    {
+        return start_position;
     }
 
     int getLastElementIndex()
     {
-        file.seekg(0, std::ios::end);
-        return file.tellg();
+        stream.seekg(0, std::ios::end);
+        return stream.tellg();
     }
 
     std::fstream file;
+
+    std::iostream& stream;
+
+    int start_position;
 };
 
 

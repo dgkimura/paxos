@@ -36,3 +36,68 @@ TEST(QueueTest, testThatVolatileQueueCanIterateOverContents)
         ASSERT_EQ(e, "narf");
     }
 }
+
+
+TEST(QueueTest, testThatPersistentQueueCanIterateOverContents)
+{
+    std::stringstream file;
+
+    PersistentQueue<std::string> queue(file);
+
+    queue.Enqueue("narf");
+
+    for (auto e : queue)
+    {
+        ASSERT_EQ(e, "narf");
+    }
+}
+
+
+TEST(QueueTest, testThatPersistentQueueCanGetSize)
+{
+    std::stringstream file;
+
+    PersistentQueue<std::string> queue(file);
+
+    queue.Enqueue("narf");
+    queue.Enqueue("zort");
+
+    ASSERT_EQ(queue.Size(), 2);
+}
+
+
+TEST(QueueTest, testThatPersistentQueueCanDequeue)
+{
+    std::stringstream file;
+
+    PersistentQueue<std::string> queue(file);
+
+    queue.Enqueue("narf");
+    queue.Enqueue("zort");
+    queue.Enqueue("poit");
+    queue.Dequeue();
+
+    ASSERT_EQ(queue.Size(), 2);
+}
+
+
+TEST(QueueTest, testThatPersistentQueueIsCanRehydrateFromAPrevousPersistentQueue)
+{
+    std::stringstream file;
+
+    PersistentQueue<std::string> queue(file);
+
+    queue.Enqueue("narf");
+    queue.Enqueue("zort");
+    queue.Enqueue("poit");
+    queue.Dequeue();
+
+    PersistentQueue<std::string> next_queue(file);
+
+    ASSERT_EQ(next_queue.Size(), 2);
+
+    next_queue.Dequeue();
+    PersistentQueue<std::string> final_queue(file);
+
+    ASSERT_EQ(final_queue.Size(), 1);
+}
