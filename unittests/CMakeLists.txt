@@ -21,6 +21,7 @@ set(SOURCES
     messages_unittest.cpp
     parliament_unittest.cpp
     queue_unittest.cpp
+    receiver_unittest.cpp
     replicaset_unittest.cpp
     roles_unittest.cpp
     serialization_unittest.cpp

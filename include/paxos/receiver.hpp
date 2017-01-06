@@ -30,7 +30,7 @@ public:
         server.RegisterAction([this](std::string content){
             Message message = Deserialize<Message>(content);
 
-            for (Callback callback : registered_map[message.type])
+            for (Callback callback : GetRegisteredCallbacks(message.type))
             {
                 callback(message);
             }
@@ -46,6 +46,18 @@ public:
         else
         {
             registered_map[type].push_back(std::move(callback));
+        }
+    }
+
+    std::vector<Callback> GetRegisteredCallbacks(MessageType type)
+    {
+        if (registered_map.find(type) != registered_map.end())
+        {
+            return registered_map[type];
+        }
+        else
+        {
+            return std::vector<Callback>();
         }
     }
 
