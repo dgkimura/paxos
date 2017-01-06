@@ -40,7 +40,7 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
             auto acceptor = std::make_shared<AcceptorContext>(location);
             hookup_legislator(l, location, acceptor);
 
-            std::make_shared<BootstrapListener<BoostServer>>(
+            bootstrap = std::make_shared<BootstrapListener<BoostServer>>(
                 l.hostname,
                 l.port + 1
             );

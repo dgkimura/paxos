@@ -53,6 +53,8 @@ private:
 
     std::shared_ptr<Sender> sender;
 
+    std::shared_ptr<Listener> bootstrap;
+
     std::shared_ptr<Ledger> ledger;
 
     std::shared_ptr<LearnerContext> learner;

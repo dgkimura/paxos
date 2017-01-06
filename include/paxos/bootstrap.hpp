@@ -7,8 +7,13 @@
 #include "paxos/server.hpp"
 
 
+class Listener
+{
+};
+
+
 template<typename Server>
-class BootstrapListener
+class BootstrapListener : public Listener
 {
 public:
 
