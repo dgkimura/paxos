@@ -90,8 +90,19 @@ class ParliamentTest: public testing::Test
         ledger = std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>());
         receiver = std::make_shared<MockReceiver>();
         sender = std::make_shared<MockSender>();
+        auto acceptor = std::make_shared<AcceptorContext>(
+            std::make_shared<VolatileDecree>(),
+            std::make_shared<VolatileDecree>()
+        );
 
-        parliament = Parliament(replica, legislators, ledger, receiver, sender);
+        parliament = std::make_shared<Parliament>(
+            replica,
+            legislators,
+            ledger,
+            receiver,
+            sender,
+            acceptor
+        );
     }
 
 public:
@@ -106,13 +117,13 @@ public:
 
     std::shared_ptr<Ledger> ledger;
 
-    Parliament parliament;
+    std::shared_ptr<Parliament> parliament;
 };
 
 
 TEST_F(ParliamentTest, testAddLegislatorSendsRequestMessage)
 {
-    parliament.AddLegislator("yourhost", 222);
+    parliament->AddLegislator("yourhost", 222);
 
     ASSERT_EQ(SystemOperation::AddReplica,
               Deserialize<SystemDecree>(sender->sentMessages()[0].decree.content).operation);
@@ -122,7 +133,7 @@ TEST_F(ParliamentTest, testAddLegislatorSendsRequestMessage)
 
 TEST_F(ParliamentTest, testRemoveLegislatorSendsRequestMessage)
 {
-    parliament.RemoveLegislator("yourhost", 222);
+    parliament->RemoveLegislator("yourhost", 222);
 
     ASSERT_EQ(SystemOperation::RemoveReplica,
               Deserialize<SystemDecree>(sender->sentMessages()[0].decree.content).operation);
@@ -132,7 +143,7 @@ TEST_F(ParliamentTest, testRemoveLegislatorSendsRequestMessage)
 
 TEST_F(ParliamentTest, testBasicSendProposalSendsProposal)
 {
-    parliament.SendProposal("Pinky says, 'Narf!'");
+    parliament->SendProposal("Pinky says, 'Narf!'");
 
     ASSERT_EQ(MessageType::RequestMessage, sender->sentMessages()[0].type);
     ASSERT_EQ("Pinky says, 'Narf!'", sender->sentMessages()[0].decree.content);
@@ -141,7 +152,7 @@ TEST_F(ParliamentTest, testBasicSendProposalSendsProposal)
 
 TEST_F(ParliamentTest, testSetActiveEnablesAppendIntoLedger)
 {
-    parliament.SetActive();
+    parliament->SetActive();
 
     receiver->ReceiveMessage(
         Message(
@@ -158,7 +169,7 @@ TEST_F(ParliamentTest, testSetActiveEnablesAppendIntoLedger)
 
 TEST_F(ParliamentTest, testSetInactiveDisablesAppendIntoLedger)
 {
-    parliament.SetInactive();
+    parliament->SetInactive();
 
     receiver->ReceiveMessage(
         Message(
@@ -170,4 +181,26 @@ TEST_F(ParliamentTest, testSetInactiveDisablesAppendIntoLedger)
     );
 
     ASSERT_EQ(0, ledger->Size());
+}
+
+
+TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleReplicaSet)
+{
+    legislators->Add(Replica("yourhost", 2222));
+    legislators->Add(Replica("ourhost", 1111));
+
+    Decree decree(replica, 1, "my decree content", DecreeType::UserDecree);
+    receiver->ReceiveMessage(
+        Message(
+            decree,
+            replica,
+            replica,
+            MessageType::AcceptedMessage
+        )
+    );
+
+    ASSERT_EQ(1, parliament->GetAbsenteeBallots(100).size());
+    ASSERT_TRUE(parliament->GetAbsenteeBallots(100)[decree]->Contains(Replica("yourhost", 2222)));
+    ASSERT_TRUE(parliament->GetAbsenteeBallots(100)[decree]->Contains(Replica("ourhost", 1111)));
+    ASSERT_FALSE(parliament->GetAbsenteeBallots(100)[decree]->Contains(replica));
 }

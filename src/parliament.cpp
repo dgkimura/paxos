@@ -37,7 +37,8 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
         {
             receiver = std::make_shared<NetworkReceiver>(l.hostname, l.port);
             sender = std::make_shared<NetworkSender>(legislators);
-            hookup_legislator(l, location);
+            auto acceptor = std::make_shared<AcceptorContext>(location);
+            hookup_legislator(l, location, acceptor);
 
             std::make_shared<BootstrapListener>(
                 l.hostname,
@@ -60,29 +61,30 @@ Parliament::Parliament(
     std::shared_ptr<ReplicaSet> legislators,
     std::shared_ptr<Ledger> ledger,
     std::shared_ptr<Receiver> receiver,
-    std::shared_ptr<Sender> sender
+    std::shared_ptr<Sender> sender,
+    std::shared_ptr<AcceptorContext> acceptor
 ) :
     legislators(legislators),
     receiver(receiver),
     sender(sender),
     ledger(ledger)
 {
-    hookup_legislator(replica, ".");
+    hookup_legislator(replica, ".", acceptor);
 }
 
 
 void
 Parliament::hookup_legislator(
     Replica replica,
-    std::string location)
+    std::string location,
+    std::shared_ptr<AcceptorContext> acceptor)
 {
-    proposer = std::make_shared<ProposerContext>(
+    auto proposer = std::make_shared<ProposerContext>(
         legislators,
         ledger->Tail().number + 1
     );
-    acceptor = std::make_shared<AcceptorContext>(location);
     learner = std::make_shared<LearnerContext>(legislators, ledger);
-    updater = std::make_shared<UpdaterContext>(ledger);
+    auto updater = std::make_shared<UpdaterContext>(ledger);
 
     RegisterProposer(
         receiver,
@@ -173,7 +175,7 @@ Parliament::GetAbsenteeBallots(int max_ballots)
     int current = 0;
     for (auto vote : learner->accepted_map)
     {
-        if (current >= learner->accepted_map.size() - max_ballots)
+        if (current <= max_ballots)
         {
             ballots[vote.first] = learner->replicaset->Difference(vote.second);
         }

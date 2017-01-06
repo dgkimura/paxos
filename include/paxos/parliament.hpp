@@ -30,7 +30,8 @@ public:
                std::shared_ptr<ReplicaSet> legislators,
                std::shared_ptr<Ledger> ledger,
                std::shared_ptr<Receiver> receiver,
-               std::shared_ptr<Sender> sender);
+               std::shared_ptr<Sender> sender,
+               std::shared_ptr<AcceptorContext> acceptor);
 
     void AddLegislator(std::string address, short port);
 
@@ -54,16 +55,11 @@ private:
 
     std::shared_ptr<Ledger> ledger;
 
-    std::shared_ptr<ProposerContext> proposer;
-
-    std::shared_ptr<AcceptorContext> acceptor;
-
     std::shared_ptr<LearnerContext> learner;
 
-    std::shared_ptr<UpdaterContext> updater;
-
     void hookup_legislator(Replica replica,
-                             std::string location);
+                           std::string location,
+                           std::shared_ptr<AcceptorContext> acceptor);
 
     void send_decree(Decree decree);
 };
