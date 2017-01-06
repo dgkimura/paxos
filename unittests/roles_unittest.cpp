@@ -256,6 +256,30 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotU
 }
 
 
+TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedValueThenUpdateDecreeContents)
+{
+    Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
+
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+
+    // Highest promised decree content is "".
+    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::SystemDecree);
+    context->replicaset = std::make_shared<ReplicaSet>();
+    context->replicaset->Add(Replica("host"));
+
+    // Requested values contains entry with "new content to be used".
+    context->requested_values.push_back(std::make_tuple("new content to be used", DecreeType::UserDecree));
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandlePromise(message, context, sender);
+
+    ASSERT_EQ("new content to be used", sender->sentMessages()[0].decree.content);
+    ASSERT_EQ(DecreeType::UserDecree, sender->sentMessages()[0].decree.type);
+    ASSERT_EQ(0, context->requested_values.size());
+}
+
+
 TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressIncrementsCurrentDecreeNumberOnce)
 {
     auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);

@@ -170,12 +170,27 @@ HandlePromise(
 
         if (received_promises >= minimum_quorum)
         {
-            if (message.decree.content.empty() && !context->requested_values.empty())
+            if (context->highest_proposed_decree.content.empty() &&
+                !context->requested_values.empty())
             {
-                message.decree.content = std::get<0>(context->requested_values[0]);
-                message.decree.type = std::get<1>(context->requested_values[0]);
-                context->requested_values.erase(context->requested_values.begin());
+                //
+                // If the following are true...
+                //
+                //     i)   the majority of replicas have sent promises
+                //     ii)  the highest proposed decree is empty
+                //     iii) we have pending requested values
+                //
+                // ... then we should update the highest proposed decree with
+                // the requested values.
+                //
+                context->highest_proposed_decree.content = std::get<0>(
+                    context->requested_values[0]);
+                context->highest_proposed_decree.type = std::get<1>(
+                    context->requested_values[0]);
+                context->requested_values.erase(
+                    context->requested_values.begin());
             }
+            message.decree = context->highest_proposed_decree;
             sender->ReplyAll(Response(message, MessageType::AcceptMessage));
         }
     }
