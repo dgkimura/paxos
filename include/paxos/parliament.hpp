@@ -26,6 +26,12 @@ public:
     Parliament(std::string location=".",
                DecreeHandler decree_handler=DecreeHandler());
 
+    Parliament(Replica replica,
+               std::shared_ptr<ReplicaSet> legislators,
+               std::shared_ptr<Ledger> ledger,
+               std::shared_ptr<Receiver> receiver,
+               std::shared_ptr<Sender> sender);
+
     void AddLegislator(std::string address, short port);
 
     void RemoveLegislator(std::string address, short port);
@@ -55,6 +61,9 @@ private:
     std::shared_ptr<LearnerContext> learner;
 
     std::shared_ptr<UpdaterContext> updater;
+
+    void hookup_legislator(Replica replica,
+                             std::string location);
 
     void send_decree(Decree decree);
 };

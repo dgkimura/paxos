@@ -19,6 +19,7 @@ set(SOURCES
     handler_unittest.cpp
     ledger_unittest.cpp
     messages_unittest.cpp
+    parliament_unittest.cpp
     queue_unittest.cpp
     replicaset_unittest.cpp
     roles_unittest.cpp
