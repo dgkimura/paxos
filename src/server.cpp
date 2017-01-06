@@ -1,17 +1,17 @@
-#include "paxos/receiver.hpp"
-#include "paxos/serialization.hpp"
+#include <boost/make_shared.hpp>
+
+#include "paxos/server.hpp"
 
 
 using boost::asio::ip::tcp;
 
 
-NetworkReceiver::NetworkReceiver(std::string address, short port)
+BoostServer::BoostServer(std::string address, short port)
     : io_service(),
       acceptor(
           io_service,
           tcp::endpoint(boost::asio::ip::address::from_string(address), port)),
-      socket(io_service),
-      registered_map()
+      socket(io_service)
 {
     do_accept();
 
@@ -19,7 +19,7 @@ NetworkReceiver::NetworkReceiver(std::string address, short port)
 }
 
 
-NetworkReceiver::~NetworkReceiver()
+BoostServer::~BoostServer()
 {
     io_service.stop();
     acceptor.close();
@@ -27,49 +27,39 @@ NetworkReceiver::~NetworkReceiver()
 
 
 void
-NetworkReceiver::RegisterCallback(Callback&& callback, MessageType type)
+BoostServer::RegisterAction(std::function<void(std::string content)> action_)
 {
-    if (registered_map.find(type) == registered_map.end())
-    {
-        registered_map[type] = std::vector<Callback> { std::move(callback) };
-    }
-    else
-    {
-        registered_map[type].push_back(std::move(callback));
-    }
+    action = action_;
 }
 
 
 void
-NetworkReceiver::do_accept()
+BoostServer::do_accept()
 {
     acceptor.async_accept(socket,
         [this](boost::system::error_code ec_accept)
         {
             if (!ec_accept)
             {
-                boost::make_shared<Session>(std::move(socket), registered_map)->Start();
+                boost::make_shared<Session>(std::move(socket), action)->Start();
             }
             do_accept();
         });
 }
 
 
-NetworkReceiver::Session::Session(
+BoostServer::Session::Session(
     boost::asio::ip::tcp::socket socket,
-    std::unordered_map<
-        MessageType,
-        std::vector<Callback>,
-        MessageTypeHash> registered_map
+    std::function<void(std::string content)> action
 )
     : socket(std::move(socket)),
-      registered_map_(registered_map)
+      action(action)
 {
 }
 
 
 void
-NetworkReceiver::Session::Start()
+BoostServer::Session::Start()
 {
     boost::asio::async_read(socket, response,
         boost::asio::transfer_at_least(1),
@@ -79,7 +69,7 @@ NetworkReceiver::Session::Start()
 
 
 void
-NetworkReceiver::Session::handle_read_message(
+BoostServer::Session::handle_read_message(
     const boost::system::error_code& err)
 {
     if (!err)
@@ -92,14 +82,9 @@ NetworkReceiver::Session::handle_read_message(
     if (err == boost::asio::error::eof)
     {
         boost::asio::streambuf::const_buffers_type bufs = response.data();
-        Message message = Deserialize<Message>(
-            std::string(
-                boost::asio::buffers_begin(bufs),
-                boost::asio::buffers_begin(bufs) + response.size()));
-
-        for (Callback callback : registered_map_[message.type])
-        {
-            callback(message);
-        }
+        std::string content(
+            boost::asio::buffers_begin(bufs),
+            boost::asio::buffers_begin(bufs) + response.size());
+        action(content);
     }
 }

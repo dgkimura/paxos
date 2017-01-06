@@ -10,10 +10,10 @@ set(SOURCES
     logging.cpp
     messages.cpp
     parliament.cpp
-    receiver.cpp
     replicaset.cpp
     roles.cpp
     sender.cpp
+    server.cpp
 )
 
 add_library(paxos SHARED ${SOURCES})

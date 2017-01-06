@@ -1,65 +1,29 @@
 #ifndef __BOOTSTRAP_HPP_INCLUDED__
 #define __BOOTSTRAP_HPP_INCLUDED__
 
-#include <thread>
-
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/make_shared.hpp>
-
+#include "paxos/file.hpp"
 #include "paxos/replicaset.hpp"
+#include "paxos/serialization.hpp"
+#include "paxos/server.hpp"
 
 
-struct BootstrapFile
-{
-    std::string name;
-
-    std::string content;
-
-    BootstrapFile()
-        : name(), content()
-    {
-    }
-
-    BootstrapFile(std::string name, std::string content)
-        : name(name), content(content)
-    {
-    }
-};
-
-
+template<typename Server>
 class BootstrapListener
 {
 public:
 
-    BootstrapListener(std::string address, short port);
+    BootstrapListener(std::string address, short port)
+        : server(address, port)
+    {
+        server.RegisterAction([this](std::string content){
+            // write out file
+            BootstrapFile bootstrap = Deserialize<BootstrapFile>(content);
+        });
+    }
 
 private:
 
-    void do_accept();
-
-    boost::asio::io_service io_service;
-
-    boost::asio::ip::tcp::acceptor acceptor;
-
-    boost::asio::ip::tcp::socket socket;
-
-    class BootstrapSession : public boost::enable_shared_from_this<BootstrapSession>
-    {
-    public:
-        BootstrapSession(boost::asio::ip::tcp::socket socket);
-
-        void Start();
-
-    private:
-
-        void handle_read_message(const boost::system::error_code& err);
-
-        boost::asio::ip::tcp::socket socket;
-
-        boost::asio::streambuf response;
-    };
+    Server server;
 };
 
 

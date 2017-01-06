@@ -1,19 +1,15 @@
 #ifndef __RECEIVER_HPP_INCLUDED__
 #define __RECEIVER_HPP_INCLUDED__
 
-
-#include <thread>
+#include <functional>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
 
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <boost/enable_shared_from_this.hpp>
-
 #include "paxos/callback.hpp"
 #include "paxos/messages.hpp"
+#include "paxos/server.hpp"
 
 
 class Receiver
@@ -23,47 +19,41 @@ public:
     virtual void RegisterCallback(Callback&& callback, MessageType type) = 0;
 };
 
+template<typename Server>
 class NetworkReceiver : public Receiver
 {
 public:
-    NetworkReceiver(std::string address, short port);
 
-    ~NetworkReceiver();
+    NetworkReceiver(std::string address, short port)
+        : server(address, port)
+    {
+        server.RegisterAction([this](std::string content){
+            Message message = Deserialize<Message>(content);
 
-    void RegisterCallback(Callback&& callback, MessageType type);
+            for (Callback callback : registered_map[message.type])
+            {
+                callback(message);
+            }
+        });
+    }
+
+    void RegisterCallback(Callback&& callback, MessageType type)
+    {
+        if (registered_map.find(type) == registered_map.end())
+        {
+            registered_map[type] = std::vector<Callback> { std::move(callback) };
+        }
+        else
+        {
+            registered_map[type].push_back(std::move(callback));
+        }
+    }
 
 private:
 
-    void do_accept();
-
-    boost::asio::io_service io_service;
-
-    boost::asio::ip::tcp::acceptor acceptor;
-
-    boost::asio::ip::tcp::socket socket;
+    Server server;
 
     std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map;
-
-    class Session : public boost::enable_shared_from_this<Session>
-    {
-    public:
-        Session(
-            boost::asio::ip::tcp::socket socket,
-            std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map
-        );
-
-        void Start();
-
-    private:
-
-        void handle_read_message(const boost::system::error_code& err);
-
-        boost::asio::ip::tcp::socket socket;
-
-        std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map_;
-
-        boost::asio::streambuf response;
-    };
 };
 
 
