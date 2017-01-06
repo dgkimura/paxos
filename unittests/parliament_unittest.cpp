@@ -3,23 +3,23 @@
 #include "paxos/parliament.hpp"
 
 
-class FakeSender : public Sender
+class MockSender : public Sender
 {
 public:
 
-    FakeSender()
+    MockSender()
         : sent_messages(),
           replicaset(std::shared_ptr<ReplicaSet>(new ReplicaSet()))
     {
     }
 
-    FakeSender(std::shared_ptr<ReplicaSet> replicaset_)
+    MockSender(std::shared_ptr<ReplicaSet> replicaset_)
         : sent_messages(),
           replicaset(replicaset_)
     {
     }
 
-    ~FakeSender()
+    ~MockSender()
     {
     }
 
@@ -49,32 +49,69 @@ private:
 };
 
 
-class FakeReceiver : public Receiver
+class MockReceiver : public Receiver
 {
 public:
 
     void RegisterCallback(Callback&& callback, MessageType type)
     {
-        registered_set.insert(type);
+        if (registered_map.find(type) == registered_map.end())
+        {
+            registered_map[type] = std::vector<Callback> { std::move(callback) };
+        }
+        else
+        {
+            registered_map[type].push_back(std::move(callback));
+        }
+    }
+
+    void ReceiveMessage(Message message)
+    {
+        for (auto callback : registered_map[message.type])
+        {
+            callback(message);
+        }
     }
 
 private:
 
-    std::set<MessageType> registered_set;
+    std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map;
 };
 
 
-TEST(ParliamentTest, testAddLegislatorSendsRequestMessage)
+class ParliamentTest: public testing::Test
 {
-    Replica replica("myhost", 111);
-    auto legislators = std::make_shared<ReplicaSet>();
-    legislators->Add(replica);
-    auto ledger = std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>());
-    auto receiver = std::make_shared<FakeReceiver>();
-    auto sender = std::make_shared<FakeSender>();
+    virtual void SetUp()
+    {
+        replica = Replica("myhost", 111);
+        legislators = std::make_shared<ReplicaSet>();
+        legislators->Add(replica);
 
-    Parliament parliament(replica, legislators, ledger, receiver, sender);
+        ledger = std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>());
+        receiver = std::make_shared<MockReceiver>();
+        sender = std::make_shared<MockSender>();
 
+        parliament = Parliament(replica, legislators, ledger, receiver, sender);
+    }
+
+public:
+
+    Replica replica;
+
+    std::shared_ptr<ReplicaSet> legislators;
+
+    std::shared_ptr<MockSender> sender;
+
+    std::shared_ptr<MockReceiver> receiver;
+
+    std::shared_ptr<Ledger> ledger;
+
+    Parliament parliament;
+};
+
+
+TEST_F(ParliamentTest, testAddLegislatorSendsRequestMessage)
+{
     parliament.AddLegislator("yourhost", 222);
 
     ASSERT_EQ(SystemOperation::AddReplica,
@@ -83,17 +120,8 @@ TEST(ParliamentTest, testAddLegislatorSendsRequestMessage)
 }
 
 
-TEST(ParliamentTest, testRemoveLegislatorSendsRequestMessage)
+TEST_F(ParliamentTest, testRemoveLegislatorSendsRequestMessage)
 {
-    Replica replica("myhost", 111);
-    auto legislators = std::make_shared<ReplicaSet>();
-    legislators->Add(replica);
-    auto ledger = std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>());
-    auto receiver = std::make_shared<FakeReceiver>();
-    auto sender = std::make_shared<FakeSender>();
-
-    Parliament parliament(replica, legislators, ledger, receiver, sender);
-
     parliament.RemoveLegislator("yourhost", 222);
 
     ASSERT_EQ(SystemOperation::RemoveReplica,
@@ -102,19 +130,44 @@ TEST(ParliamentTest, testRemoveLegislatorSendsRequestMessage)
 }
 
 
-TEST(ParliamentTest, testBasicSendProposalSendsProposal)
+TEST_F(ParliamentTest, testBasicSendProposalSendsProposal)
 {
-    Replica replica("myhost", 111);
-    auto legislators = std::make_shared<ReplicaSet>();
-    legislators->Add(replica);
-    auto ledger = std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>());
-    auto receiver = std::make_shared<FakeReceiver>();
-    auto sender = std::make_shared<FakeSender>();
-
-    Parliament parliament(replica, legislators, ledger, receiver, sender);
-
     parliament.SendProposal("Pinky says, 'Narf!'");
 
     ASSERT_EQ(MessageType::RequestMessage, sender->sentMessages()[0].type);
     ASSERT_EQ("Pinky says, 'Narf!'", sender->sentMessages()[0].decree.content);
+}
+
+
+TEST_F(ParliamentTest, testSetActiveEnablesAppendIntoLedger)
+{
+    parliament.SetActive();
+
+    receiver->ReceiveMessage(
+        Message(
+            Decree(replica, 1, "my decree content", DecreeType::UserDecree),
+            replica,
+            replica,
+            MessageType::AcceptedMessage
+        )
+    );
+
+    ASSERT_EQ(1, ledger->Size());
+}
+
+
+TEST_F(ParliamentTest, testSetInactiveDisablesAppendIntoLedger)
+{
+    parliament.SetInactive();
+
+    receiver->ReceiveMessage(
+        Message(
+            Decree(replica, 1, "my decree content", DecreeType::UserDecree),
+            replica,
+            replica,
+            MessageType::AcceptedMessage
+        )
+    );
+
+    ASSERT_EQ(0, ledger->Size());
 }
