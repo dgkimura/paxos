@@ -24,6 +24,7 @@ set(SOURCES
     receiver_unittest.cpp
     replicaset_unittest.cpp
     roles_unittest.cpp
+    sender_unittest.cpp
     serialization_unittest.cpp
 )
 

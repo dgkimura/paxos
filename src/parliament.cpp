@@ -36,7 +36,7 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
         try
         {
             receiver = std::make_shared<NetworkReceiver<BoostServer>>(l.hostname, l.port);
-            sender = std::make_shared<NetworkSender>(legislators);
+            sender = std::make_shared<NetworkSender<BoostTransport>>(legislators);
             auto acceptor = std::make_shared<AcceptorContext>(location);
             hookup_legislator(l, location, acceptor);
 

@@ -1,6 +1,5 @@
 #include "paxos/logging.hpp"
 #include "paxos/sender.hpp"
-#include "paxos/serialization.hpp"
 
 #include <boost/asio/io_service.hpp>
 
@@ -8,50 +7,30 @@
 using boost::asio::ip::tcp;
 
 
-NetworkSender::NetworkSender(std::shared_ptr<ReplicaSet> replicaset_)
+BoostTransport::BoostTransport()
     : io_service_(),
-      socket_(io_service_),
-      replicaset(replicaset_)
+      socket_(io_service_)
 {
 }
 
 
-NetworkSender::~NetworkSender()
+BoostTransport::~BoostTransport()
 {
     socket_.close();
 }
 
 
 void
-NetworkSender::Reply(Message message)
+BoostTransport::Connect(std::string hostname, short port)
 {
     tcp::resolver resolver(io_service_);
-    auto endpoint = resolver.resolve(
-                        {
-                            message.to.hostname,
-                            std::to_string(message.to.port)
-                        });
-    std::lock_guard<std::mutex> guard(mutex);
+    auto endpoint = resolver.resolve({hostname, std::to_string(port)});
     boost::asio::connect(socket_, endpoint);
-
-    // 1. serialize message
-    std::string message_str = Serialize(message);
-
-    // 2. write message
-    boost::asio::write(socket_, boost::asio::buffer(message_str.c_str(), message_str.size()));
-
-    // 3. close socket signals to server end of message
-    socket_.close();
 }
 
 
 void
-NetworkSender::ReplyAll(Message message)
+BoostTransport::Write(std::string content)
 {
-    for (auto r : *replicaset)
-    {
-        Message m = message;
-        m.to = r;
-        Reply(m);
-    }
+    boost::asio::write(socket_, boost::asio::buffer(content.c_str(), content.size()));
 }
