@@ -12,6 +12,7 @@ ExternalProject_Add(
 )
 
 set(SOURCES
+    bootstrap_unittest.cpp
     callback_unittest.cpp
     context_unittest.cpp
     decree_unittest.cpp

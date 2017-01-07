@@ -18,7 +18,7 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
                       (fs::path(location) /
                        fs::path(ReplicasetFilename)).string());
                   SaveReplicaSet(legislators, replicasetfile);
-                  SendBootstrap(r, location);
+                  SendBootstrap<BoostTransport>(r, location);
               }
               else if (d.operation == SystemOperation::RemoveReplica)
               {

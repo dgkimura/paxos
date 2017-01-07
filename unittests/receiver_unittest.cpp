@@ -14,7 +14,7 @@ public:
     {
     }
 
-    void RegisterAction(std::function<void(std::string content)> action_)
+    void RegisterAction(std::function<void(std::string content)> action)
     {
     }
 };
@@ -52,4 +52,28 @@ TEST(NetworkReceiverTest, testReceiverWithMultipleRegisteredCallback)
         MessageType::RequestMessage);
 
     ASSERT_EQ(2, receiver.GetRegisteredCallbacks(MessageType::RequestMessage).size());
+}
+
+
+TEST(NetworkReceiverTest, testProcessMessageRunsCallbacksAssociatedWithRegisteredMessage)
+{
+    bool was_callback_called = false;
+
+    NetworkReceiver<MockServer> receiver("myhost", 1111);
+    receiver.RegisterCallback(
+        Callback([&was_callback_called](Message m){was_callback_called = true;}),
+        MessageType::RequestMessage);
+
+    receiver.ProcessContent(
+        Serialize(
+            Message(
+                Decree(),
+                Replica("A"),
+                Replica("B"),
+                MessageType::RequestMessage
+            )
+        )
+    );
+
+    ASSERT_TRUE(was_callback_called);
 }

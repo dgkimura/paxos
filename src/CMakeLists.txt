@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.4)
 project(paxos.src)
 
 set(SOURCES
-    bootstrap.cpp
     callback.cpp
     decree.cpp
     handler.cpp

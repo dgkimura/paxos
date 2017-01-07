@@ -28,13 +28,18 @@ public:
         : server(address, port)
     {
         server.RegisterAction([this](std::string content){
-            Message message = Deserialize<Message>(content);
-
-            for (Callback callback : GetRegisteredCallbacks(message.type))
-            {
-                callback(message);
-            }
+            ProcessContent(content);
         });
+    }
+
+    void ProcessContent(std::string content)
+    {
+        Message message = Deserialize<Message>(content);
+
+        for (Callback callback : GetRegisteredCallbacks(message.type))
+        {
+            callback(message);
+        }
     }
 
     void RegisterCallback(Callback&& callback, MessageType type)
