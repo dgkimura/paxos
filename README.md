@@ -1,5 +1,4 @@
-paxos
-=====
+# paxos
 
 [![Build Status](https://travis-ci.org/dgkimura/paxos.svg?branch=master)](https://travis-ci.org/dgkimura/paxos)
 [![Coverage Status](https://coveralls.io/repos/github/dgkimura/paxos/badge.svg?branch=master)](https://coveralls.io/github/dgkimura/paxos?branch=master)
@@ -8,7 +7,7 @@ The paxos project is an implementation of the paxos consensus protocol. It
 provides a library for maintaining consistency within a distributed system.
 
 
-#### Build
+## Build
 You will need a compiler with full C++11 support. You can then use CMake to
 generate MakeFiles for this project.
 ```
@@ -18,7 +17,7 @@ $ make && ./unittests/all_unittests
 ```
 
 
-#### Setup
+## Setup
 Create a `replicaset` file in the directory where the parliament will run.
 
 ```
@@ -26,7 +25,7 @@ $ echo 127.0.0.1:8080 >> replicaset
 ```
 
 
-#### Usage
+## Usage
 Create a parliament and then send proposals to vote upon.
 
 ```cpp
@@ -53,5 +52,5 @@ $ cat paxos.ledger
 ```
 
 
-#### References
+## References
 - [The Part-Time Parliament](http://research.microsoft.com/en-us/um/people/lamport/pubs/lamport-paxos.pdf)
