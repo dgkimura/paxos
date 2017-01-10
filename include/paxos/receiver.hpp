@@ -7,6 +7,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include "paxos/callback.hpp"
 #include "paxos/messages.hpp"
 #include "paxos/server.hpp"
@@ -25,11 +28,12 @@ class NetworkReceiver : public Receiver
 public:
 
     NetworkReceiver(std::string address, short port)
-        : server(address, port)
+        : server(boost::make_shared<Server>(address, port))
     {
-        server.RegisterAction([this](std::string content){
+        server->RegisterAction([this](std::string content){
             ProcessContent(content);
         });
+        server->Start();
     }
 
     void ProcessContent(std::string content)
@@ -68,7 +72,7 @@ public:
 
 private:
 
-    Server server;
+    boost::shared_ptr<Server> server;
 
     std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map;
 };

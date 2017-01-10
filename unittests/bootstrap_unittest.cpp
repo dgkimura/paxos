@@ -21,6 +21,9 @@ TEST(BootstrapTest, testBootstrapListenerRegistersAction)
             is_action_registered = true;
             action(Serialize(BootstrapFile("filename", "file content")));
         }
+        void Start()
+        {
+        }
     };
 
     BootstrapListener<MockServer> listener("my-address", 111);

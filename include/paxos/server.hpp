@@ -8,7 +8,7 @@
 #include <boost/enable_shared_from_this.hpp>
 
 
-class BoostServer
+class BoostServer : public boost::enable_shared_from_this<BoostServer>
 {
 public:
 
@@ -17,6 +17,8 @@ public:
     ~BoostServer();
 
     void RegisterAction(std::function<void(std::string content)> action_);
+
+    void Start();
 
 private:
 

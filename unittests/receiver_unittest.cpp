@@ -17,6 +17,10 @@ public:
     void RegisterAction(std::function<void(std::string content)> action)
     {
     }
+
+    void Start()
+    {
+    }
 };
 
 

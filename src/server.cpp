@@ -14,8 +14,6 @@ BoostServer::BoostServer(std::string address, short port)
       socket(io_service)
 {
     do_accept();
-
-    std::thread([&]() { io_service.run(); }).detach();
 }
 
 
@@ -23,6 +21,18 @@ BoostServer::~BoostServer()
 {
     io_service.stop();
     acceptor.close();
+}
+
+
+void
+BoostServer::Start()
+{
+    // Updating shared reference and asio run must happen outside of the
+    // constructor because at that point the object isn't guaranteed to be
+    // fully instatiated yet. As such, start is expected to be called shortly
+    // after construction has finished.
+    auto self(shared_from_this());
+    std::thread([this, self]() { io_service.run(); }).detach();
 }
 
 

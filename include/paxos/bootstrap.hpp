@@ -4,7 +4,9 @@
 #include <fstream>
 
 #include <boost/filesystem.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/range/iterator_range.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "paxos/file.hpp"
 #include "paxos/replicaset.hpp"
@@ -24,17 +26,18 @@ class BootstrapListener : public Listener
 public:
 
     BootstrapListener(std::string address, short port)
-        : server(address, port)
+        : server(boost::make_shared<Server>(address, port))
     {
-        server.RegisterAction([this](std::string content){
+        server->RegisterAction([this](std::string content){
             // write out file
             BootstrapFile bootstrap = Deserialize<BootstrapFile>(content);
         });
+        server->Start();
     }
 
 private:
 
-    Server server;
+    boost::shared_ptr<Server> server;
 };
 
 
