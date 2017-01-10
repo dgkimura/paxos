@@ -56,7 +56,6 @@ public:
         : file((fs::path(dirname) / fs::path(filename)).string(),
                std::ios::out |
                std::ios::in |
-               std::ios::trunc |
                std::ios::binary
           ),
           stream(file)
@@ -98,6 +97,37 @@ private:
 
 
 template <typename T>
+class PersistentStorageWrapper : public Storage<T>
+{
+public:
+
+    PersistentStorageWrapper(std::string dirname, std::string filename)
+    {
+        std::string fullpath((fs::path(dirname) / fs::path(filename)).string());
+        if (!boost::filesystem::exists(fullpath))
+        {
+            std::fstream f(fullpath, std::ios::out | std::ios::trunc);
+        }
+        store = std::make_shared<PersistentStorage<T>>(dirname, filename);
+    }
+
+    T Get()
+    {
+        return store->Get();
+    }
+
+    void Put(T value)
+    {
+        store->Put(value);
+    }
+
+private:
+
+    std::shared_ptr<PersistentStorage<T>> store;
+};
+
+
+template <typename T>
 class Field
 {
 public:
@@ -130,7 +160,7 @@ private:
 };
 
 
-using PersistentDecree = PersistentStorage<Decree>;
+using PersistentDecree = PersistentStorageWrapper<Decree>;
 
 using VolatileDecree = VolatileStorage<Decree>;
 
