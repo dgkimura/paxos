@@ -27,8 +27,8 @@ BoostServer::~BoostServer()
 void
 BoostServer::Start()
 {
-    // Updating shared reference and asio run must happen outside of the
-    // constructor because at that point the object isn't guaranteed to be
+    // Updating shared reference and asio run must happen after calling the
+    // constructor because before that point the object isn't guaranteed to be
     // fully instatiated yet. As such, start is expected to be called shortly
     // after construction has finished.
     auto self(shared_from_this());

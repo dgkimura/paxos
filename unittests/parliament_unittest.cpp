@@ -125,8 +125,8 @@ TEST_F(ParliamentTest, testAddLegislatorSendsRequestMessage)
 {
     parliament->AddLegislator("yourhost", 222);
 
-    ASSERT_EQ(SystemOperation::AddReplica,
-              Deserialize<SystemDecree>(sender->sentMessages()[0].decree.content).operation);
+    ASSERT_EQ(SystemOperationType::AddReplica,
+              Deserialize<SystemOperation>(sender->sentMessages()[0].decree.content).operation);
     ASSERT_EQ(MessageType::RequestMessage, sender->sentMessages()[0].type);
 }
 
@@ -135,8 +135,8 @@ TEST_F(ParliamentTest, testRemoveLegislatorSendsRequestMessage)
 {
     parliament->RemoveLegislator("yourhost", 222);
 
-    ASSERT_EQ(SystemOperation::RemoveReplica,
-              Deserialize<SystemDecree>(sender->sentMessages()[0].decree.content).operation);
+    ASSERT_EQ(SystemOperationType::RemoveReplica,
+              Deserialize<SystemOperation>(sender->sentMessages()[0].decree.content).operation);
     ASSERT_EQ(MessageType::RequestMessage, sender->sentMessages()[0].type);
 }
 

@@ -91,7 +91,7 @@ struct ascending_decree
 };
 
 
-enum class SystemOperation
+enum class SystemOperationType
 {
     //
     // Add replica to replicaset
@@ -105,21 +105,23 @@ enum class SystemOperation
 };
 
 
-struct SystemDecree
+struct SystemOperation
 {
-    SystemOperation operation;
+    SystemOperationType operation;
 
     int number;
 
+    Replica replica;
+
     std::string content;
 
-    SystemDecree()
-        : operation(), number(), content()
+    SystemOperation()
+        : operation(), replica(), number(), content()
     {
     }
 
-    SystemDecree(SystemOperation op, int n, std::string c)
-        : operation(op), number(n), content(c)
+    SystemOperation(SystemOperationType op, int n, Replica r, std::string c)
+        : operation(op), number(n), replica(r), content(c)
     {
     }
 };

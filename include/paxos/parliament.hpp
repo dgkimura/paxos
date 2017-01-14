@@ -33,9 +33,9 @@ public:
                std::shared_ptr<Sender> sender,
                std::shared_ptr<AcceptorContext> acceptor);
 
-    void AddLegislator(std::string address, short port);
+    void AddLegislator(std::string address, short port, std::string location=".");
 
-    void RemoveLegislator(std::string address, short port);
+    void RemoveLegislator(std::string address, short port, std::string location=".");
 
     void SendProposal(std::string entry);
 

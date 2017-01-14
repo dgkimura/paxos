@@ -9,23 +9,21 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
           std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"),
           decree_handler,
           DecreeHandler([this, location](std::string entry){
-              SystemDecree d = Deserialize<SystemDecree>(entry);
-              if (d.operation == SystemOperation::AddReplica)
+              SystemOperation op = Deserialize<SystemOperation>(entry);
+              if (op.operation == SystemOperationType::AddReplica)
               {
-                  Replica r = Deserialize<Replica>(d.content);
-                  legislators->Add(r);
+                  legislators->Add(op.replica);
                   std::ofstream replicasetfile(
                       (fs::path(location) /
                        fs::path(ReplicasetFilename)).string());
                   SaveReplicaSet(legislators, replicasetfile);
-                  SendBootstrap<BoostTransport>(r, location);
+                  SendBootstrap<BoostTransport>(op.replica, op.content);
               }
-              else if (d.operation == SystemOperation::RemoveReplica)
+              else if (op.operation == SystemOperationType::RemoveReplica)
               {
-                  Replica r = Deserialize<Replica>(d.content);
-                  legislators->Remove(r);
+                  legislators->Remove(op.replica);
                   std::ofstream replicasetfile(
-                      (fs::path(location) /
+                      (fs::path(op.content) /
                        fs::path(ReplicasetFilename)).string());
                   SaveReplicaSet(legislators, replicasetfile);
               }
@@ -110,15 +108,19 @@ Parliament::hookup_legislator(
 
 
 void
-Parliament::AddLegislator(std::string address, short port)
+Parliament::AddLegislator(
+    std::string address,
+    short port,
+    std::string location)
 {
     Decree d;
     d.type = DecreeType::SystemDecree;
     d.content = Serialize(
-        SystemDecree(
-            SystemOperation::AddReplica,
+        SystemOperation(
+            SystemOperationType::AddReplica,
             0,
-            Serialize(Replica(address, port))
+            Replica(address, port),
+            location
         )
     );
     send_decree(d);
@@ -126,15 +128,19 @@ Parliament::AddLegislator(std::string address, short port)
 
 
 void
-Parliament::RemoveLegislator(std::string address, short port)
+Parliament::RemoveLegislator(
+    std::string address,
+    short port,
+    std::string location)
 {
     Decree d;
     d.type = DecreeType::SystemDecree;
     d.content = Serialize(
-        SystemDecree(
-            SystemOperation::RemoveReplica,
+        SystemOperation(
+            SystemOperationType::RemoveReplica,
             0,
-            Serialize(Replica(address, port))
+            Replica(address, port),
+            location
         )
     );
     send_decree(d);
