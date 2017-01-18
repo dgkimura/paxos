@@ -1,38 +1,29 @@
 cmake_minimum_required(VERSION 3.4)
-project(paxos.dependencies.boost)
+project(dependencies.boost)
 
 include(ExternalProject)
 
-set(boost_libraries
-    filesystem
-    iostreams
-    log
-    serialization
-    system
-    thread
+if (APPLE)
+    set(LINKFLAGS "linkflags=-stdlib=libc++")
+    set(CXXFLAGS "cxxflags=-stdlib=libc++")
+endif()
+
+set(INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/boost-prefix")
+
+ExternalProject_Add(boost
+   URL "https://sourceforge.net/projects/boost/files/boost/1.63.0/boost_1_63_0.tar.gz"
+   URL_HASH SHA256=fe34a4e119798e10b8cc9e565b3b0284e9fd3977ec8a1b19586ad1dec397088b
+   UPDATE_COMMAND ""
+   BUILD_IN_SOURCE 1
+   CONFIGURE_COMMAND ./bootstrap.sh --with-libraries=system,filesystem,log,serialization,iostreams "${CXXFLAGS}" "--prefix=<INSTALL_DIR>"
+   BUILD_COMMAND ./b2 link=static "${LINKFLAGS}" "${CXXFLAGS}" cxxflags=-fPIC cflags=-fPIC
+   INSTALL_COMMAND ./b2 install "${LINKFLAGS}" "${CXXFLAGS}"
 )
 
-foreach(_M ${boost_libraries})
-    set(boost_with_libraries ${boost_with_libraries} --with-${_M})
-endforeach(_M)
-
-add_definitions(-fPIC)
-
-ExternalProject_Add(Boost
-    URL http://downloads.sourceforge.net/project/boost/boost/1.56.0/boost_1_56_0.tar.gz
-    URL_MD5 8c54705c424513fa2be0042696a3a162
-    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/boost"
-    INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}"
-    CONFIGURE_COMMAND ./bootstrap.sh --prefix=<INSTALL_DIR>
-    BUILD_COMMAND ./b2 cxxflags=-fPIC cflags=-fPIC ${boost_with_libraries}
-    INSTALL_COMMAND ./b2 cxxflags=-fPIC cflags=-fPIC ${boost_with_libraries} install
-    BUILD_IN_SOURCE 1
-)
-
-foreach(_M ${boost_libraries})
-    set(boost_STATIC_LIB ${boost_STATIC_LIB} ${CMAKE_CURRENT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}boost_${_M}${CMAKE_STATIC_LIBRARY_SUFFIX})
-endforeach(_M)
-
-set(boost_STATIC_LIB ${boost_STATIC_LIB} PARENT_SCOPE)
-set(Boost_USE_STATIC_LIBS OFF)
-set(CMAKE_POSITION_INDEPENDENT_CODE TURE)
+foreach(_MODULE filesystem iostreams log serialization system thread)
+    add_library(dependency-boost_${_MODULE} STATIC IMPORTED GLOBAL)
+    set_target_properties(dependency-boost_${_MODULE} PROPERTIES
+      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+      IMPORTED_LOCATION "${INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}boost_${_MODULE}${CMAKE_SHARED_LIBRARY_SUFFIX}"
+    )
+endforeach(_MODULE)
