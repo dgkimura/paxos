@@ -15,7 +15,7 @@ ExternalProject_Add(boost
    URL_HASH SHA256=fe34a4e119798e10b8cc9e565b3b0284e9fd3977ec8a1b19586ad1dec397088b
    UPDATE_COMMAND ""
    BUILD_IN_SOURCE 1
-   CONFIGURE_COMMAND ./bootstrap.sh --with-libraries=system,filesystem,log,serialization,iostreams "${CXXFLAGS}" "--prefix=<INSTALL_DIR>"
+   CONFIGURE_COMMAND ./bootstrap.sh --with-libraries=filesystem,iostreams,log,program_options,serialization,system "${CXXFLAGS}" "--prefix=<INSTALL_DIR>"
    BUILD_COMMAND ./b2 link=static "${LINKFLAGS}" "${CXXFLAGS}" cxxflags=-fPIC cflags=-fPIC
    INSTALL_COMMAND ./b2 install "${LINKFLAGS}" "${CXXFLAGS}"
 )
