@@ -23,10 +23,11 @@ class Parliament
 {
 public:
 
-    Parliament(std::string location=".",
+    Parliament(Replica legislator,
+               std::string location=".",
                DecreeHandler decree_handler=DecreeHandler());
 
-    Parliament(Replica replica,
+    Parliament(Replica legislator,
                std::shared_ptr<ReplicaSet> legislators,
                std::shared_ptr<Ledger> ledger,
                std::shared_ptr<Receiver> receiver,

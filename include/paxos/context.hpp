@@ -51,14 +51,6 @@ struct AcceptorContext : public Context
     Field<Decree> promised_decree;
     Field<Decree> accepted_decree;
 
-    AcceptorContext(std::string dirname)
-        : AcceptorContext(
-            std::make_shared<PersistentDecree>(dirname, "promised_decree"),
-            std::make_shared<PersistentDecree>(dirname, "accepted_decree")
-          )
-    {
-    }
-
     AcceptorContext(
         std::shared_ptr<Storage<Decree>> promised_decree_,
         std::shared_ptr<Storage<Decree>> accepted_decree_

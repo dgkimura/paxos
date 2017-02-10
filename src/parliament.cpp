@@ -1,7 +1,10 @@
 #include "paxos/parliament.hpp"
 
 
-Parliament::Parliament(std::string location, DecreeHandler decree_handler)
+Parliament::Parliament(
+    Replica legislator,
+    std::string location,
+    DecreeHandler decree_handler)
     : legislators(LoadReplicaSet(
           std::ifstream(
               (fs::path(location) / fs::path(ReplicasetFilename)).string()))),
@@ -29,33 +32,23 @@ Parliament::Parliament(std::string location, DecreeHandler decree_handler)
               }
           })))
 {
-    for (auto l : *legislators)
-    {
-        try
-        {
-            receiver = std::make_shared<NetworkReceiver<BoostServer>>(l.hostname, l.port);
-            sender = std::make_shared<NetworkSender<BoostTransport>>(legislators);
-            auto acceptor = std::make_shared<AcceptorContext>(location);
-            hookup_legislator(l, location, acceptor);
+    receiver = std::make_shared<NetworkReceiver<BoostServer>>(
+        legislator.hostname, legislator.port);
+    sender = std::make_shared<NetworkSender<BoostTransport>>(legislators);
+    auto acceptor = std::make_shared<AcceptorContext>(
+        std::make_shared<PersistentDecree>(location, "promised_decree"),
+        std::make_shared<PersistentDecree>(location, "accepted_decree"));
+    hookup_legislator(legislator, location, acceptor);
 
-            bootstrap = std::make_shared<BootstrapListener<BoostServer>>(
-                l.hostname,
-                l.port + 1
-            );
-        }
-        catch (
-            boost::exception_detail::clone_impl<
-                boost::exception_detail::error_info_injector<
-                    boost::system::system_error>>& e)
-        {
-        }
-    }
-
+    bootstrap = std::make_shared<BootstrapListener<BoostServer>>(
+        legislator.hostname,
+        legislator.port + 1
+    );
 }
 
 
 Parliament::Parliament(
-    Replica replica,
+    Replica legislator,
     std::shared_ptr<ReplicaSet> legislators,
     std::shared_ptr<Ledger> ledger,
     std::shared_ptr<Receiver> receiver,
@@ -67,7 +60,7 @@ Parliament::Parliament(
     sender(sender),
     ledger(ledger)
 {
-    hookup_legislator(replica, ".", acceptor);
+    hookup_legislator(legislator, ".", acceptor);
 }
 
 

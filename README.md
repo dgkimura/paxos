@@ -36,7 +36,7 @@ int main(void)
     //
     // Create a parliament group.
     //
-    Parliament p;
+    Parliament p(Replica("127.0.0.1", 8080));
 
     //
     // Sends a proposal to vote on.
