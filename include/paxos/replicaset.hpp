@@ -79,7 +79,7 @@ private:
 //
 // File name where replica information is stored.
 //
-const std::string ReplicasetFilename = "replicaset";
+const std::string ReplicasetFilename = "paxos.replicaset";
 
 
 std::shared_ptr<ReplicaSet>

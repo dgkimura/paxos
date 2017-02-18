@@ -36,8 +36,8 @@ Parliament::Parliament(
         legislator.hostname, legislator.port);
     sender = std::make_shared<NetworkSender<BoostTransport>>(legislators);
     auto acceptor = std::make_shared<AcceptorContext>(
-        std::make_shared<PersistentDecree>(location, "promised_decree"),
-        std::make_shared<PersistentDecree>(location, "accepted_decree"));
+        std::make_shared<PersistentDecree>(location, "paxos.promised_decree"),
+        std::make_shared<PersistentDecree>(location, "paxos.accepted_decree"));
     hookup_legislator(legislator, location, acceptor);
 
     bootstrap = std::make_shared<BootstrapListener<BoostServer>>(
