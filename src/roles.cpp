@@ -96,6 +96,7 @@ HandleRequest(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
+    LOG(LogLevel::Info) << "HandleReqeust | " << Serialize(message);
     if (!message.decree.content.empty())
     {
         context->requested_values.push_back(
@@ -156,6 +157,8 @@ HandlePromise(
 
     if (IsDecreeEqual(message.decree, context->highest_proposed_decree))
     {
+        bool duplicate = context->promise_map[message.decree]
+                             ->Contains(message.from);
         //
         // If the messaged decree is the highest promised decree then update
         // our promised decree map and calculate if majority of replicas have
@@ -168,7 +171,12 @@ HandlePromise(
                                        ->Intersection(context->replicaset)
                                        ->GetSize();
 
-        if (received_promises >= minimum_quorum)
+        //
+        // If the messaged decree is a duplicate message allow a possible
+        // resend of accept message.
+        //
+        if (received_promises == minimum_quorum ||
+            (received_promises >= minimum_quorum && duplicate))
         {
             if (context->highest_proposed_decree.content.empty() &&
                 !context->requested_values.empty())

@@ -280,6 +280,59 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedV
 }
 
 
+TEST_F(ProposerTest, testHandlePromiseWillSendAcceptAgainIfDuplicatePromiseIsSent)
+{
+    Message message(Decree(Replica("host1"), 1, "", DecreeType::UserDecree), Replica("host1"), Replica("host1"), MessageType::PromiseMessage);
+
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
+    context->replicaset = std::make_shared<ReplicaSet>();
+    context->replicaset->Add(Replica("host1"));
+    context->replicaset->Add(Replica("host2"));
+    context->replicaset->Add(Replica("host3"));
+    context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
+    context->promise_map[message.decree]->Add(Replica("host1"));
+    context->promise_map[message.decree]->Add(Replica("host2"));
+    context->promise_map[message.decree]->Add(Replica("host3"));
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandlePromise(message, context, sender);
+
+    // Accept message is sent to all 3 replicas.
+    ASSERT_EQ(3, sender->sentMessages().size());
+    ASSERT_EQ(MessageType::AcceptMessage, sender->sentMessages()[0].type);
+    ASSERT_EQ(MessageType::AcceptMessage, sender->sentMessages()[1].type);
+    ASSERT_EQ(MessageType::AcceptMessage, sender->sentMessages()[2].type);
+}
+
+
+TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
+{
+    Message message(Decree(Replica("host1"), 1, "", DecreeType::UserDecree), Replica("host1"), Replica("host1"), MessageType::PromiseMessage);
+
+    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
+    context->replicaset = std::make_shared<ReplicaSet>();
+    context->replicaset->Add(Replica("host1"));
+    context->replicaset->Add(Replica("host2"));
+    context->replicaset->Add(Replica("host3"));
+    context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
+    context->promise_map[message.decree]->Add(Replica("host2"));
+    context->promise_map[message.decree]->Add(Replica("host3"));
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    // Sending promise from host1, which is not in our promise map yet.
+    HandlePromise(message, context, sender);
+
+    // We shouldn't send accept, since this is not a duplicate message and
+    // promise_map contains more than minimum quorum (so we should have already
+    // sent accept message).
+    ASSERT_EQ(0, sender->sentMessages().size());
+}
+
+
 TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressIncrementsCurrentDecreeNumberOnce)
 {
     auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
