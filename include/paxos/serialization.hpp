@@ -52,6 +52,14 @@ void serialize(Archive& ar, Message& obj, const unsigned int version)
 
 
 template <typename Archive>
+void serialize(Archive& ar, BootstrapMetadata& obj, const unsigned int version)
+{
+    ar & obj.local;
+    ar & obj.remote;
+}
+
+
+template <typename Archive>
 void serialize(Archive& ar, BootstrapFile& obj, const unsigned int version)
 {
     ar & obj.name;

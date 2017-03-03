@@ -34,9 +34,13 @@ public:
                std::shared_ptr<Sender> sender,
                std::shared_ptr<AcceptorContext> acceptor);
 
-    void AddLegislator(std::string address, short port, std::string location=".");
+    void AddLegislator(std::string address,
+                       short port,
+                       std::string remote=".");
 
-    void RemoveLegislator(std::string address, short port, std::string location=".");
+    void RemoveLegislator(std::string address,
+                          short port,
+                          std::string remote=".");
 
     void SendProposal(std::string entry);
 
@@ -60,8 +64,9 @@ private:
 
     std::shared_ptr<LearnerContext> learner;
 
+    std::string location;
+
     void hookup_legislator(Replica replica,
-                           std::string location,
                            std::shared_ptr<AcceptorContext> acceptor);
 
     void send_decree(Decree decree);

@@ -4,6 +4,14 @@
 #include <string>
 
 
+struct BootstrapMetadata
+{
+    std::string local;
+
+    std::string remote;
+};
+
+
 struct BootstrapFile
 {
     std::string name;

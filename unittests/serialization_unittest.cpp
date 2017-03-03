@@ -73,6 +73,23 @@ TEST(SerializationUnitTest, testMessageIsSerializableAndDeserializable)
 }
 
 
+TEST(SerializationUnitTest, testBootstrapMetadataIsSerializableAndDeserializable)
+{
+    BootstrapMetadata expected
+    {
+        "localpath",
+        "remotepath"
+    },
+    actual;
+
+    std::string string_obj = Serialize(expected);
+    actual = Deserialize<BootstrapMetadata>(string_obj);
+
+    ASSERT_EQ(expected.local, actual.local);
+    ASSERT_EQ(expected.remote, actual.remote);
+}
+
+
 TEST(SerializationUnitTest, testBootstrapFileIsSerializableAndDeserializable)
 {
     BootstrapFile expected(

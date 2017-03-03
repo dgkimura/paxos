@@ -46,10 +46,10 @@ private:
 
 
 template<typename Transport>
-void SendBootstrap(Replica replica, std::string location)
+void SendBootstrap(Replica replica, BootstrapMetadata metadata)
 {
     for (auto& entry : boost::make_iterator_range(
-         boost::filesystem::directory_iterator(location), {}))
+         boost::filesystem::directory_iterator(metadata.local), {}))
     {
         NetworkSender<Transport> sender;
 
@@ -60,7 +60,9 @@ void SendBootstrap(Replica replica, std::string location)
 
         // 2. send bootstrap file
         BootstrapFile file;
-        file.name = entry.path().native();
+        boost::filesystem::path remotepath(metadata.remote);
+        remotepath /= entry.path().filename();
+        file.name = remotepath.native();
         file.content = buffer.str();
         sender.SendFile(replica, file);
     }

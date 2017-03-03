@@ -8,6 +8,15 @@ Parliament::Parliament(
     : legislators(LoadReplicaSet(
           std::ifstream(
               (fs::path(location) / fs::path(ReplicasetFilename)).string()))),
+      receiver(std::make_shared<NetworkReceiver<BoostServer>>(
+               legislator.hostname, legislator.port)),
+      sender(std::make_shared<NetworkSender<BoostTransport>>(legislators)),
+      bootstrap(
+          std::make_shared<BootstrapListener<BoostServer>>(
+              legislator.hostname,
+              legislator.port + 1
+          )
+      ),
       ledger(std::make_shared<Ledger>(
           std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"),
           decree_handler,
@@ -20,7 +29,9 @@ Parliament::Parliament(
                       (fs::path(location) /
                        fs::path(ReplicasetFilename)).string());
                   SaveReplicaSet(legislators, replicasetfile);
-                  SendBootstrap<BoostTransport>(op.replica, op.content);
+                  SendBootstrap<BoostTransport>(
+                      op.replica,
+                      Deserialize<BootstrapMetadata>(op.content));
               }
               else if (op.operation == SystemOperationType::RemoveReplica)
               {
@@ -30,20 +41,14 @@ Parliament::Parliament(
                        fs::path(ReplicasetFilename)).string());
                   SaveReplicaSet(legislators, replicasetfile);
               }
-          })))
+          }))),
+      learner(std::make_shared<LearnerContext>(legislators, ledger)),
+      location(location)
 {
-    receiver = std::make_shared<NetworkReceiver<BoostServer>>(
-        legislator.hostname, legislator.port);
-    sender = std::make_shared<NetworkSender<BoostTransport>>(legislators);
     auto acceptor = std::make_shared<AcceptorContext>(
         std::make_shared<PersistentDecree>(location, "paxos.promised_decree"),
         std::make_shared<PersistentDecree>(location, "paxos.accepted_decree"));
-    hookup_legislator(legislator, location, acceptor);
-
-    bootstrap = std::make_shared<BootstrapListener<BoostServer>>(
-        legislator.hostname,
-        legislator.port + 1
-    );
+    hookup_legislator(legislator, acceptor);
 }
 
 
@@ -58,23 +63,22 @@ Parliament::Parliament(
     legislators(legislators),
     receiver(receiver),
     sender(sender),
-    ledger(ledger)
+    ledger(ledger),
+    learner(std::make_shared<LearnerContext>(legislators, ledger))
 {
-    hookup_legislator(legislator, ".", acceptor);
+    hookup_legislator(legislator, acceptor);
 }
 
 
 void
 Parliament::hookup_legislator(
     Replica replica,
-    std::string location,
     std::shared_ptr<AcceptorContext> acceptor)
 {
     auto proposer = std::make_shared<ProposerContext>(
         legislators,
         ledger->Tail().number + 1
     );
-    learner = std::make_shared<LearnerContext>(legislators, ledger);
     auto updater = std::make_shared<UpdaterContext>(ledger);
 
     RegisterProposer(
@@ -104,7 +108,7 @@ void
 Parliament::AddLegislator(
     std::string address,
     short port,
-    std::string location)
+    std::string remote)
 {
     Decree d;
     d.type = DecreeType::SystemDecree;
@@ -113,7 +117,13 @@ Parliament::AddLegislator(
             SystemOperationType::AddReplica,
             0,
             Replica(address, port),
-            location
+            Serialize(
+                BootstrapMetadata
+                {
+                    location,
+                    remote
+                }
+            )
         )
     );
     send_decree(d);
@@ -124,7 +134,7 @@ void
 Parliament::RemoveLegislator(
     std::string address,
     short port,
-    std::string location)
+    std::string remote)
 {
     Decree d;
     d.type = DecreeType::SystemDecree;
@@ -133,7 +143,13 @@ Parliament::RemoveLegislator(
             SystemOperationType::RemoveReplica,
             0,
             Replica(address, port),
-            location
+            Serialize(
+                BootstrapMetadata
+                {
+                    location,
+                    remote
+                }
+            )
         )
     );
     send_decree(d);
