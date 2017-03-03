@@ -19,7 +19,6 @@ TEST(BootstrapTest, testBootstrapListenerRegistersAction)
         void RegisterAction(std::function<void(std::string content)> action)
         {
             is_action_registered = true;
-            action(Serialize(BootstrapFile("filename", "file content")));
         }
         void Start()
         {

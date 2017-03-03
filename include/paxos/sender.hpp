@@ -86,7 +86,7 @@ public:
         std::lock_guard<std::mutex> guard(mutex);
 
         Transport transport;
-        transport.Connect(replica.hostname, replica.port);
+        transport.Connect(replica.hostname, replica.port + 1);
 
         // 1. serialize file
         std::string file_str = Serialize(file);

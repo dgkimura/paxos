@@ -31,6 +31,10 @@ public:
         server->RegisterAction([this](std::string content){
             // write out file
             BootstrapFile bootstrap = Deserialize<BootstrapFile>(content);
+            std::fstream file(
+                bootstrap.name,
+                std::ios::out | std::ios::trunc | std::ios::binary);
+            file << bootstrap.content;
         });
         server->Start();
     }
@@ -50,12 +54,13 @@ void SendBootstrap(Replica replica, std::string location)
         NetworkSender<Transport> sender;
 
         // 1. serialize file
-        std::ifstream filestream(location);
+        std::ifstream filestream(entry.path().native());
         std::stringstream buffer;
         buffer << filestream.rdbuf();
 
         // 2. send bootstrap file
         BootstrapFile file;
+        file.name = entry.path().native();
         file.content = buffer.str();
         sender.SendFile(replica, file);
     }

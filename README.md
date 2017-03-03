@@ -18,10 +18,10 @@ $ make && ./unittests/all_unittests
 
 
 ## Setup
-Create a `replicaset` file in the directory where the parliament will run.
+Create a `paxos.replicaset` file in the directory where the parliament will run.
 
 ```
-$ echo 127.0.0.1:8080 >> replicaset
+$ echo 127.0.0.1:8080 >> paxos.replicaset
 ```
 
 
