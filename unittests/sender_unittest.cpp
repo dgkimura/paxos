@@ -61,7 +61,7 @@ TEST(SenderTest, testSendFileAlongTransport)
         }
     };
 
-    NetworkSender<MockTransport> sender;
+    NetworkFileSender<MockTransport> sender;
 
     sender.SendFile(
         Replica("A", 111),

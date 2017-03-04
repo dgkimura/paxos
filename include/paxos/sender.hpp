@@ -21,6 +21,13 @@ public:
     virtual void ReplyAll(Message message) = 0;
 };
 
+class FileSender
+{
+public:
+
+    virtual void SendFile(Replica replica, BootstrapFile file) = 0;
+};
+
 
 class BoostTransport
 {
@@ -47,13 +54,8 @@ class NetworkSender : public Sender
 {
 public:
 
-    NetworkSender(std::shared_ptr<ReplicaSet> replicaset_)
+    NetworkSender(std::shared_ptr<ReplicaSet>& replicaset_)
         : replicaset(replicaset_)
-    {
-    }
-
-    NetworkSender()
-        : replicaset(std::make_shared<ReplicaSet>())
     {
     }
 
@@ -81,6 +83,20 @@ public:
         }
     }
 
+private:
+
+    std::shared_ptr<ReplicaSet>& replicaset;
+
+    std::mutex mutex;
+};
+
+
+
+template<typename Transport>
+class NetworkFileSender : public FileSender
+{
+public:
+
     void SendFile(Replica replica, BootstrapFile file)
     {
         std::lock_guard<std::mutex> guard(mutex);
@@ -96,8 +112,6 @@ public:
     }
 
 private:
-
-    std::shared_ptr<ReplicaSet> replicaset;
 
     std::mutex mutex;
 };

@@ -3,6 +3,7 @@
 
 #include <fstream>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -25,16 +26,24 @@ class BootstrapListener : public Listener
 {
 public:
 
-    BootstrapListener(std::string address, short port)
+    BootstrapListener(
+        std::shared_ptr<ReplicaSet>& legislators,
+        std::string address,
+        short port)
         : server(boost::make_shared<Server>(address, port))
     {
-        server->RegisterAction([this](std::string content){
+        server->RegisterAction([this, &legislators](std::string content){
             // write out file
             BootstrapFile bootstrap = Deserialize<BootstrapFile>(content);
             std::fstream file(
                 bootstrap.name,
                 std::ios::out | std::ios::trunc | std::ios::binary);
             file << bootstrap.content;
+            if (boost::algorithm::ends_with(bootstrap.name, ReplicasetFilename))
+            {
+                legislators =  LoadReplicaSet(
+                    std::stringstream(bootstrap.content));
+            }
         });
         server->Start();
     }
@@ -51,7 +60,7 @@ void SendBootstrap(Replica replica, BootstrapMetadata metadata)
     for (auto& entry : boost::make_iterator_range(
          boost::filesystem::directory_iterator(metadata.local), {}))
     {
-        NetworkSender<Transport> sender;
+        NetworkFileSender<Transport> sender;
 
         // 1. serialize file
         std::ifstream filestream(entry.path().native());

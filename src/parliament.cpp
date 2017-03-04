@@ -13,6 +13,7 @@ Parliament::Parliament(
       sender(std::make_shared<NetworkSender<BoostTransport>>(legislators)),
       bootstrap(
           std::make_shared<BootstrapListener<BoostServer>>(
+              legislators,
               legislator.hostname,
               legislator.port + 1
           )
