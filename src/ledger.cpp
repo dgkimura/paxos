@@ -34,21 +34,26 @@ Ledger::Append(Decree decree)
     Decree tail = Tail();
     if (tail.number < decree.number)
     {
-        //
-        // Execute handler before appending a decree thereby allowing the
-        // handler to guard against ledger corruption. This can prevent
-        // possible proliferation of a bad ledger to another replica.
-        // It is safe because we require that the handler is idempotent.
-        //
         if (decree.type == DecreeType::UserDecree)
         {
+            //
+            // Execute handler before appending a decree thereby allowing the
+            // handler to guard against ledger corruption. This can prevent
+            // possible proliferation of a bad ledger to another replica.
+            // It is safe because we require that the handler is idempotent.
+            //
             user_decree_handler(decree.content);
+            decrees->Enqueue(decree);
         }
         else if (decree.type == DecreeType::SystemDecree)
         {
+            //
+            // Append a system decree before executing handler so that post-
+            // processing handlers have a full ledger including current decree.
+            //
+            decrees->Enqueue(decree);
             system_decree_handler(decree.content);
         }
-        decrees->Enqueue(decree);
     } else
     {
         LOG(LogLevel::Warning)
