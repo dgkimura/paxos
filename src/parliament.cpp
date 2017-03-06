@@ -5,7 +5,8 @@ Parliament::Parliament(
     Replica legislator,
     std::string location,
     DecreeHandler decree_handler)
-    : legislator(legislator),
+    : signal(std::make_shared<Signal>()),
+      legislator(legislator),
       legislators(LoadReplicaSet(
           std::ifstream(
               (fs::path(location) / fs::path(ReplicasetFilename)).string()))),
@@ -49,6 +50,7 @@ Parliament::Parliament(
                        fs::path(ReplicasetFilename)).string());
                   SaveReplicaSet(legislators, replicasetfile);
               }
+              signal->Set();
           }))),
       learner(std::make_shared<LearnerContext>(legislators, ledger)),
       location(location)
@@ -60,6 +62,20 @@ Parliament::Parliament(
 }
 
 
+Parliament::Parliament(const Parliament& other)
+    : signal(other.signal),
+      legislator(other.legislator),
+      legislators(other.legislators),
+      receiver(other.receiver),
+      sender(other.sender),
+      bootstrap(other.bootstrap),
+      ledger(other.ledger),
+      learner(other.learner),
+      location(other.location)
+{
+}
+
+
 Parliament::Parliament(
     Replica legislator,
     std::shared_ptr<ReplicaSet> legislators,
@@ -68,12 +84,14 @@ Parliament::Parliament(
     std::shared_ptr<Sender> sender,
     std::shared_ptr<AcceptorContext> acceptor
 ) :
+    signal(std::make_shared<Signal>()),
     legislators(legislators),
     receiver(receiver),
     sender(sender),
     ledger(ledger),
     learner(std::make_shared<LearnerContext>(legislators, ledger))
 {
+    signal->Set();
     hookup_legislator(legislator, acceptor);
 }
 
@@ -136,6 +154,7 @@ Parliament::AddLegislator(
         )
     );
     send_decree(d);
+    signal->Wait();
 }
 
 
@@ -163,6 +182,7 @@ Parliament::RemoveLegislator(
         )
     );
     send_decree(d);
+    signal->Wait();
 }
 
 
@@ -178,17 +198,13 @@ Parliament::SendProposal(std::string entry)
 void
 Parliament::send_decree(Decree d)
 {
-    for (Replica r : *legislators)
-    {
-        Message m(
-            d,
-            Replica(r.hostname, r.port),
-            Replica(r.hostname, r.port),
-            MessageType::RequestMessage);
+    Message m(
+        d,
+        legislator,
+        legislator,
+        MessageType::RequestMessage);
 
-        sender->Reply(m);
-        break;
-    }
+    sender->Reply(m);
 }
 
 

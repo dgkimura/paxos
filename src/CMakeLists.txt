@@ -13,6 +13,7 @@ set(SOURCES
     roles.cpp
     sender.cpp
     server.cpp
+    signal.cpp
 )
 
 add_library(paxos SHARED ${SOURCES})

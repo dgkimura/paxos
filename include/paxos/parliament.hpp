@@ -10,6 +10,7 @@
 #include <paxos/replicaset.hpp>
 #include <paxos/roles.hpp>
 #include <paxos/sender.hpp>
+#include <paxos/signal.hpp>
 
 
 //
@@ -26,6 +27,8 @@ public:
     Parliament(Replica legislator,
                std::string location=".",
                DecreeHandler decree_handler=DecreeHandler());
+
+    Parliament(const Parliament& other);
 
     Parliament(Replica legislator,
                std::shared_ptr<ReplicaSet> legislators,
@@ -51,6 +54,8 @@ public:
     AbsenteeBallots GetAbsenteeBallots(int max_ballots);
 
 private:
+
+    std::shared_ptr<Signal> signal;
 
     Replica legislator;
 

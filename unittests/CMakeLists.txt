@@ -27,6 +27,7 @@ set(SOURCES
     roles_unittest.cpp
     sender_unittest.cpp
     serialization_unittest.cpp
+    signal_unittest.cpp
 )
 
 add_executable(all_unittests ${SOURCES})
