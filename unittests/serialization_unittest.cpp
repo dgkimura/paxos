@@ -20,16 +20,19 @@ TEST(SerializationUnitTest, testDecreeIsSerializableAndDeserializable)
 TEST(SerializationUnitTest, testSystemOperationIsSerializableAndDeserializable)
 {
     int number = 3;
+    Replica author("author");
     Replica replica("myhost");
     SystemOperationType operation = SystemOperationType::AddReplica;
     std::string content("system decree contents");
 
-    SystemOperation expected(operation, number, replica, content), actual;
+    SystemOperation expected(operation, author, number, replica, content), actual;
 
     std::string string_obj = Serialize(expected);
     actual = Deserialize<SystemOperation>(string_obj);
 
     ASSERT_EQ(expected.operation, actual.operation);
+    ASSERT_EQ(expected.author.hostname, actual.author.hostname);
+    ASSERT_EQ(expected.author.port, actual.author.port);
     ASSERT_EQ(expected.number, actual.number);
     ASSERT_EQ(expected.replica.hostname, actual.replica.hostname);
     ASSERT_EQ(expected.replica.port, actual.replica.port);

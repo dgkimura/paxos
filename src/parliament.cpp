@@ -5,7 +5,8 @@ Parliament::Parliament(
     Replica legislator,
     std::string location,
     DecreeHandler decree_handler)
-    : legislators(LoadReplicaSet(
+    : legislator(legislator),
+      legislators(LoadReplicaSet(
           std::ifstream(
               (fs::path(location) / fs::path(ReplicasetFilename)).string()))),
       receiver(std::make_shared<NetworkReceiver<BoostServer>>(
@@ -21,7 +22,7 @@ Parliament::Parliament(
       ledger(std::make_shared<Ledger>(
           std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"),
           decree_handler,
-          DecreeHandler([this, location](std::string entry){
+          DecreeHandler([this, location, legislator](std::string entry){
               SystemOperation op = Deserialize<SystemOperation>(entry);
               if (op.operation == SystemOperationType::AddReplica)
               {
@@ -30,9 +31,15 @@ Parliament::Parliament(
                       (fs::path(location) /
                        fs::path(ReplicasetFilename)).string());
                   SaveReplicaSet(legislators, replicasetfile);
-                  SendBootstrap<BoostTransport>(
-                      op.replica,
-                      Deserialize<BootstrapMetadata>(op.content));
+
+                  // Only decree author sends bootstrap.
+                  if (op.author.hostname == legislator.hostname &&
+                      op.author.port == legislator.port)
+                  {
+                      SendBootstrap<BoostTransport>(
+                          op.replica,
+                          Deserialize<BootstrapMetadata>(op.content));
+                  }
               }
               else if (op.operation == SystemOperationType::RemoveReplica)
               {
@@ -116,6 +123,7 @@ Parliament::AddLegislator(
     d.content = Serialize(
         SystemOperation(
             SystemOperationType::AddReplica,
+            legislator,
             0,
             Replica(address, port),
             Serialize(
@@ -142,6 +150,7 @@ Parliament::RemoveLegislator(
     d.content = Serialize(
         SystemOperation(
             SystemOperationType::RemoveReplica,
+            legislator,
             0,
             Replica(address, port),
             Serialize(

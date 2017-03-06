@@ -109,6 +109,8 @@ struct SystemOperation
 {
     SystemOperationType operation;
 
+    Replica author;
+
     int number;
 
     Replica replica;
@@ -116,12 +118,12 @@ struct SystemOperation
     std::string content;
 
     SystemOperation()
-        : operation(), replica(), number(), content()
+        : operation(), author(), number(), replica(), content()
     {
     }
 
-    SystemOperation(SystemOperationType op, int n, Replica r, std::string c)
-        : operation(op), number(n), replica(r), content(c)
+    SystemOperation(SystemOperationType op, Replica a, int n, Replica r, std::string c)
+        : operation(op), author(a), number(n), replica(r), content(c)
     {
     }
 };

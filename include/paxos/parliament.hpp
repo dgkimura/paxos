@@ -52,6 +52,8 @@ public:
 
 private:
 
+    Replica legislator;
+
     std::shared_ptr<ReplicaSet> legislators;
 
     std::shared_ptr<Receiver> receiver;
