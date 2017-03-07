@@ -46,7 +46,7 @@ Parliament::Parliament(
               {
                   legislators->Remove(op.replica);
                   std::ofstream replicasetfile(
-                      (fs::path(op.content) /
+                      (fs::path(location) /
                        fs::path(ReplicasetFilename)).string());
                   SaveReplicaSet(legislators, replicasetfile);
               }
