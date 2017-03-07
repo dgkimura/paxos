@@ -22,7 +22,7 @@ struct Context
 
 struct ProposerContext : public Context
 {
-    std::atomic<int> current_decree_number;
+    std::shared_ptr<Ledger> ledger;
     std::atomic_flag in_progress;
     Decree highest_proposed_decree;
     std::shared_ptr<ReplicaSet> replicaset;
@@ -32,9 +32,9 @@ struct ProposerContext : public Context
 
     ProposerContext(
         std::shared_ptr<ReplicaSet> replicaset_,
-        int current_decree_number_
+        std::shared_ptr<Ledger> ledger_
     )
-        : current_decree_number(current_decree_number_),
+        : ledger(ledger_),
           highest_proposed_decree(),
           replicaset(replicaset_),
           promise_map(),

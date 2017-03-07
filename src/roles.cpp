@@ -106,10 +106,15 @@ HandleRequest(
     if (!context->in_progress.test_and_set())
     {
         Message response = Response(message, MessageType::PrepareMessage);
-        response.decree.number = context->current_decree_number;
+        if (context->ledger->Size() > 0)
+        {
+            response.decree.number = context->ledger->Tail().number + 1;
+        }
+        else
+        {
+            response.decree.number = 1;
+        }
         response.decree.content = "";
-
-        context->current_decree_number += 1;
 
         sender->ReplyAll(response);
     }
@@ -277,17 +282,6 @@ HandleAccepted(
         // them again. Therefore we will reclaim memory.
         //
         context->promise_map.erase(message.decree);
-    }
-
-    if (context->current_decree_number + 1 == message.decree.number)
-    {
-        //
-        // Update our current decree iff it is one behind a higher accepted
-        // decree. This is expected when a decree is passed that was authored
-        // by another replica. We must not do this if the replica is more than
-        // 1 decree behind as it will create holes in our ledger.
-        //
-        context->current_decree_number = message.decree.number;
     }
 
     std::atomic_flag_clear(&context->in_progress);

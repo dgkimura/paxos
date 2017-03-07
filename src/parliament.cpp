@@ -103,7 +103,7 @@ Parliament::hookup_legislator(
 {
     auto proposer = std::make_shared<ProposerContext>(
         legislators,
-        ledger->Tail().number + 1
+        ledger
     );
     auto updater = std::make_shared<UpdaterContext>(ledger);
 

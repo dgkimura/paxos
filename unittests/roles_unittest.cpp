@@ -139,7 +139,12 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
 {
     auto receiver = std::make_shared<FakeReceiver>();
     auto sender = std::make_shared<FakeSender>();
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
 
     RegisterProposer(receiver, sender, context);
 
@@ -159,7 +164,12 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
 
 TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneInProgressProposal)
 {
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
     context->replicaset->Add(Replica("host"));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
@@ -207,7 +217,12 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromise
         Replica("to"),
         MessageType::PromiseMessage);
 
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
     context->highest_proposed_decree = Decree(Replica("the_author"), 0, "", DecreeType::UserDecree);
 
     std::shared_ptr<FakeSender> sender(new FakeSender());
@@ -223,7 +238,12 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
 {
     Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
     context->replicaset->Add(Replica("host"));
@@ -242,7 +262,11 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotU
     Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("unknown_host"), Replica("host"), MessageType::PromiseMessage);
 
     auto context = std::make_shared<ProposerContext>(
-        std::make_shared<ReplicaSet>(), 0);
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::shared_ptr<ReplicaSet>(new ReplicaSet());
     context->replicaset->Add(Replica("host"));
@@ -260,7 +284,12 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedV
 {
     Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
 
     // Highest promised decree content is "".
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::SystemDecree);
@@ -284,7 +313,12 @@ TEST_F(ProposerTest, testHandlePromiseWillSendAcceptAgainIfDuplicatePromiseIsSen
 {
     Message message(Decree(Replica("host1"), 1, "", DecreeType::UserDecree), Replica("host1"), Replica("host1"), MessageType::PromiseMessage);
 
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
     context->replicaset->Add(Replica("host1"));
@@ -311,7 +345,12 @@ TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
 {
     Message message(Decree(Replica("host1"), 1, "", DecreeType::UserDecree), Replica("host1"), Replica("host1"), MessageType::PromiseMessage);
 
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
     context->replicaset->Add(Replica("host1"));
@@ -333,9 +372,14 @@ TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
 }
 
 
-TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressIncrementsCurrentDecreeNumberOnce)
+TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressInSendsSingleProposal)
 {
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
     context->replicaset->Add(Replica("host"));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
@@ -363,7 +407,8 @@ TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressIncrementsCurrentDec
         sender
     );
 
-    ASSERT_EQ(context->current_decree_number, 1);
+    ASSERT_EQ(sender->sentMessages()[0].decree.number, 1);
+    ASSERT_EQ(sender->sentMessages().size(), 1);
 }
 
 
@@ -371,7 +416,12 @@ TEST_F(ProposerTest, testHandleNackRemovesReplicaFromPromisedMapAndSendsRetryPre
 {
     auto replica = Replica("host");
     auto decree = Decree(replica, -1, "first", DecreeType::UserDecree);
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
 
     // Add replica to known replicas.
     context->replicaset->Add(replica);
@@ -410,7 +460,12 @@ TEST_F(ProposerTest, testHandleNackWithoutDecreeInPromiseMap)
 {
     auto replica = Replica("host");
     auto decree = Decree(replica, -1, "first", DecreeType::UserDecree);
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
 
     // Add replica to known replicas.
     context->replicaset->Add(replica);
@@ -443,7 +498,12 @@ TEST_F(ProposerTest, testHandleNackDoesntSendRetryPrepareUntilMajorityNack)
     auto replica_3 = Replica("host-3");
 
     auto decree = Decree(replica_1, -1, "first", DecreeType::UserDecree);
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
 
     context->replicaset->Add(replica_1);
     context->replicaset->Add(replica_2);
@@ -470,14 +530,20 @@ TEST_F(ProposerTest, testHandleNackDoesntSendRetryPrepareUntilMajorityNack)
 }
 
 
-TEST_F(ProposerTest, testHandleAcceptedThenHandleRequestIncrementsCurrentDecreeNumber)
+TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
 {
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        ledger
+    );
     context->replicaset->Add(Replica("host"));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
-    // Increments current by one.
+    // Current decree is one.
     HandleRequest(
         Message(
             Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
@@ -488,17 +554,13 @@ TEST_F(ProposerTest, testHandleAcceptedThenHandleRequestIncrementsCurrentDecreeN
         context,
         sender
     );
-    // Signals round finished.
-    HandleAccepted(
-        Message(
-            Decree(Replica("host"), -1, "first", DecreeType::UserDecree),
-            Replica("host"),
-            Replica("B"),
-            MessageType::AcceptedMessage
-        ),
-        context,
-        sender
-    );
+    ASSERT_EQ(sender->sentMessages()[0].decree.number, 1);
+
+    // Our ledger was updated underneath us to 5.
+    context->ledger->Append(
+        Decree(Replica("the_author"), 5, "", DecreeType::UserDecree));
+    std::atomic_flag_clear(&context->in_progress);
+
     // Next round, increments current by one.
     HandleRequest(
         Message(
@@ -511,43 +573,30 @@ TEST_F(ProposerTest, testHandleAcceptedThenHandleRequestIncrementsCurrentDecreeN
         sender
     );
 
-    ASSERT_EQ(context->current_decree_number, 2);
+    ASSERT_EQ(sender->sentMessages()[1].decree.number, 6);
 }
 
 
 TEST_F(ProposerTest, testHandleRetryRequestNeverIncrementsCurrentDecreeNumber)
 {
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
     context->replicaset->Add(Replica("host"));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
+    // Our ledger was updated underneath us to 5.
+    context->ledger->Append(
+        Decree(Replica("the_author"), 5, "", DecreeType::UserDecree));
+
     // Retry doesn't increment.
     HandleRetryRequest(
         Message(
-            Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
-            Replica("host"),
-            Replica("B"),
-            MessageType::RequestMessage
-        ),
-        context,
-        sender
-    );
-    // Signals round finished.
-    HandleAccepted(
-        Message(
-            Decree(Replica("host"), -1, "first", DecreeType::UserDecree),
-            Replica("host"),
-            Replica("B"),
-            MessageType::AcceptedMessage
-        ),
-        context,
-        sender
-    );
-    // Next round, retry still doesn't increment.
-    HandleRetryRequest(
-        Message(
-            Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
+            Decree(Replica("host"), 1, "second", DecreeType::UserDecree),
             Replica("host"),
             Replica("B"),
             MessageType::RequestMessage
@@ -556,7 +605,15 @@ TEST_F(ProposerTest, testHandleRetryRequestNeverIncrementsCurrentDecreeNumber)
         sender
     );
 
-    ASSERT_EQ(context->current_decree_number, 0);
+    // Our ledger was updated underneath us to 5.
+    context->ledger->Append(
+        Decree(Replica("the_author"), 6, "", DecreeType::UserDecree));
+
+    for (auto m : sender->sentMessages())
+    {
+        // Retry decree sent shouldn't have changed.
+        ASSERT_EQ(m.decree.number, 1);
+    }
 }
 
 
@@ -568,7 +625,12 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
         Replica("to"),
         MessageType::AcceptMessage);
 
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
+    auto context = std::make_shared<ProposerContext>(
+        std::make_shared<ReplicaSet>(),
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        )
+    );
     context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
     context->promise_map[message.decree]->Add(message.from);
 
@@ -577,46 +639,6 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     ASSERT_EQ(context->promise_map.size(), 0);
-}
-
-
-TEST_F(ProposerTest, testHandleAcceptedIncrementsCurrentDecreeWhenCurrentDecreeAuthoredByAnotherRepicaWasAccepted)
-{
-    Message message(
-        Decree(Replica("A"), 2, "content", DecreeType::UserDecree),
-        Replica("from"),
-        Replica("to"),
-        MessageType::AcceptMessage);
-
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
-    context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
-    context->promise_map[message.decree]->Add(message.from);
-    context->current_decree_number = 1;
-
-    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
-
-    // Update current decree number.
-    ASSERT_EQ(context->current_decree_number, 2);
-}
-
-
-TEST_F(ProposerTest, testHandleAcceptedDoesNotIncrementCurrentDecreeWhenReplicaIsTooFarBehind)
-{
-    Message message(
-        Decree(Replica("A"), 200, "content", DecreeType::UserDecree),
-        Replica("from"),
-        Replica("to"),
-        MessageType::AcceptMessage);
-
-    auto context = std::make_shared<ProposerContext>(std::make_shared<ReplicaSet>(), 0);
-    context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
-    context->promise_map[message.decree]->Add(message.from);
-    context->current_decree_number = 1;
-
-    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
-
-    // Replica is behind by 199 decrees so we cannot increment the current decree.
-    ASSERT_EQ(context->current_decree_number, 1);
 }
 
 
