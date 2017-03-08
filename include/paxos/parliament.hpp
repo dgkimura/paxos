@@ -28,8 +28,6 @@ public:
                std::string location=".",
                DecreeHandler decree_handler=DecreeHandler());
 
-    Parliament(const Parliament& other);
-
     Parliament(Replica legislator,
                std::shared_ptr<ReplicaSet> legislators,
                std::shared_ptr<Ledger> ledger,

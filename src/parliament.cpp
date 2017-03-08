@@ -62,20 +62,6 @@ Parliament::Parliament(
 }
 
 
-Parliament::Parliament(const Parliament& other)
-    : signal(other.signal),
-      legislator(other.legislator),
-      legislators(other.legislators),
-      receiver(other.receiver),
-      sender(other.sender),
-      bootstrap(other.bootstrap),
-      ledger(other.ledger),
-      learner(other.learner),
-      location(other.location)
-{
-}
-
-
 Parliament::Parliament(
     Replica legislator,
     std::shared_ptr<ReplicaSet> legislators,
