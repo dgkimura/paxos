@@ -26,7 +26,6 @@ void serialize(Archive& ar, Decree& obj, const unsigned int version)
 template <typename Archive>
 void serialize(Archive& ar, SystemOperation& obj, const unsigned int version)
 {
-    ar & obj.operation;
     ar & obj.author;
     ar & obj.number;
     ar & obj.replica;

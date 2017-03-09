@@ -18,17 +18,74 @@ class DecreeHandler
 {
 public:
 
-    DecreeHandler();
+    virtual void operator()(std::string entry) = 0;
+};
 
-    DecreeHandler(Handler handler);
 
-    void Add(Handler handler);
+class EmptyDecreeHandler : public DecreeHandler
+{
+public:
 
-    void operator()(std::string entry);
+    virtual void operator()(std::string entry) override;
+};
+
+
+class CompositeHandler : public DecreeHandler
+{
+public:
+
+    CompositeHandler();
+
+    CompositeHandler(Handler handler);
+
+    virtual void operator()(std::string entry) override;
+
+    void AddHandler(Handler handler);
 
 private:
 
     std::vector<Handler> handlers;
+};
+
+
+class HandleAddNode : public DecreeHandler
+{
+public:
+
+    HandleAddNode(
+        std::string location,
+        Replica legislator,
+        std::shared_ptr<ReplicaSet>& legislators);
+
+    virtual void operator()(std::string entry) override;
+
+private:
+
+    std::string location;
+
+    Replica legislator;
+
+    std::shared_ptr<ReplicaSet>& legislators;
+};
+
+
+class HandleRemoveNode : public DecreeHandler
+{
+public:
+
+    HandleRemoveNode(
+        std::string location,
+        std::shared_ptr<ReplicaSet>& legislators);
+
+    virtual void operator()(std::string entry) override;
+
+private:
+
+    std::string location;
+
+    Replica legislator;
+
+    std::shared_ptr<ReplicaSet>& legislators;
 };
 
 #endif

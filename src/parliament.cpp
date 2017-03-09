@@ -4,9 +4,8 @@
 Parliament::Parliament(
     Replica legislator,
     std::string location,
-    DecreeHandler decree_handler)
-    : signal(std::make_shared<Signal>()),
-      legislator(legislator),
+    Handler decree_handler)
+    : legislator(legislator),
       legislators(LoadReplicaSet(
           std::ifstream(
               (fs::path(location) / fs::path(ReplicasetFilename)).string()))),
@@ -21,40 +20,22 @@ Parliament::Parliament(
           )
       ),
       ledger(std::make_shared<Ledger>(
-          std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"),
-          decree_handler,
-          DecreeHandler([this, location, legislator](std::string entry){
-              SystemOperation op = Deserialize<SystemOperation>(entry);
-              if (op.operation == SystemOperationType::AddReplica)
-              {
-                  legislators->Add(op.replica);
-                  std::ofstream replicasetfile(
-                      (fs::path(location) /
-                       fs::path(ReplicasetFilename)).string());
-                  SaveReplicaSet(legislators, replicasetfile);
-
-                  // Only decree author sends bootstrap.
-                  if (op.author.hostname == legislator.hostname &&
-                      op.author.port == legislator.port)
-                  {
-                      SendBootstrap<BoostTransport>(
-                          op.replica,
-                          Deserialize<BootstrapMetadata>(op.content));
-                  }
-              }
-              else if (op.operation == SystemOperationType::RemoveReplica)
-              {
-                  legislators->Remove(op.replica);
-                  std::ofstream replicasetfile(
-                      (fs::path(location) /
-                       fs::path(ReplicasetFilename)).string());
-                  SaveReplicaSet(legislators, replicasetfile);
-              }
-              signal->Set();
-          }))),
+          std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"))),
       learner(std::make_shared<LearnerContext>(legislators, ledger)),
       location(location)
 {
+    ledger->RegisterHandler(
+        DecreeType::UserDecree,
+        std::make_shared<CompositeHandler>(decree_handler));
+    ledger->RegisterHandler(
+        DecreeType::AddReplicaDecree,
+        std::make_shared<HandleAddNode>(location, legislator, legislators)
+    );
+    ledger->RegisterHandler(
+        DecreeType::RemoveReplicaDecree,
+        std::make_shared<HandleRemoveNode>(location, legislators)
+    );
+
     auto acceptor = std::make_shared<AcceptorContext>(
         std::make_shared<PersistentDecree>(location, "paxos.promised_decree"),
         std::make_shared<PersistentDecree>(location, "paxos.accepted_decree"));
@@ -70,14 +51,12 @@ Parliament::Parliament(
     std::shared_ptr<Sender> sender,
     std::shared_ptr<AcceptorContext> acceptor
 ) :
-    signal(std::make_shared<Signal>()),
     legislators(legislators),
     receiver(receiver),
     sender(sender),
     ledger(ledger),
     learner(std::make_shared<LearnerContext>(legislators, ledger))
 {
-    signal->Set();
     hookup_legislator(legislator, acceptor);
 }
 
@@ -123,10 +102,9 @@ Parliament::AddLegislator(
     std::string remote)
 {
     Decree d;
-    d.type = DecreeType::SystemDecree;
+    d.type = DecreeType::AddReplicaDecree;
     d.content = Serialize(
         SystemOperation(
-            SystemOperationType::AddReplica,
             legislator,
             0,
             Replica(address, port),
@@ -140,7 +118,6 @@ Parliament::AddLegislator(
         )
     );
     send_decree(d);
-    signal->Wait();
 }
 
 
@@ -151,10 +128,9 @@ Parliament::RemoveLegislator(
     std::string remote)
 {
     Decree d;
-    d.type = DecreeType::SystemDecree;
+    d.type = DecreeType::RemoveReplicaDecree;
     d.content = Serialize(
         SystemOperation(
-            SystemOperationType::RemoveReplica,
             legislator,
             0,
             Replica(address, port),
@@ -168,7 +144,6 @@ Parliament::RemoveLegislator(
         )
     );
     send_decree(d);
-    signal->Wait();
 }
 
 

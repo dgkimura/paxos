@@ -292,7 +292,7 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedV
     );
 
     // Highest promised decree content is "".
-    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::SystemDecree);
+    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
     context->replicaset->Add(Replica("host"));
 

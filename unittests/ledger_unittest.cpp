@@ -30,7 +30,7 @@ TEST_F(LedgerUnitTest, testAppendSystemDecreeIncrementsTheSize)
 
     ASSERT_EQ(ledger.Size(), 0);
 
-    ledger.Append(Decree(Replica("an_author"), 1, "decree_contents", DecreeType::SystemDecree));
+    ledger.Append(Decree(Replica("an_author"), 1, "decree_contents", DecreeType::AddReplicaDecree));
 
     ASSERT_EQ(ledger.Size(), 1);
 }
@@ -157,8 +157,7 @@ TEST_F(LedgerUnitTest, testDecreeHandlerOnAppend)
 
     Ledger ledger(
         std::make_shared<VolatileQueue<Decree>>(),
-        DecreeHandler(handler),
-        DecreeHandler());
+        std::make_shared<CompositeHandler>(handler));
     ledger.Append(Decree(Replica("a_author"), 1, "AAAAA", DecreeType::UserDecree));
     ledger.Append(Decree(Replica("b_author"), 2, "BBBBB", DecreeType::UserDecree));
 

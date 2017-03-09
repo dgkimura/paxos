@@ -5,10 +5,11 @@
 #include "paxos/handler.hpp"
 
 
-TEST(HandlerTest, testDecreeHandlerWithSingleHandler)
+TEST(HandlerTest, testCompositeDecreeHandlerWithSingleHandler)
 {
     bool was_called = false;
-    DecreeHandler handler([&was_called](std::string entry){ was_called=true; });
+    CompositeHandler handler;
+    handler.AddHandler([&was_called](std::string entry){ was_called=true; });
 
     ASSERT_FALSE(was_called);
 
@@ -18,14 +19,14 @@ TEST(HandlerTest, testDecreeHandlerWithSingleHandler)
 }
 
 
-TEST(HandlerTest, testDecreeHandlerWithMultipleHandlers)
+TEST(HandlerTest, testCompositeDecreeHandlerWithMultipleHandlers)
 {
     bool was_called = false;
     bool was_called_too = false;
 
-    DecreeHandler handler;
-    handler.Add([&was_called](std::string entry){ was_called=true; });
-    handler.Add([&was_called_too](std::string entry){ was_called_too=true; });
+    CompositeHandler handler;
+    handler.AddHandler([&was_called](std::string entry){ was_called=true; });
+    handler.AddHandler([&was_called_too](std::string entry){ was_called_too=true; });
 
     ASSERT_FALSE(was_called);
     ASSERT_FALSE(was_called_too);

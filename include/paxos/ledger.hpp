@@ -3,11 +3,22 @@
 
 #include <functional>
 #include <mutex>
+#include <unordered_map>
 
 #include "paxos/decree.hpp"
 #include "paxos/handler.hpp"
 #include "paxos/logging.hpp"
 #include "paxos/queue.hpp"
+
+
+struct DecreeTypeHash
+{
+    template <typename T>
+    std::size_t operator()(T t) const
+    {
+        return static_cast<std::size_t>(t);
+    }
+};
 
 
 class Ledger
@@ -17,10 +28,12 @@ public:
     Ledger(std::shared_ptr<BaseQueue<Decree>> decrees);
 
     Ledger(std::shared_ptr<BaseQueue<Decree>> decrees,
-           DecreeHandler user_decree_handler,
-           DecreeHandler system_decree_handler);
+           std::shared_ptr<DecreeHandler> handler);
 
     ~Ledger();
+
+    void RegisterHandler(DecreeType key,
+                         std::shared_ptr<DecreeHandler> handler);
 
     void Append(Decree decree);
 
@@ -38,11 +51,10 @@ private:
 
     std::shared_ptr<BaseQueue<Decree>> decrees;
 
-    DecreeHandler user_decree_handler;
-
-    DecreeHandler system_decree_handler;
-
     std::mutex mutex;
+
+    std::unordered_map<DecreeType, std::shared_ptr<DecreeHandler>,
+                       DecreeTypeHash> handlers;
 };
 
 

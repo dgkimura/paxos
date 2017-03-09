@@ -1,24 +1,31 @@
+#include <memory>
+
 #include "paxos/ledger.hpp"
 
 
 Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees)
-    : Ledger(decrees, DecreeHandler(), DecreeHandler())
+    : Ledger(decrees, std::make_shared<EmptyDecreeHandler>())
 {
 }
 
 
 Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees,
-               DecreeHandler user_decree_handler,
-               DecreeHandler system_decree_handler)
-    : decrees(decrees),
-      user_decree_handler(user_decree_handler),
-      system_decree_handler(system_decree_handler)
+               std::shared_ptr<DecreeHandler> handler)
+    : decrees(decrees)
 {
+    handlers[DecreeType::UserDecree] = handler;
 }
 
 
 Ledger::~Ledger()
 {
+}
+
+
+void
+Ledger::RegisterHandler(DecreeType key, std::shared_ptr<DecreeHandler> handler)
+{
+    handlers[key] = handler;
 }
 
 
@@ -34,25 +41,14 @@ Ledger::Append(Decree decree)
     Decree tail = Tail();
     if (tail.number < decree.number)
     {
-        if (decree.type == DecreeType::UserDecree)
+        //
+        // Append a system decree before executing handler so that post-
+        // processing handlers have a full ledger including current decree.
+        //
+        decrees->Enqueue(decree);
+        if (handlers.count(decree.type) > 0)
         {
-            //
-            // Execute handler before appending a decree thereby allowing the
-            // handler to guard against ledger corruption. This can prevent
-            // possible proliferation of a bad ledger to another replica.
-            // It is safe because we require that the handler is idempotent.
-            //
-            user_decree_handler(decree.content);
-            decrees->Enqueue(decree);
-        }
-        else if (decree.type == DecreeType::SystemDecree)
-        {
-            //
-            // Append a system decree before executing handler so that post-
-            // processing handlers have a full ledger including current decree.
-            //
-            decrees->Enqueue(decree);
-            system_decree_handler(decree.content);
+            (*handlers[decree.type])(decree.content);
         }
     } else
     {

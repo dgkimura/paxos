@@ -14,9 +14,14 @@ enum class DecreeType
     UserDecree,
 
     //
-    // System defined decree.
+    // Add node decree.
     //
-    SystemDecree
+    AddReplicaDecree,
+
+    //
+    // Remove node decree.
+    //
+    RemoveReplicaDecree
 };
 
 
@@ -45,6 +50,9 @@ struct Decree
     //
     std::string content;
 
+    //
+    // Type defines the type of decree.
+    //
     DecreeType type;
 
     Decree()
@@ -91,24 +99,8 @@ struct ascending_decree
 };
 
 
-enum class SystemOperationType
-{
-    //
-    // Add replica to replicaset
-    //
-    AddReplica,
-
-    //
-    // Remove replica from replicaset.
-    //
-    RemoveReplica
-};
-
-
 struct SystemOperation
 {
-    SystemOperationType operation;
-
     Replica author;
 
     int number;
@@ -118,12 +110,12 @@ struct SystemOperation
     std::string content;
 
     SystemOperation()
-        : operation(), author(), number(), replica(), content()
+        : author(), number(), replica(), content()
     {
     }
 
-    SystemOperation(SystemOperationType op, Replica a, int n, Replica r, std::string c)
-        : operation(op), author(a), number(n), replica(r), content(c)
+    SystemOperation(Replica a, int n, Replica r, std::string c)
+        : author(a), number(n), replica(r), content(c)
     {
     }
 };
