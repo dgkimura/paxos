@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include "paxos/parliament.hpp"
 
 
@@ -22,18 +24,29 @@ Parliament::Parliament(
       ledger(std::make_shared<Ledger>(
           std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"))),
       learner(std::make_shared<LearnerContext>(legislators, ledger)),
-      location(location)
+      location(location),
+      lock(legislator, sender, location, "paxos.distributed_lock")
 {
     ledger->RegisterHandler(
         DecreeType::UserDecree,
-        std::make_shared<CompositeHandler>(decree_handler));
+        std::make_shared<CompositeHandler>(decree_handler)
+    );
     ledger->RegisterHandler(
         DecreeType::AddReplicaDecree,
-        std::make_shared<HandleAddNode>(location, legislator, legislators)
+        std::make_shared<HandleAddReplica>(location, legislator, legislators)
     );
     ledger->RegisterHandler(
         DecreeType::RemoveReplicaDecree,
-        std::make_shared<HandleRemoveNode>(location, legislators)
+        std::make_shared<HandleRemoveReplica>(location, legislators)
+    );
+    ledger->RegisterHandler(
+        DecreeType::DistributedLockDecree,
+        std::make_shared<HandleDistributedLock>(
+            legislator,
+            location,
+            "paxos.distributed_lock",
+            lock.signal
+        )
     );
 
     auto acceptor = std::make_shared<AcceptorContext>(
@@ -55,7 +68,8 @@ Parliament::Parliament(
     receiver(receiver),
     sender(sender),
     ledger(ledger),
-    learner(std::make_shared<LearnerContext>(legislators, ledger))
+    learner(std::make_shared<LearnerContext>(legislators, ledger)),
+    lock(legislator, sender, location, "paxos.distributed_lock")
 {
     hookup_legislator(legislator, acceptor);
 }
@@ -101,21 +115,17 @@ Parliament::AddLegislator(
     short port,
     std::string remote)
 {
+    std::lock_guard<distributed_lock> guard(lock);
+
     Decree d;
     d.type = DecreeType::AddReplicaDecree;
     d.content = Serialize(
-        SystemOperation(
+        UpdateReplicaSetDecree
+        {
             legislator,
-            0,
             Replica(address, port),
-            Serialize(
-                BootstrapMetadata
-                {
-                    location,
-                    remote
-                }
-            )
-        )
+            remote
+        }
     );
     send_decree(d);
 }
@@ -127,21 +137,17 @@ Parliament::RemoveLegislator(
     short port,
     std::string remote)
 {
+    std::lock_guard<distributed_lock> guard(lock);
+
     Decree d;
     d.type = DecreeType::RemoveReplicaDecree;
     d.content = Serialize(
-        SystemOperation(
+        UpdateReplicaSetDecree
+        {
             legislator,
-            0,
             Replica(address, port),
-            Serialize(
-                BootstrapMetadata
-                {
-                    location,
-                    remote
-                }
-            )
-        )
+            remote
+        }
     );
     send_decree(d);
 }
@@ -150,6 +156,8 @@ Parliament::RemoveLegislator(
 void
 Parliament::SendProposal(std::string entry)
 {
+    std::lock_guard<distributed_lock> guard(lock);
+
     Decree d;
     d.content = entry;
     send_decree(d);

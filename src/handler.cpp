@@ -1,8 +1,9 @@
+#include <cstdio>
+
 #include <boost/filesystem.hpp>
 
 #include "paxos/bootstrap.hpp"
 #include "paxos/handler.hpp"
-#include "paxos/replicaset.hpp"
 #include "paxos/serialization.hpp"
 
 
@@ -42,7 +43,7 @@ CompositeHandler::AddHandler(Handler handler)
 }
 
 
-HandleAddNode::HandleAddNode(
+HandleAddReplica::HandleAddReplica(
     std::string location,
     Replica legislator,
     std::shared_ptr<ReplicaSet>& legislators)
@@ -54,27 +55,28 @@ HandleAddNode::HandleAddNode(
 
 
 void
-HandleAddNode::operator()(std::string entry)
+HandleAddReplica::operator()(std::string entry)
 {
-    SystemOperation op = Deserialize<SystemOperation>(entry);
-    legislators->Add(op.replica);
+    UpdateReplicaSetDecree decree = Deserialize<UpdateReplicaSetDecree>(entry);
+    legislators->Add(decree.replica);
     std::ofstream replicasetfile(
         (boost::filesystem::path(location) /
          boost::filesystem::path(ReplicasetFilename)).string());
     SaveReplicaSet(legislators, replicasetfile);
 
     // Only decree author sends bootstrap.
-    if (op.author.hostname == legislator.hostname &&
-        op.author.port == legislator.port)
+    if (decree.author.hostname == legislator.hostname &&
+        decree.author.port == legislator.port)
     {
         SendBootstrap<BoostTransport>(
-            op.replica,
-            Deserialize<BootstrapMetadata>(op.content));
+            decree.replica,
+            location,
+            decree.remote_directory);
     }
 }
 
 
-HandleRemoveNode::HandleRemoveNode(
+HandleRemoveReplica::HandleRemoveReplica(
     std::string location,
     std::shared_ptr<ReplicaSet>& legislators)
     : location(location),
@@ -84,12 +86,48 @@ HandleRemoveNode::HandleRemoveNode(
 
 
 void
-HandleRemoveNode::operator()(std::string entry)
+HandleRemoveReplica::operator()(std::string entry)
 {
-    SystemOperation op = Deserialize<SystemOperation>(entry);
-    legislators->Remove(op.replica);
+    UpdateReplicaSetDecree decree = Deserialize<UpdateReplicaSetDecree>(entry);
+    legislators->Remove(decree.replica);
     std::ofstream replicasetfile(
         (boost::filesystem::path(location) /
          boost::filesystem::path(ReplicasetFilename)).string());
     SaveReplicaSet(legislators, replicasetfile);
+}
+
+
+HandleDistributedLock::HandleDistributedLock(
+    Replica replica,
+    std::string location,
+    std::string lockname,
+    std::shared_ptr<Signal> signal)
+    : replica(replica),
+      location(location),
+      lockname(lockname),
+      signal(signal)
+{
+}
+
+
+void
+HandleDistributedLock::operator()(std::string entry)
+{
+    DistributedLockDecree decree = Deserialize<DistributedLockDecree>(entry);
+    if (decree.lock && !boost::filesystem::exists(
+        (boost::filesystem::path(location) /
+        boost::filesystem::path(lockname)).string()))
+    {
+        std::ofstream lockfile(
+            (boost::filesystem::path(location) /
+             boost::filesystem::path(lockname)).string());
+        lockfile << Serialize(replica);
+    }
+    else
+    {
+        std::remove(
+            (boost::filesystem::path(location) /
+             boost::filesystem::path(lockname)).string().c_str());
+    }
+    signal->Set();
 }

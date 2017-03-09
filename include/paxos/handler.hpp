@@ -5,6 +5,8 @@
 #include <vector>
 
 #include "paxos/decree.hpp"
+#include "paxos/replicaset.hpp"
+#include "paxos/signal.hpp"
 
 
 //
@@ -48,11 +50,11 @@ private:
 };
 
 
-class HandleAddNode : public DecreeHandler
+class HandleAddReplica : public DecreeHandler
 {
 public:
 
-    HandleAddNode(
+    HandleAddReplica(
         std::string location,
         Replica legislator,
         std::shared_ptr<ReplicaSet>& legislators);
@@ -69,11 +71,11 @@ private:
 };
 
 
-class HandleRemoveNode : public DecreeHandler
+class HandleRemoveReplica : public DecreeHandler
 {
 public:
 
-    HandleRemoveNode(
+    HandleRemoveReplica(
         std::string location,
         std::shared_ptr<ReplicaSet>& legislators);
 
@@ -87,5 +89,30 @@ private:
 
     std::shared_ptr<ReplicaSet>& legislators;
 };
+
+
+class HandleDistributedLock : public DecreeHandler
+{
+public:
+
+    HandleDistributedLock(
+        Replica replica,
+        std::string location,
+        std::string lockname,
+        std::shared_ptr<Signal> signal);
+
+    virtual void operator()(std::string entry) override;
+
+private:
+
+    Replica replica;
+
+    std::string location;
+
+    std::string lockname;
+
+    std::shared_ptr<Signal> signal;
+};
+
 
 #endif

@@ -7,6 +7,7 @@
 
 #include <paxos/bootstrap.hpp>
 #include <paxos/decree.hpp>
+#include "paxos/lock.hpp"
 #include <paxos/replicaset.hpp>
 #include <paxos/roles.hpp>
 #include <paxos/sender.hpp>
@@ -67,6 +68,8 @@ private:
     std::shared_ptr<LearnerContext> learner;
 
     std::string location;
+
+    distributed_lock lock;
 
     void hookup_legislator(Replica replica,
                            std::shared_ptr<AcceptorContext> acceptor);

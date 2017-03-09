@@ -21,7 +21,14 @@ enum class DecreeType
     //
     // Remove node decree.
     //
-    RemoveReplicaDecree
+    RemoveReplicaDecree,
+
+    //
+    // Distributed lock decree. Used to prevent system decrees from stomping
+    // over each other. Think multiple add nodes decrees executing
+    // simultaneously on different replicas.
+    //
+    DistributedLockDecree
 };
 
 
@@ -99,25 +106,31 @@ struct ascending_decree
 };
 
 
-struct SystemOperation
+struct UpdateReplicaSetDecree
 {
+    //
+    // Author of decree.
+    //
     Replica author;
 
-    int number;
-
+    //
+    // Replica to add.
+    //
     Replica replica;
 
-    std::string content;
+    //
+    // Remote directory storing replicated files.
+    //
+    std::string remote_directory;
+};
 
-    SystemOperation()
-        : author(), number(), replica(), content()
-    {
-    }
 
-    SystemOperation(Replica a, int n, Replica r, std::string c)
-        : author(a), number(n), replica(r), content(c)
-    {
-    }
+struct DistributedLockDecree
+{
+    //
+    // Flag signalling if decree performs lock, else unlock
+    //
+    bool lock;
 };
 
 

@@ -6,6 +6,7 @@ set(SOURCES
     decree.cpp
     handler.cpp
     ledger.cpp
+    lock.cpp
     logging.cpp
     messages.cpp
     parliament.cpp

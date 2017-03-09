@@ -17,24 +17,37 @@ TEST(SerializationUnitTest, testDecreeIsSerializableAndDeserializable)
 }
 
 
-TEST(SerializationUnitTest, testSystemOperationIsSerializableAndDeserializable)
+TEST(SerializationUnitTest, testUpdateReplicaSetDecreeIsSerializableAndDeserializable)
 {
-    int number = 3;
-    Replica author("author");
-    Replica replica("myhost");
-    std::string content("system decree contents");
-
-    SystemOperation expected(author, number, replica, content), actual;
+    UpdateReplicaSetDecree expected
+    {
+        Replica("author"),
+        Replica("myhost"),
+        "remote/directory/path"
+    }, actual;
 
     std::string string_obj = Serialize(expected);
-    actual = Deserialize<SystemOperation>(string_obj);
+    actual = Deserialize<UpdateReplicaSetDecree>(string_obj);
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
     ASSERT_EQ(expected.author.port, actual.author.port);
-    ASSERT_EQ(expected.number, actual.number);
     ASSERT_EQ(expected.replica.hostname, actual.replica.hostname);
     ASSERT_EQ(expected.replica.port, actual.replica.port);
-    ASSERT_EQ(expected.content, actual.content);
+    ASSERT_EQ(expected.remote_directory, actual.remote_directory);
+}
+
+
+TEST(SerializationUnitTest, testDistributedLockDecreeIsSerializableAndDeserializable)
+{
+    DistributedLockDecree expected
+    {
+        true
+    }, actual;
+
+    std::string string_obj = Serialize(expected);
+    actual = Deserialize<DistributedLockDecree>(string_obj);
+
+    ASSERT_EQ(expected.lock, actual.lock);
 }
 
 

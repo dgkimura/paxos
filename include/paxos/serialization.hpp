@@ -24,12 +24,18 @@ void serialize(Archive& ar, Decree& obj, const unsigned int version)
 
 
 template <typename Archive>
-void serialize(Archive& ar, SystemOperation& obj, const unsigned int version)
+void serialize(Archive& ar, UpdateReplicaSetDecree& obj, const unsigned int version)
 {
     ar & obj.author;
-    ar & obj.number;
     ar & obj.replica;
-    ar & obj.content;
+    ar & obj.remote_directory;
+}
+
+
+template <typename Archive>
+void serialize(Archive& ar, DistributedLockDecree& obj, const unsigned int version)
+{
+    ar & obj.lock;
 }
 
 
