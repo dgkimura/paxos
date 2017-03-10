@@ -163,3 +163,33 @@ TEST_F(LedgerUnitTest, testDecreeHandlerOnAppend)
 
     ASSERT_EQ(concatenated_content, "AAAAABBBBB");
 }
+
+
+TEST_F(LedgerUnitTest, testRegisteredDecreeHandlerExecuted)
+{
+    class CustomHandler : public DecreeHandler
+    {
+    public:
+
+        CustomHandler()
+            : is_executed(false)
+        {
+        }
+
+        virtual void operator()(std::string entry) override
+        {
+            is_executed = true;
+        }
+
+        bool is_executed;
+    };
+
+    auto handler = std::make_shared<CustomHandler>();
+
+    Ledger ledger(
+        std::make_shared<VolatileQueue<Decree>>());
+    ledger.RegisterHandler(DecreeType::AddReplicaDecree, handler);
+    ledger.Append(Decree(Replica("a_author"), 1, "AAAAA", DecreeType::AddReplicaDecree));
+
+    ASSERT_TRUE(handler->is_executed);
+}
