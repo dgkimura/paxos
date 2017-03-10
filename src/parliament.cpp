@@ -24,7 +24,8 @@ Parliament::Parliament(
       ledger(std::make_shared<Ledger>(
           std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"))),
       learner(std::make_shared<LearnerContext>(legislators, ledger)),
-      location(location)
+      location(location),
+      signal(std::make_shared<Signal>())
 {
     ledger->RegisterHandler(
         DecreeType::UserDecree,
@@ -32,11 +33,19 @@ Parliament::Parliament(
     );
     ledger->RegisterHandler(
         DecreeType::AddReplicaDecree,
-        std::make_shared<HandleAddReplica>(location, legislator, legislators)
+        std::make_shared<HandleAddReplica>(
+            location,
+            legislator,
+            legislators,
+            signal)
     );
     ledger->RegisterHandler(
         DecreeType::RemoveReplicaDecree,
-        std::make_shared<HandleRemoveReplica>(location, legislators)
+        std::make_shared<HandleRemoveReplica>(
+            location,
+            legislator,
+            legislators,
+            signal)
     );
 
     auto acceptor = std::make_shared<AcceptorContext>(
@@ -52,13 +61,15 @@ Parliament::Parliament(
     std::shared_ptr<Ledger> ledger,
     std::shared_ptr<Receiver> receiver,
     std::shared_ptr<Sender> sender,
-    std::shared_ptr<AcceptorContext> acceptor
+    std::shared_ptr<AcceptorContext> acceptor,
+    std::shared_ptr<Signal> signal
 ) :
     legislators(legislators),
     receiver(receiver),
     sender(sender),
     ledger(ledger),
-    learner(std::make_shared<LearnerContext>(legislators, ledger))
+    learner(std::make_shared<LearnerContext>(legislators, ledger)),
+    signal(signal)
 {
     hookup_legislator(legislator, acceptor);
 }
@@ -115,6 +126,9 @@ Parliament::AddLegislator(
         }
     );
     send_decree(d);
+
+    // Block our main thread until decree handler is finished.
+    signal->Wait();
 }
 
 
@@ -135,6 +149,7 @@ Parliament::RemoveLegislator(
         }
     );
     send_decree(d);
+    signal->Wait();
 }
 
 

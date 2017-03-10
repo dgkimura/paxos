@@ -114,7 +114,7 @@ struct UpdateReplicaSetDecree
     Replica author;
 
     //
-    // Replica to add.
+    // Replica to add or remove.
     //
     Replica replica;
 

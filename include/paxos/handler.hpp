@@ -57,7 +57,8 @@ public:
     HandleAddReplica(
         std::string location,
         Replica legislator,
-        std::shared_ptr<ReplicaSet>& legislators);
+        std::shared_ptr<ReplicaSet>& legislators,
+        std::shared_ptr<Signal> signal);
 
     virtual void operator()(std::string entry) override;
 
@@ -68,6 +69,8 @@ private:
     Replica legislator;
 
     std::shared_ptr<ReplicaSet>& legislators;
+
+    std::shared_ptr<Signal> signal;
 };
 
 
@@ -77,7 +80,9 @@ public:
 
     HandleRemoveReplica(
         std::string location,
-        std::shared_ptr<ReplicaSet>& legislators);
+        Replica legislator,
+        std::shared_ptr<ReplicaSet>& legislators,
+        std::shared_ptr<Signal> signal);
 
     virtual void operator()(std::string entry) override;
 
@@ -88,6 +93,8 @@ private:
     Replica legislator;
 
     std::shared_ptr<ReplicaSet>& legislators;
+
+    std::shared_ptr<Signal> signal;
 };
 
 

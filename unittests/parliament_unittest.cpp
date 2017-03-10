@@ -94,6 +94,8 @@ class ParliamentTest: public testing::Test
             std::make_shared<VolatileDecree>(),
             std::make_shared<VolatileDecree>()
         );
+        auto signal = std::make_shared<Signal>();
+        signal->Set();
 
         parliament = std::make_shared<Parliament>(
             replica,
@@ -101,7 +103,8 @@ class ParliamentTest: public testing::Test
             ledger,
             receiver,
             sender,
-            acceptor
+            acceptor,
+            signal
         );
     }
 

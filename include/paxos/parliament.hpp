@@ -33,7 +33,8 @@ public:
                std::shared_ptr<Ledger> ledger,
                std::shared_ptr<Receiver> receiver,
                std::shared_ptr<Sender> sender,
-               std::shared_ptr<AcceptorContext> acceptor);
+               std::shared_ptr<AcceptorContext> acceptor,
+               std::shared_ptr<Signal> signal);
 
     void AddLegislator(std::string address,
                        short port,
@@ -68,6 +69,8 @@ private:
     std::shared_ptr<LearnerContext> learner;
 
     std::string location;
+
+    std::shared_ptr<Signal> signal;
 
     void hookup_legislator(Replica replica,
                            std::shared_ptr<AcceptorContext> acceptor);

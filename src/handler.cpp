@@ -46,10 +46,12 @@ CompositeHandler::AddHandler(Handler handler)
 HandleAddReplica::HandleAddReplica(
     std::string location,
     Replica legislator,
-    std::shared_ptr<ReplicaSet>& legislators)
+    std::shared_ptr<ReplicaSet>& legislators,
+    std::shared_ptr<Signal> signal)
     : location(location),
       legislator(legislator),
-      legislators(legislators)
+      legislators(legislators),
+      signal(signal)
 {
 }
 
@@ -72,15 +74,20 @@ HandleAddReplica::operator()(std::string entry)
             decree.replica,
             location,
             decree.remote_directory);
+        signal->Set();
     }
 }
 
 
 HandleRemoveReplica::HandleRemoveReplica(
     std::string location,
-    std::shared_ptr<ReplicaSet>& legislators)
+    Replica legislator,
+    std::shared_ptr<ReplicaSet>& legislators,
+    std::shared_ptr<Signal> signal)
     : location(location),
-      legislators(legislators)
+      legislator(legislator),
+      legislators(legislators),
+      signal(signal)
 {
 }
 
@@ -94,6 +101,12 @@ HandleRemoveReplica::operator()(std::string entry)
         (boost::filesystem::path(location) /
          boost::filesystem::path(ReplicasetFilename)).string());
     SaveReplicaSet(legislators, replicasetfile);
+
+    if (decree.author.hostname == legislator.hostname &&
+        decree.author.port == legislator.port)
+    {
+        signal->Set();
+    }
 }
 
 
