@@ -69,8 +69,6 @@ private:
 
     std::string location;
 
-    distributed_lock lock;
-
     void hookup_legislator(Replica replica,
                            std::shared_ptr<AcceptorContext> acceptor);
 

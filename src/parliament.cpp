@@ -24,8 +24,7 @@ Parliament::Parliament(
       ledger(std::make_shared<Ledger>(
           std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"))),
       learner(std::make_shared<LearnerContext>(legislators, ledger)),
-      location(location),
-      lock(legislator, sender, location, "paxos.distributed_lock")
+      location(location)
 {
     ledger->RegisterHandler(
         DecreeType::UserDecree,
@@ -38,15 +37,6 @@ Parliament::Parliament(
     ledger->RegisterHandler(
         DecreeType::RemoveReplicaDecree,
         std::make_shared<HandleRemoveReplica>(location, legislators)
-    );
-    ledger->RegisterHandler(
-        DecreeType::DistributedLockDecree,
-        std::make_shared<HandleDistributedLock>(
-            legislator,
-            location,
-            "paxos.distributed_lock",
-            lock.signal
-        )
     );
 
     auto acceptor = std::make_shared<AcceptorContext>(
@@ -68,8 +58,7 @@ Parliament::Parliament(
     receiver(receiver),
     sender(sender),
     ledger(ledger),
-    learner(std::make_shared<LearnerContext>(legislators, ledger)),
-    lock(legislator, sender, location, "paxos.distributed_lock")
+    learner(std::make_shared<LearnerContext>(legislators, ledger))
 {
     hookup_legislator(legislator, acceptor);
 }
@@ -115,8 +104,6 @@ Parliament::AddLegislator(
     short port,
     std::string remote)
 {
-    std::lock_guard<distributed_lock> guard(lock);
-
     Decree d;
     d.type = DecreeType::AddReplicaDecree;
     d.content = Serialize(
@@ -137,8 +124,6 @@ Parliament::RemoveLegislator(
     short port,
     std::string remote)
 {
-    std::lock_guard<distributed_lock> guard(lock);
-
     Decree d;
     d.type = DecreeType::RemoveReplicaDecree;
     d.content = Serialize(
@@ -156,8 +141,6 @@ Parliament::RemoveLegislator(
 void
 Parliament::SendProposal(std::string entry)
 {
-    std::lock_guard<distributed_lock> guard(lock);
-
     Decree d;
     d.content = entry;
     send_decree(d);
