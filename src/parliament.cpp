@@ -48,10 +48,16 @@ Parliament::Parliament(
             signal)
     );
 
+    auto proposer = std::make_shared<ProposerContext>(
+        legislators,
+        ledger,
+        std::make_shared<PersistentDecree>(
+            location,
+            "paxos.highest_proposed_decree"));
     auto acceptor = std::make_shared<AcceptorContext>(
         std::make_shared<PersistentDecree>(location, "paxos.promised_decree"),
         std::make_shared<PersistentDecree>(location, "paxos.accepted_decree"));
-    hookup_legislator(legislator, acceptor);
+    hookup_legislator(legislator, proposer, acceptor);
 }
 
 
@@ -62,6 +68,7 @@ Parliament::Parliament(
     std::shared_ptr<Receiver> receiver,
     std::shared_ptr<Sender> sender,
     std::shared_ptr<AcceptorContext> acceptor,
+    std::shared_ptr<ProposerContext> proposer,
     std::shared_ptr<Signal> signal
 ) :
     legislators(legislators),
@@ -71,19 +78,16 @@ Parliament::Parliament(
     learner(std::make_shared<LearnerContext>(legislators, ledger)),
     signal(signal)
 {
-    hookup_legislator(legislator, acceptor);
+    hookup_legislator(legislator, proposer, acceptor);
 }
 
 
 void
 Parliament::hookup_legislator(
     Replica replica,
+    std::shared_ptr<ProposerContext> proposer,
     std::shared_ptr<AcceptorContext> acceptor)
 {
-    auto proposer = std::make_shared<ProposerContext>(
-        legislators,
-        ledger
-    );
     auto updater = std::make_shared<UpdaterContext>(ledger);
 
     RegisterProposer(

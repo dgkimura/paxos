@@ -141,7 +141,8 @@ HandlePromise(
 {
     LOG(LogLevel::Info) << "HandlePromise | " << Serialize(message);
 
-    if (IsDecreeHigher(message.decree, context->highest_proposed_decree) &&
+    if (IsDecreeHigher(message.decree,
+                       context->highest_proposed_decree.Value()) &&
         context->replicaset->Contains(message.from))
     {
         //
@@ -160,7 +161,7 @@ HandlePromise(
         context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
     }
 
-    if (IsDecreeEqual(message.decree, context->highest_proposed_decree))
+    if (IsDecreeEqual(message.decree, context->highest_proposed_decree.Value()))
     {
         bool duplicate = context->promise_map[message.decree]
                              ->Contains(message.from);
@@ -183,7 +184,7 @@ HandlePromise(
         if (received_promises == minimum_quorum ||
             (received_promises >= minimum_quorum && duplicate))
         {
-            if (context->highest_proposed_decree.content.empty() &&
+            if (context->highest_proposed_decree.Value().content.empty() &&
                 !context->requested_values.empty())
             {
                 //
@@ -196,14 +197,18 @@ HandlePromise(
                 // ... then we should update the highest proposed decree with
                 // the requested values.
                 //
-                context->highest_proposed_decree.content = std::get<0>(
+                Decree updated_highest_proposed_decree =
+                    context->highest_proposed_decree.Value();
+                updated_highest_proposed_decree.content = std::get<0>(
                     context->requested_values[0]);
-                context->highest_proposed_decree.type = std::get<1>(
+                updated_highest_proposed_decree.type = std::get<1>(
                     context->requested_values[0]);
+
+                context->highest_proposed_decree = updated_highest_proposed_decree;
                 context->requested_values.erase(
                     context->requested_values.begin());
             }
-            message.decree = context->highest_proposed_decree;
+            message.decree = context->highest_proposed_decree.Value();
             sender->ReplyAll(Response(message, MessageType::AcceptMessage));
         }
     }

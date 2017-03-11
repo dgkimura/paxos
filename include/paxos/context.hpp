@@ -24,7 +24,7 @@ struct ProposerContext : public Context
 {
     std::shared_ptr<Ledger> ledger;
     std::atomic_flag in_progress;
-    Decree highest_proposed_decree;
+    Field<Decree> highest_proposed_decree;
     std::shared_ptr<ReplicaSet>& replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> promise_map;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> nack_map;
@@ -32,10 +32,11 @@ struct ProposerContext : public Context
 
     ProposerContext(
         std::shared_ptr<ReplicaSet>& replicaset_,
-        std::shared_ptr<Ledger> ledger_
+        std::shared_ptr<Ledger> ledger_,
+        std::shared_ptr<Storage<Decree>> highest_proposed_decree_
     )
         : ledger(ledger_),
-          highest_proposed_decree(),
+          highest_proposed_decree(highest_proposed_decree_),
           replicaset(replicaset_),
           promise_map(),
           nack_map(),

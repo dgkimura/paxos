@@ -90,6 +90,11 @@ class ParliamentTest: public testing::Test
         ledger = std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>());
         receiver = std::make_shared<MockReceiver>();
         sender = std::make_shared<MockSender>();
+        auto proposer = std::make_shared<ProposerContext>(
+            legislators,
+            ledger,
+            std::make_shared<VolatileDecree>()
+        );
         auto acceptor = std::make_shared<AcceptorContext>(
             std::make_shared<VolatileDecree>(),
             std::make_shared<VolatileDecree>()
@@ -104,6 +109,7 @@ class ParliamentTest: public testing::Test
             receiver,
             sender,
             acceptor,
+            proposer,
             signal
         );
     }
