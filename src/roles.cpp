@@ -224,47 +224,14 @@ HandleNack(
 {
     LOG(LogLevel::Info) << "HandleNack    | " << Serialize(message);
 
-    if (context->nack_map.find(message.decree) == context->nack_map.end())
-    {
-        //
-        // If there is no entry for the messaged decree then make an entry.
-        //
-        context->nack_map[message.decree] = std::make_shared<ReplicaSet>();
-    }
-    context->nack_map[message.decree]->Add(message.from);
-
-    int maximum_allowed_nacks = context->replicaset->GetSize() / 2;
-    int received_nacks = context->nack_map[message.decree]
-                                ->Intersection(context->replicaset)
-                                ->GetSize();
-
-    if (received_nacks > maximum_allowed_nacks)
-    {
-        //
-        // If exceeded maximum nacks then it is impossible for our proposed
-        // decree to be elected. Here we setup to retry the prepare.
-        //
-        context->nack_map[message.decree] = std::make_shared<ReplicaSet>();
-
-        if (context->promise_map.find(message.decree) !=
-            context->promise_map.end())
-        {
-            //
-            // If replica voted for itself then remove vote on the contentious
-            // decree.
-            //
-            context->promise_map[message.decree]->Remove(message.to);
-        }
-
-        sender->Reply(
-            Message(
-                message.decree,
-                message.to,
-                message.to,
-                MessageType::RetryPrepareMessage
-            )
-        );
-    }
+    Message nack_response(
+        message.decree,
+        message.to,
+        message.to,
+        MessageType::PrepareMessage
+    );
+    nack_response.decree.number += 1;
+    sender->Reply(nack_response);
 }
 
 
@@ -422,7 +389,16 @@ HandleProclaim(
 
     if (accepted_quorum >= minimum_quorum)
     {
-        if (IsDecreeLower(context->ledger->Tail(), message.decree))
+        if (IsDecreeOrdered(context->ledger->Tail(), message.original_decree)
+            && !context->is_observer)
+        {
+            //
+            // If decree is ordered then append to ledger. We check the decree
+            // because decree may be incremented in response to NACK.
+            //
+            context->ledger->Append(message.decree);
+        }
+        else if (IsDecreeLower(context->ledger->Tail(), message.decree))
         {
             //
             // Save the decree in memory if the decree is a future decree that

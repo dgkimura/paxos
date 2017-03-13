@@ -430,53 +430,7 @@ TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressInSendsSingleProposa
 }
 
 
-TEST_F(ProposerTest, testHandleNackRemovesReplicaFromPromisedMapAndSendsRetryPrepareMessage)
-{
-    auto replica = Replica("host");
-    auto decree = Decree(replica, -1, "first", DecreeType::UserDecree);
-    auto replicaset = std::make_shared<ReplicaSet>();
-    auto context = std::make_shared<ProposerContext>(
-        replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
-        std::make_shared<VolatileDecree>()
-    );
-
-    // Add replica to known replicas.
-    context->replicaset->Add(replica);
-    context->promise_map[decree] = std::make_shared<ReplicaSet>();
-
-    // Set previously promised replica.
-    context->promise_map[decree]->Add(replica);
-
-    auto sender = std::make_shared<FakeSender>(context->replicaset);
-
-    ASSERT_TRUE(context->promise_map[decree]->Contains(replica));
-
-    HandleNack(
-        Message(
-            decree,
-            replica,
-            replica,
-            MessageType::NackMessage
-        ),
-        context,
-        sender
-    );
-
-    // Our replicaset is size 1, so we reached maximum nack and must send retry
-    // prepare.
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::RetryPrepareMessage);
-    // We must also remove our promise to the decree.
-    ASSERT_FALSE(context->promise_map[decree]->Contains(replica));
-
-    // Nack map should be cleared after sending retry prepare.
-    ASSERT_EQ(0, context->nack_map[decree]->GetSize());
-}
-
-
-TEST_F(ProposerTest, testHandleNackWithoutDecreeInPromiseMap)
+TEST_F(ProposerTest, testHandleNackIncrementsDecreeNumberAndResendsPrepareMessage)
 {
     auto replica = Replica("host");
     auto decree = Decree(replica, -1, "first", DecreeType::UserDecree);
@@ -505,52 +459,8 @@ TEST_F(ProposerTest, testHandleNackWithoutDecreeInPromiseMap)
         sender
     );
 
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::RetryPrepareMessage);
-
-    // XXX: The decree is not in the promise map. This can happen in the case
-    //      where the replica is behind. The replica sends a prepare, but
-    //      before could promised itself, it promised another replica.
-}
-
-
-TEST_F(ProposerTest, testHandleNackDoesntSendRetryPrepareUntilMajorityNack)
-{
-    auto replica_1 = Replica("host-1");
-    auto replica_2 = Replica("host-2");
-    auto replica_3 = Replica("host-3");
-
-    auto decree = Decree(replica_1, -1, "first", DecreeType::UserDecree);
-    auto replicaset = std::make_shared<ReplicaSet>();
-    auto context = std::make_shared<ProposerContext>(
-        replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
-        std::make_shared<VolatileDecree>()
-    );
-
-    context->replicaset->Add(replica_1);
-    context->replicaset->Add(replica_2);
-    context->replicaset->Add(replica_3);
-
-    auto sender = std::make_shared<FakeSender>(context->replicaset);
-
-    HandleNack(
-        Message(
-            decree,
-            replica_1,
-            replica_1,
-            MessageType::NackMessage
-        ),
-        context,
-        sender
-    );
-
-    // Not yet maximim nack, so no retry prepare is sent.
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::RetryPrepareMessage);
-
-    // Nack map should not be cleared since we haven't reached maximum nack.
-    ASSERT_EQ(1, context->nack_map[decree]->GetSize());
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PrepareMessage);
+    ASSERT_EQ(decree.number + 1, sender->sentMessages()[0].decree.number);
 }
 
 
@@ -1116,9 +1026,26 @@ TEST_F(LearnerTest, testProclaimHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLe
 }
 
 
+TEST_F(LearnerTest, testProclaimHandleAppendsToLedgerAfterComparingAgainstOriginalDecree)
+{
+    Message message(Decree(Replica("A"), 42, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
+    message.original_decree = Decree(Replica("A"), 1, "", DecreeType::UserDecree);
+    auto context = createLearnerContext({"A"});
+
+    HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+
+    // Even though actual decree 42 is out-of-order, original is 1 which is in-order.
+    ASSERT_EQ(context->ledger->Size(), 1);
+    ASSERT_EQ(context->tracked_future_decrees.size(), 0);
+
+    // Actual decree should be appended
+    ASSERT_TRUE(IsDecreeIdentical(context->ledger->Tail(), message.decree));
+}
+
+
 TEST_F(LearnerTest, testProclaimHandleTracksFutureDecreesIfReceivedOutOfOrder)
 {
-    Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
+    Message message(Decree(Replica("A"), 42, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
     auto context = createLearnerContext({"A"});
     context->is_observer = true;
 

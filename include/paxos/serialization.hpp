@@ -54,6 +54,7 @@ void serialize(Archive& ar, Message& obj, const unsigned int version)
     ar & obj.to;
     ar & obj.type;
     ar & obj.decree;
+    ar & obj.original_decree;
 }
 
 

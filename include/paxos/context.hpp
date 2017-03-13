@@ -27,7 +27,6 @@ struct ProposerContext : public Context
     Field<Decree> highest_proposed_decree;
     std::shared_ptr<ReplicaSet>& replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> promise_map;
-    std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> nack_map;
     std::vector<std::tuple<std::string, DecreeType>> requested_values;
 
     ProposerContext(
@@ -39,7 +38,6 @@ struct ProposerContext : public Context
           highest_proposed_decree(highest_proposed_decree_),
           replicaset(replicaset_),
           promise_map(),
-          nack_map(),
           requested_values()
     {
         std::atomic_flag_clear(&in_progress);

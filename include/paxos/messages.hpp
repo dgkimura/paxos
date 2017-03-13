@@ -72,17 +72,18 @@ struct MessageTypeHash
 struct Message
 {
     Decree decree;
+    Decree original_decree;
     Replica from;
     Replica to;
     MessageType type;
 
     Message()
-        : decree(), from(), to(), type()
+        : decree(), original_decree(), from(), to(), type()
     {
     }
 
     Message(Decree d, Replica f, Replica t, MessageType mtype)
-        : decree(d), from(f), to(t), type(mtype)
+        : decree(d), original_decree(d), from(f), to(t), type(mtype)
     {
     }
 };
