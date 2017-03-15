@@ -151,13 +151,11 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
     RegisterProposer(receiver, sender, context);
 
     ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
-    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::RetryRequestMessage));
     ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
     ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::NackMessage));
     ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
 
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RetryPrepareMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdateMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdatedMessage));
@@ -513,48 +511,6 @@ TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
 }
 
 
-TEST_F(ProposerTest, testHandleRetryRequestNeverIncrementsCurrentDecreeNumber)
-{
-    auto replicaset = std::make_shared<ReplicaSet>();
-    auto context = std::make_shared<ProposerContext>(
-        replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
-        std::make_shared<VolatileDecree>()
-    );
-    context->replicaset->Add(Replica("host"));
-
-    auto sender = std::make_shared<FakeSender>(context->replicaset);
-
-    // Our ledger was updated underneath us to 5.
-    context->ledger->Append(
-        Decree(Replica("the_author"), 5, "", DecreeType::UserDecree));
-
-    // Retry doesn't increment.
-    HandleRetryRequest(
-        Message(
-            Decree(Replica("host"), 1, "second", DecreeType::UserDecree),
-            Replica("host"),
-            Replica("B"),
-            MessageType::RequestMessage
-        ),
-        context,
-        sender
-    );
-
-    // Our ledger was updated underneath us to 5.
-    context->ledger->Append(
-        Decree(Replica("the_author"), 6, "", DecreeType::UserDecree));
-
-    for (auto m : sender->sentMessages())
-    {
-        // Retry decree sent shouldn't have changed.
-        ASSERT_EQ(m.decree.number, 1);
-    }
-}
-
-
 TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
 {
     Message message(
@@ -600,11 +556,9 @@ TEST_F(AcceptorTest, testRegisterAcceptorWillRegistereMessageTypes)
     RegisterAcceptor(receiver, sender, context);
 
     ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
-    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::RetryPrepareMessage));
     ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
 
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RetryRequestMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
@@ -685,64 +639,6 @@ TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromSingleReplicasRes
 }
 
 
-TEST_F(AcceptorTest, testHandleRetryPrepareLastSelfishPromises)
-{
-    auto replica = Replica("the_author");
-    auto current_decree = Decree(replica, 1, "", DecreeType::UserDecree);
-    auto past_decree = Decree(replica, 2, "", DecreeType::UserDecree);
-
-    auto context = createAcceptorContext();
-    context->promised_decree = current_decree;
-    context->accepted_decree = past_decree;
-
-    auto sender = std::make_shared<FakeSender>();
-
-    HandleRetryPrepare(
-        Message(
-            Decree(),
-            replica,
-            replica,
-            MessageType::RetryPrepareMessage
-        ),
-        context,
-        sender
-    );
-
-    // Undo promise to self.
-    ASSERT_TRUE(IsDecreeEqual(context->promised_decree.Value(), past_decree));
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::RetryRequestMessage);
-}
-
-
-TEST_F(AcceptorTest, testHandleRetryPrepareHasNoEffectOnLastUnselfishPromise)
-{
-    auto replica = Replica("the_author");
-    auto current_decree = Decree(Replica("another_author"), 1, "", DecreeType::UserDecree);
-    auto past_decree = Decree(replica, 2, "", DecreeType::UserDecree);
-
-    auto context = createAcceptorContext();
-    context->promised_decree = current_decree;
-    context->accepted_decree = past_decree;
-
-    auto sender = std::make_shared<FakeSender>();
-
-    HandleRetryPrepare(
-        Message(
-            Decree(),
-            replica,
-            replica,
-            MessageType::RetryPrepareMessage
-        ),
-        context,
-        sender
-    );
-
-    // No promise to self, therefore nothing to undo.
-    ASSERT_FALSE(IsDecreeEqual(context->promised_decree.Value(), past_decree));
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::RetryRequestMessage);
-}
-
-
 TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 {
     Message message(Decree(Replica("the_author"), -1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::AcceptMessage);
@@ -812,9 +708,7 @@ TEST_F(LearnerTest, testRegisterLearnerWillRegistereMessageTypes)
     ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::UpdatedMessage));
 
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RetryRequestMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RetryPrepareMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
@@ -1214,9 +1108,7 @@ TEST_F(UpdaterTest, testRegisterUpdaterWillRegistereMessageTypes)
     ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::UpdateMessage));
 
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RetryRequestMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RetryPrepareMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));

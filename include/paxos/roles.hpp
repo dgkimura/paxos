@@ -54,12 +54,6 @@ void HandleRequest(
     std::shared_ptr<Sender> sender);
 
 
-void HandleRetryRequest(
-    Message message,
-    std::shared_ptr<ProposerContext> context,
-    std::shared_ptr<Sender> sender);
-
-
 void HandlePromise(
     Message message,
     std::shared_ptr<ProposerContext> context,
@@ -79,12 +73,6 @@ void HandleAccepted(
 
 
 void HandlePrepare(
-    Message message,
-    std::shared_ptr<AcceptorContext> context,
-    std::shared_ptr<Sender> sender);
-
-
-void HandleRetryPrepare(
     Message message,
     std::shared_ptr<AcceptorContext> context,
     std::shared_ptr<Sender> sender);

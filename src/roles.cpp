@@ -26,10 +26,6 @@ RegisterProposer(
         Callback(std::bind(HandleAccepted, std::placeholders::_1, context, sender)),
         MessageType::AcceptedMessage
     );
-    receiver->RegisterCallback(
-        Callback(std::bind(HandleRetryRequest, std::placeholders::_1, context, sender)),
-        MessageType::RetryRequestMessage
-    );
 }
 
 
@@ -44,10 +40,6 @@ RegisterAcceptor(
     receiver->RegisterCallback(
         Callback(std::bind(HandlePrepare, std::placeholders::_1, context, sender)),
         MessageType::PrepareMessage
-    );
-    receiver->RegisterCallback(
-        Callback(std::bind(HandleRetryPrepare, std::placeholders::_1, context, sender)),
-        MessageType::RetryPrepareMessage
     );
     receiver->RegisterCallback(
         Callback(std::bind(HandleAccept, std::placeholders::_1, context, sender)),
@@ -118,18 +110,6 @@ HandleRequest(
 
         sender->ReplyAll(response);
     }
-}
-
-
-void
-HandleRetryRequest(
-    Message message,
-    std::shared_ptr<ProposerContext> context,
-    std::shared_ptr<Sender> sender)
-{
-    Message response = Response(message, MessageType::PrepareMessage);
-    response.decree = message.decree;
-    sender->ReplyAll(response);
 }
 
 
@@ -303,44 +283,6 @@ HandlePrepare(
         // proposers. Send a NACK and let the proposer handle it.
         //
         sender->Reply(Response(message, MessageType::NackMessage));
-    }
-}
-
-
-void
-HandleRetryPrepare(
-    Message message,
-    std::shared_ptr<AcceptorContext> context,
-    std::shared_ptr<Sender> sender)
-{
-    if (IsReplicaEqual(context->promised_decree.Value().author, message.to))
-    {
-        //
-        // If the promised decree was authored by this replica then we can undo
-        // the promise. This is only safe because we have adjusted the promise
-        // count on the proposer.
-        //
-        if (!IsDecreeEqual(context->promised_decree.Value(),
-                           context->accepted_decree.Value()))
-        {
-            //
-            // If the promised decree and accepted decree are unique then
-            // rollback the promised decree and retry the request.
-            //
-            context->promised_decree = context->accepted_decree;
-
-            //
-            // Wait for some amount of exponential backoff time before sending.
-            //
-            sender->Reply(
-                Message(
-                    message.decree,
-                    message.to,
-                    message.to,
-                    MessageType::RetryRequestMessage
-                )
-            );
-        }
     }
 }
 
