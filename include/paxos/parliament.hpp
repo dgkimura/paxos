@@ -45,6 +45,8 @@ public:
                           short port,
                           std::string remote=".");
 
+    std::shared_ptr<ReplicaSet> GetLegislators();
+
     void SendProposal(std::string entry);
 
     void SetActive();

@@ -150,6 +150,12 @@ TEST_F(ParliamentTest, testRemoveLegislatorSendsRequestMessage)
 }
 
 
+TEST_F(ParliamentTest, testGetLegislatorsReturnsAllLegislators)
+{
+    ASSERT_EQ(parliament->GetLegislators()->GetSize(), 1);
+}
+
+
 TEST_F(ParliamentTest, testBasicSendProposalSendsProposal)
 {
     parliament->SendProposal("Pinky says, 'Narf!'");

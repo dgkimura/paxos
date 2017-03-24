@@ -157,6 +157,13 @@ Parliament::RemoveLegislator(
 }
 
 
+std::shared_ptr<ReplicaSet>
+Parliament::GetLegislators()
+{
+    return legislators;
+}
+
+
 void
 Parliament::SendProposal(std::string entry)
 {
