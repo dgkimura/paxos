@@ -25,12 +25,26 @@ BoostTransport::Connect(std::string hostname, short port)
 {
     tcp::resolver resolver(io_service_);
     auto endpoint = resolver.resolve({hostname, std::to_string(port)});
-    boost::asio::connect(socket_, endpoint);
+    try
+    {
+        boost::asio::connect(socket_, endpoint);
+    }
+    catch (const boost::system::system_error& e)
+    {
+        LOG(LogLevel::Warning) << "Could not connect to " << hostname << ":" << port;
+    }
 }
 
 
 void
 BoostTransport::Write(std::string content)
 {
-    boost::asio::write(socket_, boost::asio::buffer(content.c_str(), content.size()));
+    try
+    {
+        boost::asio::write(socket_, boost::asio::buffer(content.c_str(), content.size()));
+    }
+    catch (const boost::system::system_error& e)
+    {
+        LOG(LogLevel::Warning) << "Could not write to transport";
+    }
 }
