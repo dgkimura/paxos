@@ -108,39 +108,3 @@ HandleRemoveReplica::operator()(std::string entry)
         signal->Set();
     }
 }
-
-
-HandleDistributedLock::HandleDistributedLock(
-    Replica replica,
-    std::string location,
-    std::string lockname,
-    std::shared_ptr<Signal> signal)
-    : replica(replica),
-      location(location),
-      lockname(lockname),
-      signal(signal)
-{
-}
-
-
-void
-HandleDistributedLock::operator()(std::string entry)
-{
-    DistributedLockDecree decree = Deserialize<DistributedLockDecree>(entry);
-    if (decree.lock && !boost::filesystem::exists(
-        (boost::filesystem::path(location) /
-        boost::filesystem::path(lockname)).string()))
-    {
-        std::ofstream lockfile(
-            (boost::filesystem::path(location) /
-             boost::filesystem::path(lockname)).string());
-        lockfile << Serialize(replica);
-    }
-    else
-    {
-        std::remove(
-            (boost::filesystem::path(location) /
-             boost::filesystem::path(lockname)).string().c_str());
-    }
-    signal->Set();
-}

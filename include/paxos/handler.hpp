@@ -98,28 +98,4 @@ private:
 };
 
 
-class HandleDistributedLock : public DecreeHandler
-{
-public:
-
-    HandleDistributedLock(
-        Replica replica,
-        std::string location,
-        std::string lockname,
-        std::shared_ptr<Signal> signal);
-
-    virtual void operator()(std::string entry) override;
-
-private:
-
-    Replica replica;
-
-    std::string location;
-
-    std::string lockname;
-
-    std::shared_ptr<Signal> signal;
-};
-
-
 #endif

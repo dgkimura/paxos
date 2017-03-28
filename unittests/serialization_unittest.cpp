@@ -37,20 +37,6 @@ TEST(SerializationUnitTest, testUpdateReplicaSetDecreeIsSerializableAndDeseriali
 }
 
 
-TEST(SerializationUnitTest, testDistributedLockDecreeIsSerializableAndDeserializable)
-{
-    DistributedLockDecree expected
-    {
-        true
-    }, actual;
-
-    std::string string_obj = Serialize(expected);
-    actual = Deserialize<DistributedLockDecree>(string_obj);
-
-    ASSERT_EQ(expected.lock, actual.lock);
-}
-
-
 TEST(SerializationUnitTest, testReplicaIsSerializableAndDeserializable)
 {
     Replica expected("hostname", 123), actual;

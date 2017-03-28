@@ -33,13 +33,6 @@ void serialize(Archive& ar, UpdateReplicaSetDecree& obj, const unsigned int vers
 
 
 template <typename Archive>
-void serialize(Archive& ar, DistributedLockDecree& obj, const unsigned int version)
-{
-    ar & obj.lock;
-}
-
-
-template <typename Archive>
 void serialize(Archive& ar, Replica& obj, const unsigned int version)
 {
     ar & obj.hostname;

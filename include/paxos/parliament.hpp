@@ -7,7 +7,6 @@
 
 #include <paxos/bootstrap.hpp>
 #include <paxos/decree.hpp>
-#include "paxos/lock.hpp"
 #include <paxos/replicaset.hpp>
 #include <paxos/roles.hpp>
 #include <paxos/sender.hpp>

@@ -21,14 +21,7 @@ enum class DecreeType
     //
     // Remove node decree.
     //
-    RemoveReplicaDecree,
-
-    //
-    // Distributed lock decree. Used to prevent system decrees from stomping
-    // over each other. Think multiple add nodes decrees executing
-    // simultaneously on different replicas.
-    //
-    DistributedLockDecree
+    RemoveReplicaDecree
 };
 
 
@@ -122,15 +115,6 @@ struct UpdateReplicaSetDecree
     // Remote directory storing replicated files.
     //
     std::string remote_directory;
-};
-
-
-struct DistributedLockDecree
-{
-    //
-    // Flag signalling if decree performs lock, else unlock
-    //
-    bool lock;
 };
 
 
