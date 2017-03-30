@@ -538,6 +538,31 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
 }
 
 
+TEST_F(ProposerTest, testHandleAcceptedSendsNextRequestIfThereArePendingProposals)
+{
+    Message message(
+        Decree(Replica("A"), 1, "content", DecreeType::UserDecree),
+        Replica("from"),
+        Replica("to"),
+        MessageType::AcceptMessage);
+
+    auto replicaset = std::make_shared<ReplicaSet>();
+    auto context = std::make_shared<ProposerContext>(
+        replicaset,
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        ),
+        std::make_shared<VolatileDecree>()
+    );
+    context->requested_values.push_back("another pending value");
+    auto sender = std::shared_ptr<FakeSender>(new FakeSender());
+
+    HandleAccepted(message, context, sender);
+
+    ASSERT_EQ(sender->sentMessages()[0].type, MessageType::RequestMessage);
+}
+
+
 class AcceptorTest: public testing::Test
 {
     virtual void SetUp()
