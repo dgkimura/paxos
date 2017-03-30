@@ -554,7 +554,7 @@ TEST_F(ProposerTest, testHandleAcceptedSendsNextRequestIfThereArePendingProposal
         ),
         std::make_shared<VolatileDecree>()
     );
-    context->requested_values.push_back("another pending value");
+    context->requested_values.push_back(std::make_tuple("another pending value", DecreeType::UserDecree));
     auto sender = std::shared_ptr<FakeSender>(new FakeSender());
 
     HandleAccepted(message, context, sender);
