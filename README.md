@@ -45,11 +45,20 @@ int main(void)
 }
 ```
 
-Each passed proposal is appended into the `paxos.ledger`.
+Each passed proposal is appended to the `paxos.ledger`. If you want to process
+the decree, you must create your parliament with a decree handler.
+
+```cpp
+    Parliament p(
+        Replica("127.0.0.1", 8080),
+        ".",
+        [](std::string decree)
+        {
+            std::cout << "Processing decree: " << decree << std::endl;
+        });
 ```
-$ cat paxos.ledger
-22 serialization::archive 11 0 0 0 0 0  0 1 0 19 "Narf!", says Pinky
-```
+As soon as the instance sees the decree passes it will execute the decree your
+decree handler and append the decree to the ledger.
 
 
 ## References
