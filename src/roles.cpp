@@ -314,6 +314,8 @@ HandleProclaim(
 {
     LOG(LogLevel::Info) << "HandleProclaim| " << Serialize(message);
 
+    std::lock_guard<std::mutex> lock(context->mutex);
+
     if (context->accepted_map.find(message.decree) == context->accepted_map.end())
     {
         context->accepted_map[message.decree] = std::shared_ptr<ReplicaSet>(

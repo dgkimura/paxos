@@ -191,6 +191,8 @@ Parliament::GetAbsenteeBallots(int max_ballots)
 {
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> ballots;
 
+    std::lock_guard<std::mutex> lock(learner->mutex);
+
     int current = 0;
     for (auto vote : learner->accepted_map)
     {
