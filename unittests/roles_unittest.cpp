@@ -238,6 +238,32 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromise
 }
 
 
+TEST_F(ProposerTest, testHandlePromiseWithoutAnyRequestedValuesDoesNotSendAccept)
+{
+    Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
+
+    auto replicaset = std::make_shared<ReplicaSet>();
+    auto context = std::make_shared<ProposerContext>(
+        replicaset,
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        ),
+        std::make_shared<VolatileDecree>()
+    );
+    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
+    context->replicaset = std::make_shared<ReplicaSet>();
+    context->replicaset->Add(Replica("host"));
+
+    // context->requested_values is EMPTY!!
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandlePromise(message, context, sender);
+
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::AcceptMessage);
+}
+
+
 TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecree)
 {
     Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
@@ -253,6 +279,7 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
     context->replicaset->Add(Replica("host"));
+    context->requested_values.push_back(std::make_tuple("a_requested_value", DecreeType::UserDecree));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
@@ -340,6 +367,7 @@ TEST_F(ProposerTest, testHandlePromiseWillSendAcceptAgainIfDuplicatePromiseIsSen
     context->promise_map[message.decree]->Add(Replica("host1"));
     context->promise_map[message.decree]->Add(Replica("host2"));
     context->promise_map[message.decree]->Add(Replica("host3"));
+    context->requested_values.push_back(std::make_tuple("a_requested_value",  DecreeType::UserDecree));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 

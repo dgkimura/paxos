@@ -88,7 +88,7 @@ HandleRequest(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleReqeust | " << Serialize(message);
+    LOG(LogLevel::Info) << "HandleRequest | " << Serialize(message);
     if (!message.decree.content.empty())
     {
         context->requested_values.push_back(
@@ -189,7 +189,11 @@ HandlePromise(
                     context->requested_values.begin());
             }
             message.decree = context->highest_proposed_decree.Value();
-            sender->ReplyAll(Response(message, MessageType::AcceptMessage));
+
+            if (!message.decree.content.empty())
+            {
+                sender->ReplyAll(Response(message, MessageType::AcceptMessage));
+            }
         }
     }
 
