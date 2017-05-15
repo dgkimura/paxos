@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 
+#include "paxos/customhash.hpp"
 #include "paxos/parliament.hpp"
 
 
@@ -75,7 +76,7 @@ public:
 
 private:
 
-    std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map;
+    std::unordered_map<MessageType, std::vector<Callback>> registered_map;
 };
 
 

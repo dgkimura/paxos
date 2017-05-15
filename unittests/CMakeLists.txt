@@ -15,6 +15,7 @@ set(SOURCES
     bootstrap_unittest.cpp
     callback_unittest.cpp
     context_unittest.cpp
+    customhash_unittest.cpp
     decree_unittest.cpp
     fields_unittest.cpp
     handler_unittest.cpp

@@ -5,20 +5,11 @@
 #include <mutex>
 #include <unordered_map>
 
+#include "paxos/customhash.hpp"
 #include "paxos/decree.hpp"
 #include "paxos/handler.hpp"
 #include "paxos/logging.hpp"
 #include "paxos/queue.hpp"
-
-
-struct DecreeTypeHash
-{
-    template <typename T>
-    std::size_t operator()(T t) const
-    {
-        return static_cast<std::size_t>(t);
-    }
-};
 
 
 class Ledger
@@ -53,8 +44,7 @@ private:
 
     std::mutex mutex;
 
-    std::unordered_map<DecreeType, std::shared_ptr<DecreeHandler>,
-                       DecreeTypeHash> handlers;
+    std::unordered_map<DecreeType, std::shared_ptr<DecreeHandler>> handlers;
 };
 
 

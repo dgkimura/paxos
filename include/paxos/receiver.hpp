@@ -11,6 +11,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "paxos/callback.hpp"
+#include "paxos/customhash.hpp"
 #include "paxos/messages.hpp"
 #include "paxos/server.hpp"
 
@@ -74,7 +75,7 @@ private:
 
     boost::shared_ptr<Server> server;
 
-    std::unordered_map<MessageType, std::vector<Callback>, MessageTypeHash> registered_map;
+    std::unordered_map<MessageType, std::vector<Callback>> registered_map;
 };
 
 
