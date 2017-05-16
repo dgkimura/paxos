@@ -3,6 +3,7 @@
 
 
 #include <atomic>
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -29,17 +30,20 @@ struct ProposerContext : public Context
     std::shared_ptr<ReplicaSet>& replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> promise_map;
     std::vector<std::tuple<std::string, DecreeType>> requested_values;
+    std::function<void(std::string)> ignore_handler;
 
     ProposerContext(
         std::shared_ptr<ReplicaSet>& replicaset_,
         std::shared_ptr<Ledger> ledger_,
-        std::shared_ptr<Storage<Decree>> highest_proposed_decree_
+        std::shared_ptr<Storage<Decree>> highest_proposed_decree_,
+        std::function<void(std::string)> ignore_handler
     )
         : ledger(ledger_),
           highest_proposed_decree(highest_proposed_decree_),
           replicaset(replicaset_),
           promise_map(),
-          requested_values()
+          requested_values(),
+          ignore_handler(ignore_handler)
     {
         std::atomic_flag_clear(&in_progress);
     }

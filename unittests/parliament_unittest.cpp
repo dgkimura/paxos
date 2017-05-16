@@ -94,7 +94,8 @@ class ParliamentTest: public testing::Test
         auto proposer = std::make_shared<ProposerContext>(
             legislators,
             ledger,
-            std::make_shared<VolatileDecree>()
+            std::make_shared<VolatileDecree>(),
+            [](std::string entry){}
         );
         auto acceptor = std::make_shared<AcceptorContext>(
             std::make_shared<VolatileDecree>(),

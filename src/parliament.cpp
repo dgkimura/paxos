@@ -6,7 +6,8 @@
 Parliament::Parliament(
     Replica legislator,
     std::string location,
-    Handler decree_handler)
+    Handler accept_handler,
+    Handler ignore_handler)
     : legislator(legislator),
       legislators(LoadReplicaSet(
           std::ifstream(
@@ -29,7 +30,7 @@ Parliament::Parliament(
 {
     ledger->RegisterHandler(
         DecreeType::UserDecree,
-        std::make_shared<CompositeHandler>(decree_handler)
+        std::make_shared<CompositeHandler>(accept_handler)
     );
     ledger->RegisterHandler(
         DecreeType::AddReplicaDecree,
@@ -53,7 +54,8 @@ Parliament::Parliament(
         ledger,
         std::make_shared<PersistentDecree>(
             location,
-            "paxos.highest_proposed_decree"));
+            "paxos.highest_proposed_decree"),
+        ignore_handler);
     auto acceptor = std::make_shared<AcceptorContext>(
         std::make_shared<PersistentDecree>(location, "paxos.promised_decree"),
         std::make_shared<PersistentDecree>(location, "paxos.accepted_decree"));

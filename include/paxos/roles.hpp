@@ -60,6 +60,12 @@ void HandlePromise(
     std::shared_ptr<Sender> sender);
 
 
+void HandleNackTie(
+    Message message,
+    std::shared_ptr<ProposerContext> context,
+    std::shared_ptr<Sender> sender);
+
+
 void HandleNack(
     Message message,
     std::shared_ptr<ProposerContext> context,

@@ -19,6 +19,10 @@ RegisterProposer(
         MessageType::PromiseMessage
     );
     receiver->RegisterCallback(
+        Callback(std::bind(HandleNackTie, std::placeholders::_1, context, sender)),
+        MessageType::NackTieMessage
+    );
+    receiver->RegisterCallback(
         Callback(std::bind(HandleNack, std::placeholders::_1, context, sender)),
         MessageType::NackMessage
     );
@@ -201,12 +205,12 @@ HandlePromise(
 
 
 void
-HandleNack(
+HandleNackTie(
     Message message,
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleNack    | " << Serialize(message);
+    LOG(LogLevel::Info) << "HandleNackTie | " << Serialize(message);
 
     Message nack_response(
         message.decree,
@@ -216,6 +220,16 @@ HandleNack(
     );
     nack_response.decree.number += 1;
     sender->Reply(nack_response);
+}
+
+
+void
+HandleNack(
+    Message message,
+    std::shared_ptr<ProposerContext> context,
+    std::shared_ptr<Sender> sender)
+{
+    context->ignore_handler(message.decree.content);
 }
 
 
@@ -284,7 +298,15 @@ HandlePrepare(
         //
         // If the messaged decree is equal to current promised decree and
         // sent from a different replica then there may be dueling
-        // proposers. Send a NACK and let the proposer handle it.
+        // proposers. Send a NackTie and let the proposer handle it.
+        //
+        sender->Reply(Response(message, MessageType::NackTieMessage));
+    }
+    else
+    {
+        //
+        // If the messaged decree is lower than current promised decree then.
+        // the other proposer is behind. Send a Nack.
         //
         sender->Reply(Response(message, MessageType::NackMessage));
     }

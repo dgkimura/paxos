@@ -33,6 +33,11 @@ enum class MessageType
     PromiseMessage,
 
     //
+    // NackTieMessage sent as a response to prepare indicating a tie.
+    //
+    NackTieMessage,
+
+    //
     // NackMessage sent as a negative response to prepare.
     //
     NackMessage,

@@ -145,14 +145,15 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
 
     RegisterProposer(receiver, sender, context);
 
     ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
     ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
-    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::NackMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::NackTieMessage));
     ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
 
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
@@ -170,7 +171,8 @@ TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneInProgressProposal)
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
     context->replicaset->Add(Replica("host"));
 
@@ -225,7 +227,8 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromise
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
     context->highest_proposed_decree = Decree(Replica("the_author"), 0, "", DecreeType::UserDecree);
 
@@ -248,7 +251,8 @@ TEST_F(ProposerTest, testHandlePromiseWithoutAnyRequestedValuesDoesNotSendAccept
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
@@ -274,7 +278,8 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
@@ -300,7 +305,8 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotU
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::shared_ptr<ReplicaSet>(new ReplicaSet());
@@ -325,7 +331,8 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedV
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
 
     // Highest promised decree content is "".
@@ -356,7 +363,8 @@ TEST_F(ProposerTest, testHandlePromiseWillSendAcceptAgainIfDuplicatePromiseIsSen
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
@@ -391,7 +399,8 @@ TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
@@ -422,7 +431,8 @@ TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressInSendsSingleProposa
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
     context->replicaset->Add(Replica("host"));
 
@@ -466,7 +476,8 @@ TEST_F(ProposerTest, testHandleNackIncrementsDecreeNumberAndResendsPrepareMessag
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
 
     // Add replica to known replicas.
@@ -474,12 +485,12 @@ TEST_F(ProposerTest, testHandleNackIncrementsDecreeNumberAndResendsPrepareMessag
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
-    HandleNack(
+    HandleNackTie(
         Message(
             decree,
             replica,
             replica,
-            MessageType::NackMessage
+            MessageType::NackTieMessage
         ),
         context,
         sender
@@ -499,7 +510,8 @@ TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
     auto context = std::make_shared<ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
     context->replicaset->Add(Replica("host"));
 
@@ -553,7 +565,8 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
     context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
     context->promise_map[message.decree]->Add(message.from);
@@ -580,7 +593,8 @@ TEST_F(ProposerTest, testHandleAcceptedSendsNextRequestIfThereArePendingProposal
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>()
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){}
     );
     context->requested_values.push_back(std::make_tuple("another pending value", DecreeType::UserDecree));
     auto sender = std::shared_ptr<FakeSender>(new FakeSender());
@@ -613,7 +627,7 @@ TEST_F(AcceptorTest, testRegisterAcceptorWillRegistereMessageTypes)
 
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackTieMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdateMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdatedMessage));
@@ -648,6 +662,7 @@ TEST_F(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree
     HandlePrepare(message, context, sender);
 
     ASSERT_TRUE(IsDecreeLower(message.decree, context->promised_decree.Value()));
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::NackMessage);
 }
 
 
@@ -665,7 +680,7 @@ TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromMultipleReplicasS
     HandlePrepare(author_b, context, sender);
 
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PromiseMessage);
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::NackMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::NackTieMessage);
 
     // We send 1 accept message and 1 nack message.
     ASSERT_EQ(2, sender->sentMessages().size());
@@ -685,7 +700,7 @@ TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromSingleReplicasRes
     HandlePrepare(message, context, sender);
 
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PromiseMessage);
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::NackMessage);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::NackTieMessage);
 
     // We send 2 accept messages.
     ASSERT_EQ(2, sender->sentMessages().size());
@@ -763,7 +778,7 @@ TEST_F(LearnerTest, testRegisterLearnerWillRegistereMessageTypes)
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackTieMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdateMessage));
 }
@@ -1163,7 +1178,7 @@ TEST_F(UpdaterTest, testRegisterUpdaterWillRegistereMessageTypes)
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackTieMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
     ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdatedMessage));
