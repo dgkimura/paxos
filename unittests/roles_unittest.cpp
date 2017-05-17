@@ -482,6 +482,7 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
 
     // Add replica to known replicas.
     context->replicaset->Add(replica);
+    context->replicaset->Add(Replica("host-2"));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
@@ -498,6 +499,9 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
 
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PrepareMessage);
     ASSERT_EQ(decree.number + 1, sender->sentMessages()[0].decree.number);
+
+    // Sends 1 message to each replica
+    ASSERT_EQ(2, sender->sentMessages().size());
 }
 
 

@@ -219,7 +219,7 @@ HandleNackTie(
         MessageType::PrepareMessage
     );
     nack_response.decree.number += 1;
-    sender->Reply(nack_response);
+    sender->ReplyAll(nack_response);
 }
 
 
