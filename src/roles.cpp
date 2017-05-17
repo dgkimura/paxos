@@ -92,7 +92,8 @@ HandleRequest(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleRequest | " << Serialize(message);
+    LOG(LogLevel::Info) << "HandleRequest | " << message.decree.number << "|"
+                        << Serialize(message);
     if (!message.decree.content.empty())
     {
         context->requested_values.push_back(
@@ -123,7 +124,8 @@ HandlePromise(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandlePromise | " << Serialize(message);
+    LOG(LogLevel::Info) << "HandlePromise | " << message.decree.number << "|"
+                        << Serialize(message);
 
     if (IsDecreeHigher(message.decree,
                        context->highest_proposed_decree.Value()) &&
@@ -210,7 +212,8 @@ HandleNackTie(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleNackTie | " << Serialize(message);
+    LOG(LogLevel::Info) << "HandleNackTie | " << message.decree.number << "|"
+                        << Serialize(message);
 
     Message nack_response(
         message.decree,
@@ -229,6 +232,9 @@ HandleNack(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
+    LOG(LogLevel::Info) << "HandleTie | " << message.decree.number << "|"
+                        << Serialize(message);
+
     context->ignore_handler(message.decree.content);
 }
 
@@ -239,7 +245,8 @@ HandleAccepted(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleAccepted| " << Serialize(message);
+    LOG(LogLevel::Info) << "HandleAccepted| " << message.decree.number << "|"
+                        << Serialize(message);
 
     if (context->promise_map.find(message.decree) != context->promise_map.end()
         && context->promise_map[message.decree]
@@ -279,7 +286,8 @@ HandlePrepare(
     std::shared_ptr<AcceptorContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandlePrepare | " << Serialize(message);
+    LOG(LogLevel::Info) << "HandlePrepare | " << message.decree.number << "|"
+                        << Serialize(message);
 
     if (IsDecreeHigher(message.decree, context->promised_decree.Value()) ||
         IsDecreeIdentical(message.decree, context->promised_decree.Value()))
@@ -319,7 +327,8 @@ HandleAccept(
     std::shared_ptr<AcceptorContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleAccept  | " << Serialize(message);
+    LOG(LogLevel::Info) << "HandleAccept  | " << message.decree.number << "|"
+                        << Serialize(message);
 
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree.Value()))
     {
@@ -338,7 +347,8 @@ HandleProclaim(
     std::shared_ptr<LearnerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleProclaim| " << Serialize(message);
+    LOG(LogLevel::Info) << "HandleProclaim| " << message.decree.number << "|"
+                        << Serialize(message);
 
     std::lock_guard<std::mutex> lock(context->mutex);
 
@@ -436,7 +446,8 @@ HandleUpdated(
     std::shared_ptr<LearnerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleUpdated | " << Serialize(message);
+    LOG(LogLevel::Info) << "HandleUpdated | " << message.decree.number << "|"
+                        << Serialize(message);
 
     if (IsDecreeOrdered(context->ledger->Tail(), message.decree))
     {
@@ -489,7 +500,8 @@ HandleUpdate(
     std::shared_ptr<UpdaterContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleUpdate| " << Serialize(message);
+    LOG(LogLevel::Info) << "HandleUpdate| " << message.decree.number << "|"
+                        << Serialize(message);
 
     //
     // Check if our ledger has the next logical ordered decree.
