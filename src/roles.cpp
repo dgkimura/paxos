@@ -415,6 +415,7 @@ HandleProclaim(
             //
             Message response = Response(message, MessageType::UpdateMessage);
             response.decree = context->ledger->Tail();
+            response.to = message.decree.author;
             sender->Reply(response);
         }
     }
@@ -435,7 +436,7 @@ HandleUpdated(
     std::shared_ptr<LearnerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleUpdated| " << Serialize(message);
+    LOG(LogLevel::Info) << "HandleUpdated | " << Serialize(message);
 
     if (IsDecreeOrdered(context->ledger->Tail(), message.decree))
     {
@@ -497,6 +498,7 @@ HandleUpdate(
 
     if (IsDecreeOrdered(message.decree, next))
     {
+        message.decree = next;
         sender->Reply(Response(message, MessageType::UpdatedMessage));
     }
 }
