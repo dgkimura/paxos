@@ -466,7 +466,7 @@ TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressInSendsSingleProposa
 }
 
 
-TEST_F(ProposerTest, testHandleNackIncrementsDecreeNumberAndResendsPrepareMessage)
+TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMessage)
 {
     auto replica = Replica("host");
     auto decree = Decree(replica, -1, "first", DecreeType::UserDecree);
@@ -498,6 +498,37 @@ TEST_F(ProposerTest, testHandleNackIncrementsDecreeNumberAndResendsPrepareMessag
 
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PrepareMessage);
     ASSERT_EQ(decree.number + 1, sender->sentMessages()[0].decree.number);
+}
+
+
+TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
+{
+    bool was_ignore_handler_run = false;
+    auto replica = Replica("host");
+    auto decree = Decree(replica, -1, "first", DecreeType::UserDecree);
+    auto replicaset = std::make_shared<ReplicaSet>();
+    auto context = std::make_shared<ProposerContext>(
+        replicaset,
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        ),
+        std::make_shared<VolatileDecree>(),
+        [&was_ignore_handler_run](std::string entry){ was_ignore_handler_run = true; }
+    );
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNack(
+        Message(
+            decree,
+            replica,
+            replica,
+            MessageType::NackMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_TRUE(was_ignore_handler_run);
 }
 
 
