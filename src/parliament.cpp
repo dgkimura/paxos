@@ -171,7 +171,6 @@ Parliament::SendProposal(std::string entry)
 {
     Decree d;
     d.content = entry;
-    d.author = legislator;
     send_decree(d);
 }
 
@@ -179,6 +178,7 @@ Parliament::SendProposal(std::string entry)
 void
 Parliament::send_decree(Decree d)
 {
+    d.author = legislator;
     Message m(
         d,
         legislator,
