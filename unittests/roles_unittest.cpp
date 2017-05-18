@@ -519,6 +519,7 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
         std::make_shared<VolatileDecree>(),
         [&was_ignore_handler_run](std::string entry){ was_ignore_handler_run = true; }
     );
+    context->requested_values.push_back(std::make_tuple("a pending value", DecreeType::UserDecree));
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleNack(

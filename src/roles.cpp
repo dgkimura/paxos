@@ -232,10 +232,10 @@ HandleNack(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleTie | " << message.decree.number << "|"
+    LOG(LogLevel::Info) << "HandleTie     | " << message.decree.number << "|"
                         << Serialize(message);
 
-    context->ignore_handler(message.decree.content);
+    context->ignore_handler(std::get<0>(context->requested_values.front()));
 }
 
 
