@@ -222,6 +222,8 @@ HandleNackTie(
         MessageType::PrepareMessage
     );
     nack_response.decree.number += 1;
+
+    context->pause->Start();
     sender->ReplyAll(nack_response);
 }
 
@@ -232,10 +234,17 @@ HandleNack(
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleTie     | " << message.decree.number << "|"
+    LOG(LogLevel::Info) << "HandleNack    | " << message.decree.number << "|"
                         << Serialize(message);
 
-    context->ignore_handler(std::get<0>(context->requested_values.front()));
+    if (IsDecreeHigher(message.decree, context->highest_nacked_decree))
+    {
+        context->ignore_handler(std::get<0>(context->requested_values.front()));
+        context->highest_nacked_decree = message.decree;
+        context->requested_values.erase(context->requested_values.begin());
+
+        std::atomic_flag_clear(&context->in_progress);
+    }
 }
 
 

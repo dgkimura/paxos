@@ -95,7 +95,8 @@ class ParliamentTest: public testing::Test
             legislators,
             ledger,
             std::make_shared<VolatileDecree>(),
-            [](std::string entry){}
+            [](std::string entry){},
+            std::make_shared<NoPause>()
         );
         auto acceptor = std::make_shared<AcceptorContext>(
             std::make_shared<VolatileDecree>(),

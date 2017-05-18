@@ -146,7 +146,8 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
 
     RegisterProposer(receiver, sender, context);
@@ -172,7 +173,8 @@ TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneInProgressProposal)
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
     context->replicaset->Add(Replica("host"));
 
@@ -228,7 +230,8 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromise
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
     context->highest_proposed_decree = Decree(Replica("the_author"), 0, "", DecreeType::UserDecree);
 
@@ -252,7 +255,8 @@ TEST_F(ProposerTest, testHandlePromiseWithoutAnyRequestedValuesDoesNotSendAccept
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
@@ -279,7 +283,8 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
@@ -306,7 +311,8 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotU
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::shared_ptr<ReplicaSet>(new ReplicaSet());
@@ -332,7 +338,8 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedV
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
 
     // Highest promised decree content is "".
@@ -364,7 +371,8 @@ TEST_F(ProposerTest, testHandlePromiseWillSendAcceptAgainIfDuplicatePromiseIsSen
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
@@ -400,7 +408,8 @@ TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
     context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
     context->replicaset = std::make_shared<ReplicaSet>();
@@ -432,7 +441,8 @@ TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressInSendsSingleProposa
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
     context->replicaset->Add(Replica("host"));
 
@@ -477,7 +487,8 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
 
     // Add replica to known replicas.
@@ -509,7 +520,7 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
 {
     bool was_ignore_handler_run = false;
     auto replica = Replica("host");
-    auto decree = Decree(replica, -1, "first", DecreeType::UserDecree);
+    auto decree = Decree(replica, 1, "next", DecreeType::UserDecree);
     auto replicaset = std::make_shared<ReplicaSet>();
     auto context = std::make_shared<ProposerContext>(
         replicaset,
@@ -517,9 +528,12 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [&was_ignore_handler_run](std::string entry){ was_ignore_handler_run = true; }
+        [&was_ignore_handler_run](std::string entry){ was_ignore_handler_run = true; },
+        std::make_shared<NoPause>()
     );
     context->requested_values.push_back(std::make_tuple("a pending value", DecreeType::UserDecree));
+    context->in_progress.test_and_set();
+
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleNack(
@@ -534,6 +548,52 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
     );
 
     ASSERT_TRUE(was_ignore_handler_run);
+    ASSERT_FALSE(context->in_progress.test_and_set());
+    ASSERT_EQ(0, context->requested_values.size());
+}
+
+
+TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
+{
+    int ignore_handler_run_count = 0;
+    auto replica = Replica("host");
+    auto decree = Decree(replica, 1, "next", DecreeType::UserDecree);
+    auto replicaset = std::make_shared<ReplicaSet>();
+    auto context = std::make_shared<ProposerContext>(
+        replicaset,
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        ),
+        std::make_shared<VolatileDecree>(),
+        [&ignore_handler_run_count](std::string entry){ ignore_handler_run_count += 1; },
+        std::make_shared<NoPause>()
+    );
+    context->requested_values.push_back(std::make_tuple("a pending value", DecreeType::UserDecree));
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNack(
+        Message(
+            decree,
+            replica,
+            replica,
+            MessageType::NackMessage
+        ),
+        context,
+        sender
+    );
+    HandleNack(
+        Message(
+            decree,
+            replica,
+            replica,
+            MessageType::NackMessage
+        ),
+        context,
+        sender
+    );
+
+    // HandleNack run multiple times on decree, but ignore handler is run once.
+    ASSERT_EQ(1, ignore_handler_run_count);
 }
 
 
@@ -547,7 +607,8 @@ TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
         replicaset,
         ledger,
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
     context->replicaset->Add(Replica("host"));
 
@@ -602,7 +663,8 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
     context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
     context->promise_map[message.decree]->Add(message.from);
@@ -630,7 +692,8 @@ TEST_F(ProposerTest, testHandleAcceptedSendsNextRequestIfThereArePendingProposal
             std::make_shared<VolatileQueue<Decree>>()
         ),
         std::make_shared<VolatileDecree>(),
-        [](std::string entry){}
+        [](std::string entry){},
+        std::make_shared<NoPause>()
     );
     context->requested_values.push_back(std::make_tuple("another pending value", DecreeType::UserDecree));
     auto sender = std::shared_ptr<FakeSender>(new FakeSender());

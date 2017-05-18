@@ -9,6 +9,7 @@ set(SOURCES
     logging.cpp
     messages.cpp
     parliament.cpp
+    pause.cpp
     replicaset.cpp
     roles.cpp
     sender.cpp
