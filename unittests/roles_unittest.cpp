@@ -671,13 +671,13 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
 
     ASSERT_EQ(context->promise_map.size(), 1);
 
-    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+    HandleResume(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     ASSERT_EQ(context->promise_map.size(), 0);
 }
 
 
-TEST_F(ProposerTest, testHandleAcceptedSendsNextRequestIfThereArePendingProposals)
+TEST_F(ProposerTest, testHandleResumeSendsNextRequestIfThereArePendingProposals)
 {
     Message message(
         Decree(Replica("A"), 1, "content", DecreeType::UserDecree),
@@ -698,7 +698,7 @@ TEST_F(ProposerTest, testHandleAcceptedSendsNextRequestIfThereArePendingProposal
     context->requested_values.push_back(std::make_tuple("another pending value", DecreeType::UserDecree));
     auto sender = std::shared_ptr<FakeSender>(new FakeSender());
 
-    HandleAccepted(message, context, sender);
+    HandleResume(message, context, sender);
 
     ASSERT_EQ(sender->sentMessages()[0].type, MessageType::RequestMessage);
 }
@@ -883,44 +883,44 @@ TEST_F(LearnerTest, testRegisterLearnerWillRegistereMessageTypes)
 }
 
 
-TEST_F(LearnerTest, testProclaimHandleWithSingleReplica)
+TEST_F(LearnerTest, testAcceptedHandleWithSingleReplica)
 {
     Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
     auto context = createLearnerContext({"A"});
 
-    HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     ASSERT_EQ(context->ledger->Size(), 1);
 }
 
 
-TEST_F(LearnerTest, testProclaimHandleIgnoresMessagesFromUnknownReplica)
+TEST_F(LearnerTest, testAcceptedHandleIgnoresMessagesFromUnknownReplica)
 {
     Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("Unknown"), Replica("A"), MessageType::AcceptedMessage);
     auto context = createLearnerContext({"A"});
 
-    HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     ASSERT_EQ(context->ledger->Size(), 0);
 }
 
 
-TEST_F(LearnerTest, testProclaimHandleReceivesOneAcceptedWithThreeReplicaSet)
+TEST_F(LearnerTest, testAcceptedHandleReceivesOneAcceptedWithThreeReplicaSet)
 {
     Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("A"), Replica("B"), MessageType::AcceptedMessage);
     auto context = createLearnerContext({"A", "B", "C"});
 
-    HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     ASSERT_EQ(context->ledger->Size(), 0);
 }
 
 
-TEST_F(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
+TEST_F(LearnerTest, testAcceptedHandleReceivesTwoAcceptedWithThreeReplicaSet)
 {
     auto context = createLearnerContext({"A", "B", "C"});
 
-    HandleProclaim(
+    HandleAccepted(
         Message(
             Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("A"),
@@ -930,7 +930,7 @@ TEST_F(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
     );
-    HandleProclaim(
+    HandleAccepted(
         Message(
             Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("B"),
@@ -945,12 +945,12 @@ TEST_F(LearnerTest, testProclaimHandleReceivesTwoAcceptedWithThreeReplicaSet)
 }
 
 
-TEST_F(LearnerTest, testProclaimHandleCleansUpAcceptedMapAfterAllVotesReceived)
+TEST_F(LearnerTest, testAcceptedHandleCleansUpAcceptedMapAfterAllVotesReceived)
 {
     auto context = createLearnerContext({"A", "B", "C"});
     Decree decree(Replica("A"), 1, "", DecreeType::UserDecree);
 
-    HandleProclaim(
+    HandleAccepted(
         Message(
             decree,
             Replica("A"),
@@ -963,7 +963,7 @@ TEST_F(LearnerTest, testProclaimHandleCleansUpAcceptedMapAfterAllVotesReceived)
 
     ASSERT_FALSE(context->accepted_map.find(decree) == context->accepted_map.end());
 
-    HandleProclaim(
+    HandleAccepted(
         Message(
             decree,
             Replica("B"),
@@ -976,7 +976,7 @@ TEST_F(LearnerTest, testProclaimHandleCleansUpAcceptedMapAfterAllVotesReceived)
 
     ASSERT_FALSE(context->accepted_map.find(decree) == context->accepted_map.end());
 
-    HandleProclaim(
+    HandleAccepted(
         Message(
             decree,
             Replica("C"),
@@ -991,13 +991,13 @@ TEST_F(LearnerTest, testProclaimHandleCleansUpAcceptedMapAfterAllVotesReceived)
 }
 
 
-TEST_F(LearnerTest, testProclaimHandleIgnoresPreviouslyAcceptedMessagesFromReplicasRemovedFromReplicaSet)
+TEST_F(LearnerTest, testAcceptedHandleIgnoresPreviouslyAcceptedMessagesFromReplicasRemovedFromReplicaSet)
 {
     auto context = createLearnerContext({"A", "B", "C"});
     Decree decree(Replica("A"), 1, "", DecreeType::UserDecree);
 
     // Accepted from replica A.
-    HandleProclaim(
+    HandleAccepted(
         Message(
             decree,
             Replica("A"),
@@ -1011,7 +1011,7 @@ TEST_F(LearnerTest, testProclaimHandleIgnoresPreviouslyAcceptedMessagesFromRepli
     // Remove replica A from replicaset.
     context->replicaset->Remove(Replica("A"));
 
-    HandleProclaim(
+    HandleAccepted(
         Message(
             decree,
             Replica("B"),
@@ -1027,11 +1027,11 @@ TEST_F(LearnerTest, testProclaimHandleIgnoresPreviouslyAcceptedMessagesFromRepli
 }
 
 
-TEST_F(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
+TEST_F(LearnerTest, testAcceptedHandleIgnoresDuplicateAcceptedMessages)
 {
     auto context = createLearnerContext({"A", "B", "C"});
 
-    HandleProclaim(
+    HandleAccepted(
         Message(
             Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("A"),
@@ -1041,7 +1041,7 @@ TEST_F(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
     );
-    HandleProclaim(
+    HandleAccepted(
         Message(
             Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("A"),
@@ -1056,12 +1056,12 @@ TEST_F(LearnerTest, testProclaimHandleIgnoresDuplicateAcceptedMessages)
 }
 
 
-TEST_F(LearnerTest, testProclaimHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLedgerIsOutOfOrder)
+TEST_F(LearnerTest, testAcceptedHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLedgerIsOutOfOrder)
 {
     auto context = createLearnerContext({"A"});
     auto sender = std::make_shared<FakeSender>();
 
-    HandleProclaim(
+    HandleAccepted(
         Message(
             Decree(Replica("A"), 1, "", DecreeType::UserDecree),
             Replica("A"), Replica("A"),
@@ -1072,7 +1072,7 @@ TEST_F(LearnerTest, testProclaimHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLe
     );
 
     // Missing decrees 2-9 so don't write to ledger yet.
-    HandleProclaim(
+    HandleAccepted(
         Message(
             Decree(Replica("A"), 10, "", DecreeType::UserDecree),
             Replica("A"), Replica("A"),
@@ -1087,13 +1087,13 @@ TEST_F(LearnerTest, testProclaimHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLe
 }
 
 
-TEST_F(LearnerTest, testProclaimHandleAppendsToLedgerAfterComparingAgainstOriginalDecree)
+TEST_F(LearnerTest, testAcceptedHandleAppendsToLedgerAfterComparingAgainstOriginalDecree)
 {
     Message message(Decree(Replica("A"), 42, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
     message.original_decree = Decree(Replica("A"), 1, "", DecreeType::UserDecree);
     auto context = createLearnerContext({"A"});
 
-    HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     // Even though actual decree 42 is out-of-order, original is 1 which is in-order.
     ASSERT_EQ(context->ledger->Size(), 1);
@@ -1104,13 +1104,13 @@ TEST_F(LearnerTest, testProclaimHandleAppendsToLedgerAfterComparingAgainstOrigin
 }
 
 
-TEST_F(LearnerTest, testProclaimHandleTracksFutureDecreesIfReceivedOutOfOrder)
+TEST_F(LearnerTest, testAcceptedHandleTracksFutureDecreesIfReceivedOutOfOrder)
 {
     Message message(Decree(Replica("A"), 42, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
     auto context = createLearnerContext({"A"});
     context->is_observer = true;
 
-    HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     // Mode is_observer should not write to ledger.
     ASSERT_EQ(context->ledger->Size(), 0);
@@ -1118,7 +1118,7 @@ TEST_F(LearnerTest, testProclaimHandleTracksFutureDecreesIfReceivedOutOfOrder)
 }
 
 
-TEST_F(LearnerTest, testProclaimHandleDoesNotTrackPastDecrees)
+TEST_F(LearnerTest, testAcceptedHandleDoesNotTrackPastDecrees)
 {
     Decree past_decree(Replica("A"), 1, "", DecreeType::UserDecree);
     Decree future_decree(Replica("A"), 1, "", DecreeType::UserDecree);
@@ -1128,7 +1128,7 @@ TEST_F(LearnerTest, testProclaimHandleDoesNotTrackPastDecrees)
     context->is_observer = true;
     context->ledger->Append(future_decree);
 
-    HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     // Mode is_observer shouldn't write next passed decree to ledger.
     ASSERT_EQ(context->ledger->Size(), 1);
@@ -1138,7 +1138,7 @@ TEST_F(LearnerTest, testProclaimHandleDoesNotTrackPastDecrees)
 }
 
 
-TEST_F(LearnerTest, testProclaimHandleAppendsTrackedFutureDecreesToLedgerWhenTheyFillInHoles)
+TEST_F(LearnerTest, testAcceptedHandleAppendsTrackedFutureDecreesToLedgerWhenTheyFillInHoles)
 {
     Decree past_decree(Replica("A"), 1, "", DecreeType::UserDecree);
     Decree current_decree(Replica("A"), 2, "", DecreeType::UserDecree);
@@ -1147,7 +1147,7 @@ TEST_F(LearnerTest, testProclaimHandleAppendsTrackedFutureDecreesToLedgerWhenThe
     auto context = createLearnerContext({"A"});
     context->tracked_future_decrees.push(past_decree);
 
-    HandleProclaim(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     // Past decree from tracked future decrees and current decree are both appended to ledger.
     ASSERT_EQ(context->ledger->Size(), 2);

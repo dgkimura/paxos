@@ -27,8 +27,8 @@ RegisterProposer(
         MessageType::NackMessage
     );
     receiver->RegisterCallback(
-        Callback(std::bind(HandleAccepted, std::placeholders::_1, context, sender)),
-        MessageType::AcceptedMessage
+        Callback(std::bind(HandleResume, std::placeholders::_1, context, sender)),
+        MessageType::ResumeMessage
     );
 }
 
@@ -61,7 +61,7 @@ RegisterLearner(
     using namespace std::placeholders;
 
     receiver->RegisterCallback(
-        Callback(std::bind(HandleProclaim, std::placeholders::_1, context, sender)),
+        Callback(std::bind(HandleAccepted, std::placeholders::_1, context, sender)),
         MessageType::AcceptedMessage
     );
     receiver->RegisterCallback(
@@ -249,12 +249,12 @@ HandleNack(
 
 
 void
-HandleAccepted(
+HandleResume(
     Message message,
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleAccepted| " << message.decree.number << "|"
+    LOG(LogLevel::Info) << "HandleResume  | " << message.decree.number << "|"
                         << Serialize(message);
 
     if (context->promise_map.find(message.decree) != context->promise_map.end()
@@ -351,12 +351,12 @@ HandleAccept(
 
 
 void
-HandleProclaim(
+HandleAccepted(
     Message message,
     std::shared_ptr<LearnerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleProclaim| " << message.decree.number << "|"
+    LOG(LogLevel::Info) << "HandleAccepted| " << message.decree.number << "|"
                         << Serialize(message);
 
     std::lock_guard<std::mutex> lock(context->mutex);
@@ -383,9 +383,22 @@ HandleProclaim(
         {
             //
             // If decree is ordered then append to ledger. We check the decree
-            // because decree may be incremented in response to NACK.
+            // because decree may be incremented in response to NACK-tie.
             //
             context->ledger->Append(message.decree);
+
+            if (accepted_quorum == minimum_quorum &&
+                IsReplicaEqual(message.decree.author, message.to))
+            {
+                //
+                // If we authored this decree then allow our replica to resume
+                // and propose a new decree.
+                //
+                Message response;
+                response.to = message.to;
+                response.type = MessageType::ResumeMessage;
+                sender->Reply(response);
+            }
         }
         else if (IsDecreeLower(context->ledger->Tail(), message.decree))
         {

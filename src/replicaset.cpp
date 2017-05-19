@@ -108,7 +108,7 @@ ReplicaSet::end() const
 std::shared_ptr<ReplicaSet>
 LoadReplicaSet(std::istream&& replicasetfile)
 {
-    auto replicaset =   std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<ReplicaSet>();
 
     std::string line;
     while (std::getline(replicasetfile, line))

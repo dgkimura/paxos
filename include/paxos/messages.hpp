@@ -48,9 +48,14 @@ enum class MessageType
     AcceptMessage,
 
     //
-    // AcceptedMessage sent to prepare for a new round of paxos.
+    // AcceptedMessage sent to continue to second phase of concensus.
     //
     AcceptedMessage,
+
+    //
+    // ResumeMessage sent to prepare for a new round of paxos.
+    //
+    ResumeMessage,
 
     //
     // UpdateMessage sent when replica realizes it is behind.

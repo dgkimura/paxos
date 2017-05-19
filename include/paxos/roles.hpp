@@ -72,7 +72,7 @@ void HandleNack(
     std::shared_ptr<Sender> sender);
 
 
-void HandleAccepted(
+void HandleResume(
     Message message,
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender);
@@ -90,7 +90,7 @@ void HandleAccept(
     std::shared_ptr<Sender> sender);
 
 
-void HandleProclaim(
+void HandleAccepted(
     Message message,
     std::shared_ptr<LearnerContext> context,
     std::shared_ptr<Sender> sender);
