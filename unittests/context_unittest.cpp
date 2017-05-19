@@ -7,8 +7,9 @@
 
 TEST(ContextUnitTest, testLearnerContextTrackedFutureDecreeStoredInAscendingOrder)
 {
+    auto replicaset = std::make_shared<ReplicaSet>();
     LearnerContext context(
-        std::make_shared<ReplicaSet>(),
+        replicaset,
         std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>())
     );
 

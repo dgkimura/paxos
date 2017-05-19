@@ -72,13 +72,14 @@ Parliament::Parliament(
     std::shared_ptr<Sender> sender,
     std::shared_ptr<AcceptorContext> acceptor,
     std::shared_ptr<ProposerContext> proposer,
+    std::shared_ptr<LearnerContext> learner,
     std::shared_ptr<Signal> signal
 ) :
     legislators(legislators),
     receiver(receiver),
     sender(sender),
     ledger(ledger),
-    learner(std::make_shared<LearnerContext>(legislators, ledger)),
+    learner(learner),
     signal(signal)
 {
     hookup_legislator(legislator, proposer, acceptor);

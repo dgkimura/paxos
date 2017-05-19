@@ -52,15 +52,15 @@ public:
 
     void Remove(Replica replica);
 
-    bool Contains(Replica replica);
+    bool Contains(const Replica replica) const;
 
-    int GetSize();
+    int GetSize() const;
 
     void Clear();
 
-    std::shared_ptr<ReplicaSet> Intersection(std::shared_ptr<ReplicaSet> other);
+    std::shared_ptr<ReplicaSet> Intersection(std::shared_ptr<ReplicaSet>& other) const;
 
-    std::shared_ptr<ReplicaSet> Difference(std::shared_ptr<ReplicaSet> other);
+    std::shared_ptr<ReplicaSet> Difference(std::shared_ptr<const ReplicaSet> other) const;
 
     using iterator = std::set<Replica, compare_replica>::iterator;
 

@@ -41,14 +41,14 @@ ReplicaSet::Remove(Replica replica)
 
 
 bool
-ReplicaSet::Contains(Replica replica)
+ReplicaSet::Contains(const Replica replica) const
 {
     return replicaset.find(replica) != replicaset.end();
 }
 
 
 int
-ReplicaSet::GetSize()
+ReplicaSet::GetSize() const
 {
     return replicaset.size();
 }
@@ -62,7 +62,7 @@ ReplicaSet::Clear()
 
 
 std::shared_ptr<ReplicaSet>
-ReplicaSet::Intersection(std::shared_ptr<ReplicaSet> other)
+ReplicaSet::Intersection(std::shared_ptr<ReplicaSet>& other) const
 {
     auto intersection = std::make_shared<ReplicaSet>();
     for (auto r : *other)
@@ -77,7 +77,7 @@ ReplicaSet::Intersection(std::shared_ptr<ReplicaSet> other)
 
 
 std::shared_ptr<ReplicaSet>
-ReplicaSet::Difference(std::shared_ptr<ReplicaSet> other)
+ReplicaSet::Difference(std::shared_ptr<const ReplicaSet> other) const
 {
     auto difference = std::make_shared<ReplicaSet>();
     for (auto r : replicaset)

@@ -75,7 +75,7 @@ struct AcceptorContext : public Context
 
 struct LearnerContext : public Context
 {
-    std::shared_ptr<ReplicaSet> replicaset;
+    std::shared_ptr<ReplicaSet>& replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> accepted_map;
     std::shared_ptr<Ledger> ledger;
     std::priority_queue<Decree, std::vector<Decree>, ascending_decree> tracked_future_decrees;
@@ -85,7 +85,7 @@ struct LearnerContext : public Context
     std::mutex mutex;
 
     LearnerContext(
-        std::shared_ptr<ReplicaSet> replicaset_,
+        std::shared_ptr<ReplicaSet>& replicaset_,
         std::shared_ptr<Ledger> ledger_,
         bool is_observer=false
     )

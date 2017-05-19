@@ -102,6 +102,10 @@ class ParliamentTest: public testing::Test
             std::make_shared<VolatileDecree>(),
             std::make_shared<VolatileDecree>()
         );
+        auto learner = std::make_shared<LearnerContext>(
+            legislators,
+            ledger
+        );
         auto signal = std::make_shared<Signal>();
         signal->Set();
 
@@ -113,6 +117,7 @@ class ParliamentTest: public testing::Test
             sender,
             acceptor,
             proposer,
+            learner,
             signal
         );
     }
