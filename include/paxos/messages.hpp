@@ -72,18 +72,18 @@ enum class MessageType
 struct Message
 {
     Decree decree;
-    Decree original_decree;
+    Decree root_decree;
     Replica from;
     Replica to;
     MessageType type;
 
     Message()
-        : decree(), original_decree(), from(), to(), type()
+        : decree(), root_decree(), from(), to(), type()
     {
     }
 
     Message(Decree d, Replica f, Replica t, MessageType mtype)
-        : decree(d), original_decree(d), from(f), to(t), type(mtype)
+        : decree(d), root_decree(d), from(f), to(t), type(mtype)
     {
     }
 };

@@ -106,10 +106,12 @@ HandleRequest(
         if (context->ledger->Size() > 0)
         {
             response.decree.number = context->ledger->Tail().number + 1;
+            response.root_decree.number = response.decree.number;
         }
         else
         {
             response.decree.number = 1;
+            response.root_decree.number = 1;
         }
         response.decree.content = "";
 
@@ -250,7 +252,11 @@ HandleNack(
         context->highest_nacked_decree = message.decree;
         context->requested_values.erase(context->requested_values.begin());
 
-        std::atomic_flag_clear(&context->in_progress);
+        //
+        // No point in continuing yet since we are behind. Instead keep
+        // in_progress set until the next accepted is caught and we are up to
+        // date.
+        //
     }
 }
 
@@ -351,8 +357,8 @@ HandleAccept(
         if (IsDecreeHigher(message.decree, context->accepted_decree.Value()))
         {
             context->accepted_decree = message.decree;
+            sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
         }
-        sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
     }
 }
 
@@ -385,7 +391,7 @@ HandleAccepted(
 
     if (accepted_quorum >= minimum_quorum)
     {
-        if (IsDecreeOrdered(context->ledger->Tail(), message.original_decree)
+        if (IsDecreeOrdered(context->ledger->Tail(), message.root_decree)
             && !context->is_observer)
         {
             //
