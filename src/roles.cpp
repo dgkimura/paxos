@@ -106,11 +106,13 @@ HandleRequest(
         if (context->ledger->Size() > 0)
         {
             response.decree.number = context->ledger->Tail().number + 1;
+            response.decree.author = message.to;
             response.root_decree.number = response.decree.number;
         }
         else
         {
             response.decree.number = 1;
+            response.decree.author = message.to;
             response.root_decree.number = 1;
         }
         response.decree.content = "";

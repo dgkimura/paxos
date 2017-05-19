@@ -675,6 +675,7 @@ TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
 
     ASSERT_EQ(sender->sentMessages()[1].decree.number, 6);
     ASSERT_EQ(sender->sentMessages()[1].root_decree.number, 6);
+    ASSERT_TRUE(IsReplicaEqual(Replica("B"), sender->sentMessages()[1].decree.author));
 }
 
 
