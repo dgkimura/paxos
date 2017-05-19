@@ -466,14 +466,17 @@ TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressInSendsSingleProposa
 TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMessage)
 {
     auto replica = Replica("host");
-    auto decree = Decree(replica, -1, "first", DecreeType::UserDecree);
+    auto decree = Decree(replica, 1, "first", DecreeType::UserDecree);
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto highest_proposed_decree = std::make_shared<VolatileDecree>();
+    highest_proposed_decree->Put(decree);
+
     auto context = std::make_shared<ProposerContext>(
         replicaset,
         std::make_shared<Ledger>(
             std::make_shared<VolatileQueue<Decree>>()
         ),
-        std::make_shared<VolatileDecree>(),
+        highest_proposed_decree,
         [](std::string entry){},
         std::make_shared<NoPause>()
     );
@@ -500,6 +503,44 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
 
     // Sends 1 message to each replica
     ASSERT_EQ(2, sender->sentMessages().size());
+}
+
+
+TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestProposedDecree)
+{
+    auto replica = Replica("host");
+    auto decree = Decree(replica, 2, "next", DecreeType::UserDecree);
+    auto replicaset = std::make_shared<ReplicaSet>();
+    auto highest_proposed_decree = std::make_shared<VolatileDecree>();
+    highest_proposed_decree->Put(Decree(replica, 1, "first", DecreeType::UserDecree));
+
+    auto context = std::make_shared<ProposerContext>(
+        replicaset,
+        std::make_shared<Ledger>(
+            std::make_shared<VolatileQueue<Decree>>()
+        ),
+        highest_proposed_decree,
+        [](std::string entry){},
+        std::make_shared<NoPause>()
+    );
+
+    // Add replica to known replicas.
+    context->replicaset->Add(replica);
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNackTie(
+        Message(
+            decree,
+            replica,
+            replica,
+            MessageType::NackTieMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::PrepareMessage);
 }
 
 

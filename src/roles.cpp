@@ -150,7 +150,7 @@ HandlePromise(
     if (IsDecreeEqual(message.decree, context->highest_proposed_decree.Value()))
     {
         bool duplicate = context->promise_map[message.decree]
-                             ->Contains(message.from);
+                                ->Contains(message.from);
         //
         // If the messaged decree is the highest promised decree then update
         // our promised decree map and calculate if majority of replicas have
@@ -215,16 +215,23 @@ HandleNackTie(
     LOG(LogLevel::Info) << "HandleNackTie | " << message.decree.number << "|"
                         << Serialize(message);
 
-    Message nack_response(
-        message.decree,
-        message.to,
-        message.to,
-        MessageType::PrepareMessage
-    );
-    nack_response.decree.number += 1;
+    if (IsDecreeEqual(message.decree, context->highest_proposed_decree.Value()))
+    {
+        //
+        // Iff the current proposed decree is tied then retry with a higher
+        // decree.
+        //
+        Message nack_response(
+            message.decree,
+            message.to,
+            message.to,
+            MessageType::PrepareMessage
+        );
+        nack_response.decree.number += 1;
 
-    context->pause->Start();
-    sender->ReplyAll(nack_response);
+        context->pause->Start();
+        sender->ReplyAll(nack_response);
+    }
 }
 
 
@@ -387,12 +394,11 @@ HandleAccepted(
             //
             context->ledger->Append(message.decree);
 
-            if (accepted_quorum == minimum_quorum &&
-                IsReplicaEqual(message.decree.author, message.to))
+            if (accepted_quorum == minimum_quorum )
             {
                 //
-                // If we authored this decree then allow our replica to resume
-                // and propose a new decree.
+                // A quorum has been accepted so we should resume to allow
+                // ourselves to send proposals in the next election.
                 //
                 Message response;
                 response.to = message.to;
