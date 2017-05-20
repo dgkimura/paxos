@@ -32,6 +32,7 @@ BoostTransport::Connect(std::string hostname, short port)
     catch (const boost::system::system_error& e)
     {
         LOG(LogLevel::Warning) << "Could not connect to " << hostname << ":" << port;
+        socket_.close();
     }
 }
 
@@ -46,5 +47,6 @@ BoostTransport::Write(std::string content)
     catch (const boost::system::system_error& e)
     {
         LOG(LogLevel::Warning) << "Could not write to transport";
+        socket_.close();
     }
 }
