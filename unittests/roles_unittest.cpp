@@ -1222,6 +1222,30 @@ TEST_F(LearnerTest, testHandleUpdatedWithEmptyLedger)
     );
 
     ASSERT_EQ(context->ledger->Size(), 0);
+
+    // We are still behind so we should not resume.
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::ResumeMessage);
+}
+
+
+TEST_F(LearnerTest, testHandleUpdatedReceivedMessageWithZeroDecree)
+{
+    replicaset->Add(Replica("A"));
+    auto sender = std::make_shared<FakeSender>();
+
+    // Sending zero decree.
+    HandleUpdated(
+        Message(
+            Decree(Replica("A"), 0, "", DecreeType::UserDecree),
+            Replica("A"), Replica("A"),
+            MessageType::UpdatedMessage
+        ),
+        context,
+        sender
+    );
+
+    // We are up to date so send resume.
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::ResumeMessage);
 }
 
 
@@ -1354,8 +1378,10 @@ TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndHasEmptyLedger)
         sender
     );
 
-    // Our ledger is empty so we shouldn't send an updated message.
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::UpdatedMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::UpdatedMessage);
+
+    // Our ledger is empty so we will send an zero decree to show we have nothing.
+    ASSERT_EQ(sender->sentMessages()[0].decree.number, 0);
 }
 
 

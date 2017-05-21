@@ -527,6 +527,16 @@ HandleUpdated(
             sender->Reply(Response(message, MessageType::UpdateMessage));
         }
     }
+    else if (message.decree.number == 0)
+    {
+        //
+        // Zero decree means that we are now up to date so we should continue.
+        //
+        Message response;
+        response.to = message.to;
+        response.type = MessageType::ResumeMessage;
+        sender->Reply(response);
+    }
 }
 
 
@@ -540,13 +550,9 @@ HandleUpdate(
                         << Serialize(message);
 
     //
-    // Check if our ledger has the next logical ordered decree.
+    // Get the next logical ordered decree in our ledger. If we do not have the
+    // next logical decree then we get the zero decree.
     //
-    Decree next = context->ledger->Next(message.decree);
-
-    if (IsDecreeOrdered(message.decree, next))
-    {
-        message.decree = next;
-        sender->Reply(Response(message, MessageType::UpdatedMessage));
-    }
+    message.decree = context->ledger->Next(message.decree);
+    sender->Reply(Response(message, MessageType::UpdatedMessage));
 }
