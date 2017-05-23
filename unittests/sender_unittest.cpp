@@ -14,7 +14,7 @@ TEST(SenderTest, testReplyAllSendsMultipleMessages)
     class MockTransport
     {
     public:
-        void Connect(std::string hostname, short port)
+        MockTransport(std::string hostname, short port)
         {
         }
         void Write(std::string content)
@@ -52,7 +52,7 @@ TEST(SenderTest, testSendFileAlongTransport)
     class MockTransport
     {
     public:
-        void Connect(std::string hostname, short port)
+        MockTransport(std::string hostname, short port)
         {
         }
         void Write(std::string content)

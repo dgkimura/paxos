@@ -33,11 +33,9 @@ class BoostTransport
 {
 public:
 
-    BoostTransport();
+    BoostTransport(std::string hostname, short port);
 
     ~BoostTransport();
-
-    void Connect(std::string hostname, short port);
 
     void Write(std::string content);
 
@@ -46,6 +44,10 @@ private:
     boost::asio::io_service io_service_;
 
     boost::asio::ip::tcp::socket socket_;
+
+    boost::asio::ip::tcp::resolver resolver_;
+
+    boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> endpoint_;
 };
 
 
@@ -63,8 +65,7 @@ public:
     {
         std::lock_guard<std::mutex> guard(mutex);
 
-        Transport transport;
-        transport.Connect(message.to.hostname, message.to.port);
+        Transport transport(message.to.hostname, message.to.port);
 
         // 1. serialize message
         std::string message_str = Serialize(message);
@@ -101,8 +102,7 @@ public:
     {
         std::lock_guard<std::mutex> guard(mutex);
 
-        Transport transport;
-        transport.Connect(replica.hostname, replica.port + 1);
+        Transport transport(replica.hostname, replica.port + 1);
 
         // 1. serialize file
         std::string file_str = Serialize(file);
