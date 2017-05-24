@@ -198,14 +198,24 @@ Parliament::GetAbsenteeBallots(int max_ballots)
 
     std::lock_guard<std::mutex> lock(learner->mutex);
 
-    int current = 0;
-    for (auto vote : learner->accepted_map)
+    auto latest = learner->ledger->Tail();
+    for (int i=latest.number-max_ballots + 1; i <= latest.number; i++)
     {
-        if (current <= max_ballots)
+        if (i <= 0)
         {
-            ballots[vote.first] = learner->replicaset->Difference(vote.second);
+            continue;
         }
-        current += 1;
+
+        Decree d;
+        d.number = i;
+        if (learner->accepted_map.find(d) != learner->accepted_map.end())
+        {
+            ballots[d] = learner->replicaset->Difference(learner->accepted_map[d]);
+        }
+        else
+        {
+            ballots[d] = std::make_shared<ReplicaSet>();
+        }
     }
     return ballots;
 

@@ -213,6 +213,7 @@ TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleReplicaSet)
     legislators->Add(Replica("ourhost", 1111));
 
     Decree decree(replica, 1, "my decree content", DecreeType::UserDecree);
+    ledger->Append(decree);
     receiver->ReceiveMessage(
         Message(
             decree,
@@ -226,4 +227,28 @@ TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleReplicaSet)
     ASSERT_TRUE(parliament->GetAbsenteeBallots(100)[decree]->Contains(Replica("yourhost", 2222)));
     ASSERT_TRUE(parliament->GetAbsenteeBallots(100)[decree]->Contains(Replica("ourhost", 1111)));
     ASSERT_FALSE(parliament->GetAbsenteeBallots(100)[decree]->Contains(replica));
+}
+
+
+TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleDecrees)
+{
+    ledger->Append(Decree(replica, 1, "my decree 1", DecreeType::UserDecree));
+    ledger->Append(Decree(replica, 2, "my decree 2", DecreeType::UserDecree));
+    ledger->Append(Decree(replica, 3, "my decree 3", DecreeType::UserDecree));
+    ledger->Append(Decree(replica, 4, "my decree 4", DecreeType::UserDecree));
+    ledger->Append(Decree(replica, 5, "my decree 5", DecreeType::UserDecree));
+    ledger->Append(Decree(replica, 6, "my decree 6", DecreeType::UserDecree));
+
+    ASSERT_EQ(5, parliament->GetAbsenteeBallots(5).size());
+}
+
+
+TEST_F(ParliamentTest, testGetAbsenteeBallotIfDecreeIsNotInPromiseMap)
+{
+    Decree decree1(replica, 1, "my decree 1", DecreeType::UserDecree);
+
+    ledger->Append(decree1);
+
+    ASSERT_EQ(1, parliament->GetAbsenteeBallots(5).size());
+    ASSERT_EQ(0, parliament->GetAbsenteeBallots(5)[decree1]->GetSize());
 }
