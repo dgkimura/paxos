@@ -8,9 +8,10 @@
 TEST(ContextUnitTest, testLearnerContextTrackedFutureDecreeStoredInAscendingOrder)
 {
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>());
     LearnerContext context(
         replicaset,
-        std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>())
+        ledger
     );
 
     context.tracked_future_decrees.push(Decree(Replica("A"), 2, "", DecreeType::UserDecree));

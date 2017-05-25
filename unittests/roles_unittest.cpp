@@ -126,11 +126,12 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
     auto receiver = std::make_shared<FakeReceiver>();
     auto sender = std::make_shared<FakeSender>();
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -154,11 +155,12 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
 TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneInProgressProposal)
 {
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -211,11 +213,12 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromise
         MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -236,11 +239,12 @@ TEST_F(ProposerTest, testHandlePromiseWithoutAnyRequestedValuesDoesNotSendAccept
     Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -264,11 +268,12 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
     Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -292,11 +297,12 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotU
     Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("unknown_host"), Replica("host"), MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -319,11 +325,12 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedV
     Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -352,11 +359,12 @@ TEST_F(ProposerTest, testHandlePromiseWillSendAcceptAgainIfDuplicatePromiseIsSen
     Message message(Decree(Replica("host1"), 1, "", DecreeType::UserDecree), Replica("host1"), Replica("host1"), MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -389,11 +397,12 @@ TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
     Message message(Decree(Replica("host1"), 1, "", DecreeType::UserDecree), Replica("host1"), Replica("host1"), MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -422,11 +431,12 @@ TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
 TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressInSendsSingleProposal)
 {
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -470,12 +480,13 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
     auto replicaset = std::make_shared<ReplicaSet>();
     auto highest_proposed_decree = std::make_shared<VolatileDecree>();
     highest_proposed_decree->Put(decree);
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
 
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         highest_proposed_decree,
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -513,12 +524,13 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestPro
     auto replicaset = std::make_shared<ReplicaSet>();
     auto highest_proposed_decree = std::make_shared<VolatileDecree>();
     highest_proposed_decree->Put(Decree(replica, 1, "first", DecreeType::UserDecree));
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
 
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         highest_proposed_decree,
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -550,11 +562,12 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
     auto replica = Replica("host");
     auto decree = Decree(replica, 1, "next", DecreeType::UserDecree);
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [&was_ignore_handler_run](std::string entry){ was_ignore_handler_run = true; },
         std::make_shared<NoPause>()
@@ -587,11 +600,12 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
     auto replica = Replica("host");
     auto decree = Decree(replica, 1, "next", DecreeType::UserDecree);
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [&ignore_handler_run_count](std::string entry){ ignore_handler_run_count += 1; },
         std::make_shared<NoPause>()
@@ -688,11 +702,12 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
         MessageType::AcceptMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -717,11 +732,12 @@ TEST_F(ProposerTest, testHandleResumeSendsNextRequestIfThereArePendingProposals)
         MessageType::AcceptMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<ProposerContext>(
         replicaset,
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        ),
+        ledger,
         std::make_shared<VolatileDecree>(),
         [](std::string entry){},
         std::make_shared<NoPause>()
@@ -1339,10 +1355,11 @@ TEST_F(UpdaterTest, testRegisterUpdaterWillRegistereMessageTypes)
 {
     auto receiver = std::make_shared<FakeReceiver>();
     auto sender = std::make_shared<FakeSender>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<UpdaterContext>(
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        )
+        ledger
     );
 
     RegisterUpdater(receiver, sender, context);
@@ -1361,10 +1378,11 @@ TEST_F(UpdaterTest, testRegisterUpdaterWillRegistereMessageTypes)
 
 TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndHasEmptyLedger)
 {
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<UpdaterContext>(
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        )
+        ledger
     );
     auto sender = std::make_shared<FakeSender>();
 
@@ -1387,10 +1405,11 @@ TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndHasEmptyLedger)
 
 TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndLedgerHasNextDecree)
 {
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
     auto context = std::make_shared<UpdaterContext>(
-        std::make_shared<Ledger>(
-            std::make_shared<VolatileQueue<Decree>>()
-        )
+        ledger
     );
     auto sender = std::make_shared<FakeSender>();
 

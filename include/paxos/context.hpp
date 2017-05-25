@@ -25,7 +25,7 @@ struct Context
 
 struct ProposerContext : public Context
 {
-    std::shared_ptr<Ledger> ledger;
+    std::shared_ptr<Ledger>& ledger;
     std::atomic_flag in_progress;
     Field<Decree> highest_proposed_decree;
     std::shared_ptr<ReplicaSet>& replicaset;
@@ -38,7 +38,7 @@ struct ProposerContext : public Context
 
     ProposerContext(
         std::shared_ptr<ReplicaSet>& replicaset_,
-        std::shared_ptr<Ledger> ledger_,
+        std::shared_ptr<Ledger>& ledger_,
         std::shared_ptr<Storage<Decree>> highest_proposed_decree_,
         std::function<void(std::string)> ignore_handler,
         std::shared_ptr<Pause> pause
@@ -77,7 +77,7 @@ struct LearnerContext : public Context
 {
     std::shared_ptr<ReplicaSet>& replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> accepted_map;
-    std::shared_ptr<Ledger> ledger;
+    std::shared_ptr<Ledger>& ledger;
     std::priority_queue<Decree, std::vector<Decree>, ascending_decree> tracked_future_decrees;
     bool is_observer;
 
@@ -86,7 +86,7 @@ struct LearnerContext : public Context
 
     LearnerContext(
         std::shared_ptr<ReplicaSet>& replicaset_,
-        std::shared_ptr<Ledger> ledger_,
+        std::shared_ptr<Ledger>& ledger_,
         bool is_observer=false
     )
         : replicaset(replicaset_),
@@ -102,10 +102,10 @@ struct LearnerContext : public Context
 
 struct UpdaterContext : public Context
 {
-    std::shared_ptr<Ledger> ledger;
+    std::shared_ptr<Ledger>& ledger;
 
     UpdaterContext(
-        std::shared_ptr<Ledger> ledger_
+        std::shared_ptr<Ledger>& ledger_
     )
         : ledger(ledger_)
     {
