@@ -30,19 +30,19 @@ public:
 
     void Remove();
 
-    int Size() const;
+    int Size();
 
-    Decree Head() const;
+    Decree Head();
 
-    Decree Tail() const;
+    Decree Tail();
 
-    Decree Next(Decree previous) const;
+    Decree Next(Decree previous);
 
 private:
 
     std::shared_ptr<BaseQueue<Decree>> decrees;
 
-    std::mutex mutex;
+    std::recursive_mutex mutex;
 
     std::unordered_map<DecreeType, std::shared_ptr<DecreeHandler>> handlers;
 };

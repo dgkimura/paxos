@@ -36,7 +36,7 @@ Ledger::Append(Decree decree)
     // A lock must be acquired before executing decree_handler in order to
     // help prevent out of order decrees.
     //
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
 
     Decree tail = Tail();
     if (tail.number < decree.number)
@@ -63,19 +63,25 @@ Ledger::Append(Decree decree)
 void
 Ledger::Remove()
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
     decrees->Dequeue();
 }
 
 int
-Ledger::Size() const
+Ledger::Size()
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
     return decrees->Size();
 }
 
 
 Decree
-Ledger::Head() const
+Ledger::Head()
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
     Decree head;
     for (Decree d : *decrees)
     {
@@ -87,8 +93,10 @@ Ledger::Head() const
 
 
 Decree
-Ledger::Tail() const
+Ledger::Tail()
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
     Decree tail;
     for (Decree d : *decrees)
     {
@@ -99,8 +107,10 @@ Ledger::Tail() const
 
 
 Decree
-Ledger::Next(Decree previous) const
+Ledger::Next(Decree previous)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
     Decree next;
     for (Decree current : *decrees)
     {
