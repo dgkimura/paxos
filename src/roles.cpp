@@ -248,7 +248,8 @@ HandleNack(
     LOG(LogLevel::Info) << "HandleNack    | " << message.decree.number << "|"
                         << Serialize(message);
 
-    if (IsDecreeHigher(message.decree, context->highest_nacked_decree))
+    if (IsDecreeHigher(message.decree, context->highest_nacked_decree) &&
+        message.decree.type == DecreeType::UserDecree)
     {
         context->ignore_handler(std::get<0>(context->requested_values.front()));
         context->highest_nacked_decree = message.decree;

@@ -594,6 +594,44 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
 }
 
 
+TEST_F(ProposerTest, testHandleNackDoesNotRunIgnoreHandlerOnSystemDecrees)
+{
+    bool was_ignore_handler_run = false;
+    auto replica = Replica("host");
+
+    // DecreeType::AddReplicaDecree is a system decree
+    auto decree = Decree(replica, 1, "next", DecreeType::AddReplicaDecree);
+    auto replicaset = std::make_shared<ReplicaSet>();
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<VolatileQueue<Decree>>()
+    );
+    auto context = std::make_shared<ProposerContext>(
+        replicaset,
+        ledger,
+        std::make_shared<VolatileDecree>(),
+        [&was_ignore_handler_run](std::string entry){ was_ignore_handler_run = true; },
+        std::make_shared<NoPause>()
+    );
+    context->requested_values.push_back(std::make_tuple("a pending value", DecreeType::AddReplicaDecree));
+    context->in_progress.test_and_set();
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNack(
+        Message(
+            decree,
+            replica,
+            replica,
+            MessageType::NackMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_FALSE(was_ignore_handler_run);
+}
+
+
 TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
 {
     int ignore_handler_run_count = 0;
