@@ -248,6 +248,12 @@ HandleNack(
     LOG(LogLevel::Info) << "HandleNack    | " << message.decree.number << "|"
                         << Serialize(message);
 
+    //
+    // Acquire mutex to prevent race-conditions relating to compare and set of
+    // the highest_nacked_decree.
+    //
+    std::lock_guard<std::mutex> lock(context->mutex);
+
     if (IsDecreeHigher(message.decree, context->highest_nacked_decree) &&
         message.decree.type == DecreeType::UserDecree)
     {

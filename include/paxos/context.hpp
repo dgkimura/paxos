@@ -33,6 +33,7 @@ struct ProposerContext : public Context
     std::vector<std::tuple<std::string, DecreeType>> requested_values;
     std::function<void(std::string)> ignore_handler;
 
+    std::mutex mutex;
     Decree highest_nacked_decree;
     std::shared_ptr<Pause> pause;
 
@@ -49,6 +50,7 @@ struct ProposerContext : public Context
           promise_map(),
           requested_values(),
           ignore_handler(ignore_handler),
+          mutex(),
           highest_nacked_decree(Replica(""), -1, "first", DecreeType::UserDecree),
           pause(pause)
     {
