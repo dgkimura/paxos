@@ -174,6 +174,11 @@ HandlePromise(
         if (received_promises == minimum_quorum ||
             (received_promises >= minimum_quorum && duplicate))
         {
+            //
+            // Acquire mutex to protect check and erase on requested_values.
+            //
+            std::lock_guard<std::mutex> lock(context->mutex);
+
             if (context->highest_proposed_decree.Value().content.empty() &&
                 !context->requested_values.empty())
             {
@@ -255,7 +260,8 @@ HandleNack(
     std::lock_guard<std::mutex> lock(context->mutex);
 
     if (IsDecreeHigher(message.decree, context->highest_nacked_decree) &&
-        message.decree.type == DecreeType::UserDecree)
+        message.decree.type == DecreeType::UserDecree &&
+        !context->requested_values.empty())
     {
         context->ignore_handler(std::get<0>(context->requested_values.front()));
         context->highest_nacked_decree = message.decree;
