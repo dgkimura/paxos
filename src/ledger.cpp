@@ -60,6 +60,7 @@ Ledger::Append(Decree decree)
     }
 }
 
+
 void
 Ledger::Remove()
 {
@@ -68,12 +69,23 @@ Ledger::Remove()
     decrees->Dequeue();
 }
 
+
 int
 Ledger::Size()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
     return decrees->Size();
+}
+
+
+bool
+Ledger::IsEmpty()
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
+    Decree empty;
+    return decrees->Last().number == empty.number;
 }
 
 
@@ -97,12 +109,7 @@ Ledger::Tail()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    Decree tail;
-    for (Decree d : *decrees)
-    {
-        tail = d;
-    }
-    return tail;
+    return decrees->Last();
 }
 
 

@@ -103,7 +103,7 @@ HandleRequest(
     if (!context->in_progress.test_and_set())
     {
         Message response = Response(message, MessageType::PrepareMessage);
-        if (context->ledger->Size() > 0)
+        if (!context->ledger->IsEmpty())
         {
             response.decree.number = context->ledger->Tail().number + 1;
             response.decree.author = message.to;

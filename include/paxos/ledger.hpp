@@ -32,6 +32,8 @@ public:
 
     int Size();
 
+    bool IsEmpty();
+
     Decree Head();
 
     Decree Tail();

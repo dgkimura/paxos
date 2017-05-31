@@ -47,6 +47,18 @@ TEST_F(LedgerUnitTest, testRemoveDecrementsTheSize)
 }
 
 
+TEST_F(LedgerUnitTest, testLedgerAppendChangesIsEmptyStatus)
+{
+    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+
+    ASSERT_TRUE(ledger.IsEmpty());
+
+    ledger.Append(Decree(Replica("an_author"), 1, "decree_contents", DecreeType::AddReplicaDecree));
+
+    ASSERT_FALSE(ledger.IsEmpty());
+}
+
+
 TEST_F(LedgerUnitTest, testEmptyHeadReturnsDefaultDecree)
 {
     Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
@@ -192,4 +204,24 @@ TEST_F(LedgerUnitTest, testRegisteredDecreeHandlerExecuted)
     ledger.Append(Decree(Replica("a_author"), 1, "AAAAA", DecreeType::AddReplicaDecree));
 
     ASSERT_TRUE(handler->is_executed);
+}
+
+
+TEST_F(LedgerUnitTest, testAppendIncrementsWithPersistentQueue)
+{
+    std::stringstream file;
+
+    Ledger ledger(std::make_shared<PersistentQueue<Decree>>(file));
+
+    ASSERT_EQ(ledger.Size(), 0);
+    ASSERT_TRUE(ledger.IsEmpty());
+
+    ledger.Append(Decree(Replica("an_author"), 1, "some_decree_contents", DecreeType::UserDecree));
+
+    ASSERT_EQ(ledger.Size(), 1);
+    ASSERT_FALSE(ledger.IsEmpty());
+
+    ledger.Append(Decree(Replica("an_author"), 2, "some_other_decree_contents", DecreeType::UserDecree));
+
+    ASSERT_EQ(ledger.Size(), 2);
 }

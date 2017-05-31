@@ -101,3 +101,27 @@ TEST(QueueTest, testThatPersistentQueueIsCanRehydrateFromAPrevousPersistentQueue
 
     ASSERT_EQ(final_queue.Size(), 1);
 }
+
+
+TEST(QueueTest, testThatPersistentQueueGetLastElementOnEmptyQueue)
+{
+    std::stringstream file;
+
+    PersistentQueue<std::string> queue(file);
+
+    ASSERT_EQ(queue.Last(), "");
+}
+
+
+TEST(QueueTest, testThatPersistentQueueGetLastElement)
+{
+    std::stringstream file;
+
+    PersistentQueue<std::string> queue(file);
+
+    queue.Enqueue("narf");
+    queue.Enqueue("zort");
+    queue.Enqueue("poit");
+
+    ASSERT_EQ(queue.Last(), "poit");
+}

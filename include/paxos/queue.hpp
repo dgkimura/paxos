@@ -65,6 +65,8 @@ public:
 
     virtual int Size() = 0;
 
+    virtual T Last() = 0;
+
     Iterator begin()
     {
         return Iterator(this, getFirstElementIndex());
@@ -100,6 +102,12 @@ public:
         return data.size();
     }
 
+    T Last()
+    {
+        T empty;
+        return data.size() > 0 ? data[data.size() - 1 ] : empty;
+    }
+
 private:
 
     T getElementAt(int index)
@@ -126,6 +134,9 @@ private:
 };
 
 
+constexpr const int INDEX_SIZE = 10;
+
+
 template <typename T>
 class PersistentQueue : public BaseQueue<T>
 {
@@ -140,29 +151,26 @@ public:
         : file((fs::path(dirname) / fs::path(filename)).string(),
                std::ios::out | std::ios::in | std::ios::app | std::ios::binary),
           stream(file),
-          start_position(0)
+          insert_file((fs::path(dirname) / fs::path(filename)).string(),
+                       std::ios::in | std::ios::out | std::ios::binary),
+          insert_stream(insert_file),
+          start_position(0),
+          end_position(0),
+          mutex()
     {
+        SaveOffsets();
+        LoadOffsets();
     }
 
     PersistentQueue(std::iostream& stream)
         : stream(stream),
-          start_position(0)
+          insert_stream(stream),
+          start_position(0),
+          end_position(0),
+          mutex()
     {
-        stream.seekg(0, std::ios::end);
-        if (stream.tellg() < sizeof(int))
-        {
-            stream << std::setw(sizeof(int)) << sizeof(int);
-            start_position = sizeof(int);
-        }
-        else
-        {
-            stream.seekg(0, std::ios::beg);
-
-            std::string buffer;
-            stream.read(&buffer[0], sizeof(int));
-            boost::trim(buffer);
-            start_position = std::stoi(buffer);
-        }
+        SaveOffsets();
+        LoadOffsets();
     }
 
     ~PersistentQueue()
@@ -170,8 +178,48 @@ public:
         stream.flush();
     }
 
+    void SaveOffsets()
+    {
+        stream.seekg(0, std::ios::end);
+        if (stream.tellg() < INDEX_SIZE * 2)
+        {
+            start_position = INDEX_SIZE * 2;
+            end_position = -1;
+        }
+
+        //insert_stream.seekp(0, std::ios::beg);
+        insert_stream << std::setw(INDEX_SIZE) << start_position;
+        insert_stream << std::setw(INDEX_SIZE) << end_position;
+        insert_stream.flush();
+    }
+
+    void LoadOffsets()
+    {
+        stream.seekg(0, std::ios::beg);
+
+        std::string buffer;
+        stream.read(&buffer[0], INDEX_SIZE);
+        boost::trim(buffer);
+        start_position = std::stoi(buffer);
+
+        stream.read(&buffer[0], INDEX_SIZE);
+        boost::trim(buffer);
+        end_position = std::stoi(buffer);
+    }
+
     void Enqueue(T e)
     {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
+
+        LoadOffsets();
+
+        stream.seekg(0, std::ios::end);
+        end_position = stream.tellg();
+
+        insert_stream.seekp(INDEX_SIZE, std::ios::beg);
+        insert_stream << std::setw(INDEX_SIZE) << end_position;
+        insert_stream.flush();
+
         stream.seekp(0, std::ios::end);
         std::string element_as_string = Serialize<T>(e);
         stream << element_as_string;
@@ -180,6 +228,10 @@ public:
 
     void Dequeue()
     {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
+
+        LoadOffsets();
+
         bool is_head = true;
         for (T element : *this)
         {
@@ -188,13 +240,17 @@ public:
                 is_head = false;
                 start_position += Serialize<T>(element).length();
                 stream.seekp(0, std::ios::beg);
-                stream << std::setw(sizeof(int)) << start_position;
+                stream << std::setw(INDEX_SIZE) << start_position;
             }
         }
     }
 
     int Size()
     {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
+
+        LoadOffsets();
+
         int size = 0;
         for (auto e : *this)
         {
@@ -203,27 +259,49 @@ public:
         return size;
     }
 
+    T Last()
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
+
+        LoadOffsets();
+
+        T empty;
+        stream.seekg(end_position, std::ios::beg);
+
+        return end_position == -1 ? empty : Deserialize<T>(stream);
+    }
+
 private:
 
     T getElementAt(int index)
     {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
+
         stream.seekg(index, std::ios::beg);
         return Deserialize<T>(stream);
     }
 
     int getElementSizeAt(int index)
     {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
+
         stream.seekg(index, std::ios::beg);
         return Serialize<T>(Deserialize<T>(stream)).length();
     }
 
     int getFirstElementIndex()
     {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
+
+        LoadOffsets();
+
         return start_position;
     }
 
     int getLastElementIndex()
     {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
+
         stream.seekg(0, std::ios::end);
         return stream.tellg();
     }
@@ -232,7 +310,15 @@ private:
 
     std::iostream& stream;
 
+    std::fstream insert_file;
+
+    std::iostream& insert_stream;
+
     int start_position;
+
+    int end_position;
+
+    std::recursive_mutex mutex;
 };
 
 
