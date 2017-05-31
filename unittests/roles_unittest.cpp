@@ -946,13 +946,25 @@ class LearnerTest: public testing::Test
         DisableLogging();
 
         replicaset = std::make_shared<ReplicaSet>();
-        ledger = std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>());
+        queue = std::make_shared<VolatileQueue<Decree>>();
+        ledger = std::make_shared<Ledger>(queue);
         context = std::make_shared<LearnerContext>(replicaset, ledger);
     }
 
 public:
 
+    int GetQueueSize(std::shared_ptr<BaseQueue<Decree>> queue)
+    {
+        int size = 0;
+        for (auto d : *queue)
+        {
+            size += 1;
+        }
+        return size;
+    }
+
     std::shared_ptr<ReplicaSet> replicaset;
+    std::shared_ptr<BaseQueue<Decree>> queue;
     std::shared_ptr<Ledger> ledger;
     std::shared_ptr<LearnerContext> context;
 };
@@ -984,7 +996,7 @@ TEST_F(LearnerTest, testAcceptedHandleWithSingleReplica)
 
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
-    ASSERT_EQ(context->ledger->Size(), 1);
+    ASSERT_EQ(GetQueueSize(queue), 1);
 }
 
 
@@ -995,7 +1007,7 @@ TEST_F(LearnerTest, testAcceptedHandleIgnoresMessagesFromUnknownReplica)
 
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
-    ASSERT_EQ(context->ledger->Size(), 0);
+    ASSERT_EQ(GetQueueSize(queue), 0);
 }
 
 
@@ -1008,7 +1020,7 @@ TEST_F(LearnerTest, testAcceptedHandleReceivesOneAcceptedWithThreeReplicaSet)
 
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
-    ASSERT_EQ(context->ledger->Size(), 0);
+    ASSERT_EQ(GetQueueSize(queue), 0);
 }
 
 
@@ -1039,7 +1051,7 @@ TEST_F(LearnerTest, testAcceptedHandleReceivesTwoAcceptedWithThreeReplicaSet)
         std::shared_ptr<FakeSender>(new FakeSender())
     );
 
-    ASSERT_EQ(context->ledger->Size(), 1);
+    ASSERT_EQ(GetQueueSize(queue), 1);
 }
 
 
@@ -1126,7 +1138,7 @@ TEST_F(LearnerTest, testAcceptedHandleIgnoresPreviouslyAcceptedMessagesFromRepli
     );
 
     // We should not have written to ledger since replica A was removed from replicaset.
-    ASSERT_EQ(context->ledger->Size(), 0);
+    ASSERT_EQ(GetQueueSize(queue), 0);
 }
 
 
@@ -1157,7 +1169,7 @@ TEST_F(LearnerTest, testAcceptedHandleIgnoresDuplicateAcceptedMessages)
         std::shared_ptr<FakeSender>(new FakeSender())
     );
 
-    ASSERT_EQ(context->ledger->Size(), 0);
+    ASSERT_EQ(GetQueueSize(queue), 0);
 }
 
 
@@ -1187,7 +1199,7 @@ TEST_F(LearnerTest, testAcceptedHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLe
         sender
     );
 
-    ASSERT_EQ(context->ledger->Size(), 1);
+    ASSERT_EQ(GetQueueSize(queue), 1);
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::UpdateMessage);
 }
 
@@ -1201,7 +1213,7 @@ TEST_F(LearnerTest, testAcceptedHandleAppendsToLedgerAfterComparingAgainstOrigin
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     // Even though actual decree 42 is out-of-order, original is 1 which is in-order.
-    ASSERT_EQ(context->ledger->Size(), 1);
+    ASSERT_EQ(GetQueueSize(queue), 1);
     ASSERT_EQ(context->tracked_future_decrees.size(), 0);
 
     // Actual decree should be appended
@@ -1218,7 +1230,7 @@ TEST_F(LearnerTest, testAcceptedHandleTracksFutureDecreesIfReceivedOutOfOrder)
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     // Mode is_observer should not write to ledger.
-    ASSERT_EQ(context->ledger->Size(), 0);
+    ASSERT_EQ(GetQueueSize(queue), 0);
     ASSERT_EQ(context->tracked_future_decrees.size(), 1);
 }
 
@@ -1236,7 +1248,7 @@ TEST_F(LearnerTest, testAcceptedHandleDoesNotTrackPastDecrees)
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     // Mode is_observer shouldn't write next passed decree to ledger.
-    ASSERT_EQ(context->ledger->Size(), 1);
+    ASSERT_EQ(GetQueueSize(queue), 1);
 
     // Decree is in the past so shouldn't add to tracked decrees.
     ASSERT_EQ(context->tracked_future_decrees.size(), 0);
@@ -1255,7 +1267,7 @@ TEST_F(LearnerTest, testAcceptedHandleAppendsTrackedFutureDecreesToLedgerWhenThe
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
     // Past decree from tracked future decrees and current decree are both appended to ledger.
-    ASSERT_EQ(context->ledger->Size(), 2);
+    ASSERT_EQ(GetQueueSize(queue), 2);
 }
 
 
@@ -1275,7 +1287,7 @@ TEST_F(LearnerTest, testHandleUpdatedWithEmptyLedger)
         sender
     );
 
-    ASSERT_EQ(context->ledger->Size(), 0);
+    ASSERT_EQ(GetQueueSize(queue), 0);
 
     // We are still behind so we should not resume.
     ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::ResumeMessage);
@@ -1323,7 +1335,7 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecree)
     );
 
     // We should have appended 9 and 10 to our ledger.
-    ASSERT_EQ(context->ledger->Size(), 2);
+    ASSERT_EQ(GetQueueSize(queue), 2);
 }
 
 
@@ -1348,7 +1360,7 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrac
     );
 
     // We should have appended 1, 2, and 3 to our ledger.
-    ASSERT_EQ(context->ledger->Size(), 3);
+    ASSERT_EQ(GetQueueSize(queue), 3);
 }
 
 
@@ -1373,7 +1385,7 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrac
     );
 
     // We appended 1 to our ledger, but are missing 2 so we can't add 3 and 4.
-    ASSERT_EQ(context->ledger->Size(), 1);
+    ASSERT_EQ(GetQueueSize(queue), 1);
 
     // Since we still have a hole we should send an update message.
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::UpdateMessage);

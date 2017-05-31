@@ -2,6 +2,7 @@
 #define __QUEUE_HPP_INCLUDED__
 
 #include <fstream>
+#include <mutex>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -63,8 +64,6 @@ public:
 
     virtual void Dequeue() = 0;
 
-    virtual int Size() = 0;
-
     virtual T Last() = 0;
 
     Iterator begin()
@@ -97,11 +96,6 @@ public:
         }
     }
 
-    int Size()
-    {
-        return data.size();
-    }
-
     T Last()
     {
         T empty;
@@ -127,7 +121,7 @@ private:
 
     int getLastElementIndex()
     {
-        return Size();
+        return data.size();
     }
 
     std::vector<T> data;
@@ -243,20 +237,6 @@ public:
                 stream << std::setw(INDEX_SIZE) << start_position;
             }
         }
-    }
-
-    int Size()
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex);
-
-        LoadOffsets();
-
-        int size = 0;
-        for (auto e : *this)
-        {
-            size += 1;
-        }
-        return size;
     }
 
     T Last()

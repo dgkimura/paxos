@@ -5,33 +5,44 @@
 #include "paxos/queue.hpp"
 
 
+int GetQueueSize(std::shared_ptr<BaseQueue<std::string>> queue)
+{
+    int size = 0;
+    for (auto d : *queue)
+    {
+        size += 1;
+    }
+    return size;
+}
+
+
 TEST(QueueTest, testThatVolatileQueueCanEnqueueAnElement)
 {
-    VolatileQueue<std::string> queue;
+    auto queue = std::make_shared<VolatileQueue<std::string>>();
 
-    queue.Enqueue("narf");
-    ASSERT_EQ(queue.Size(), 1);
+    queue->Enqueue("narf");
+    ASSERT_EQ(GetQueueSize(queue), 1);
 }
 
 
 TEST(QueueTest, testThatVolatileQueueCanDequeueAnElement)
 {
-    VolatileQueue<std::string> queue;
+    auto queue = std::make_shared<VolatileQueue<std::string>>();
 
-    queue.Enqueue("narf");
-    queue.Dequeue();
+    queue->Enqueue("narf");
+    queue->Dequeue();
 
-    ASSERT_EQ(queue.Size(), 0);
+    ASSERT_EQ(GetQueueSize(queue), 0);
 }
 
 
 TEST(QueueTest, testThatVolatileQueueCanIterateOverContents)
 {
-    VolatileQueue<std::string> queue;
+    auto queue = std::make_shared<VolatileQueue<std::string>>();
 
-    queue.Enqueue("narf");
+    queue->Enqueue("narf");
 
-    for (auto e : queue)
+    for (auto e : *queue)
     {
         ASSERT_EQ(e, "narf");
     }
@@ -42,27 +53,27 @@ TEST(QueueTest, testThatPersistentQueueCanIterateOverContents)
 {
     std::stringstream file;
 
-    PersistentQueue<std::string> queue(file);
+    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
 
-    queue.Enqueue("narf");
+    queue->Enqueue("narf");
 
-    for (auto e : queue)
+    for (auto e : *queue)
     {
         ASSERT_EQ(e, "narf");
     }
 }
 
 
-TEST(QueueTest, testThatPersistentQueueCanGetSize)
+TEST(QueueTest, testThatPersistentQueueSizeAfterEnqueue)
 {
     std::stringstream file;
 
-    PersistentQueue<std::string> queue(file);
+    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
 
-    queue.Enqueue("narf");
-    queue.Enqueue("zort");
+    queue->Enqueue("narf");
+    queue->Enqueue("zort");
 
-    ASSERT_EQ(queue.Size(), 2);
+    ASSERT_EQ(GetQueueSize(queue), 2);
 }
 
 
@@ -70,14 +81,14 @@ TEST(QueueTest, testThatPersistentQueueCanDequeue)
 {
     std::stringstream file;
 
-    PersistentQueue<std::string> queue(file);
+    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
 
-    queue.Enqueue("narf");
-    queue.Enqueue("zort");
-    queue.Enqueue("poit");
-    queue.Dequeue();
+    queue->Enqueue("narf");
+    queue->Enqueue("zort");
+    queue->Enqueue("poit");
+    queue->Dequeue();
 
-    ASSERT_EQ(queue.Size(), 2);
+    ASSERT_EQ(GetQueueSize(queue), 2);
 }
 
 
@@ -85,21 +96,21 @@ TEST(QueueTest, testThatPersistentQueueIsCanRehydrateFromAPrevousPersistentQueue
 {
     std::stringstream file;
 
-    PersistentQueue<std::string> queue(file);
+    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
 
-    queue.Enqueue("narf");
-    queue.Enqueue("zort");
-    queue.Enqueue("poit");
-    queue.Dequeue();
+    queue->Enqueue("narf");
+    queue->Enqueue("zort");
+    queue->Enqueue("poit");
+    queue->Dequeue();
 
-    PersistentQueue<std::string> next_queue(file);
+    auto next_queue = std::make_shared<PersistentQueue<std::string>>(file);
 
-    ASSERT_EQ(next_queue.Size(), 2);
+    ASSERT_EQ(GetQueueSize(next_queue), 2);
 
-    next_queue.Dequeue();
-    PersistentQueue<std::string> final_queue(file);
+    next_queue->Dequeue();
+    auto final_queue = std::make_shared<PersistentQueue<std::string>>(file);
 
-    ASSERT_EQ(final_queue.Size(), 1);
+    ASSERT_EQ(GetQueueSize(final_queue), 1);
 }
 
 
@@ -107,9 +118,9 @@ TEST(QueueTest, testThatPersistentQueueGetLastElementOnEmptyQueue)
 {
     std::stringstream file;
 
-    PersistentQueue<std::string> queue(file);
+    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
 
-    ASSERT_EQ(queue.Last(), "");
+    ASSERT_EQ(queue->Last(), "");
 }
 
 
@@ -117,11 +128,11 @@ TEST(QueueTest, testThatPersistentQueueGetLastElement)
 {
     std::stringstream file;
 
-    PersistentQueue<std::string> queue(file);
+    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
 
-    queue.Enqueue("narf");
-    queue.Enqueue("zort");
-    queue.Enqueue("poit");
+    queue->Enqueue("narf");
+    queue->Enqueue("zort");
+    queue->Enqueue("poit");
 
-    ASSERT_EQ(queue.Last(), "poit");
+    ASSERT_EQ(queue->Last(), "poit");
 }

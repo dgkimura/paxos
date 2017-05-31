@@ -30,8 +30,6 @@ public:
 
     void Remove();
 
-    int Size();
-
     bool IsEmpty();
 
     Decree Head();

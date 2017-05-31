@@ -70,15 +70,6 @@ Ledger::Remove()
 }
 
 
-int
-Ledger::Size()
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
-    return decrees->Size();
-}
-
-
 bool
 Ledger::IsEmpty()
 {

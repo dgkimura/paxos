@@ -12,38 +12,52 @@ class LedgerUnitTest: public testing::Test
 };
 
 
+int GetQueueSize(std::shared_ptr<BaseQueue<Decree>> queue)
+{
+    int size = 0;
+    for (auto d : *queue)
+    {
+        size += 1;
+    }
+    return size;
+}
+
+
 TEST_F(LedgerUnitTest, testAppendIncrementsTheSize)
 {
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+    auto queue = std::make_shared<VolatileQueue<Decree>>();
+    Ledger ledger(queue);
 
-    ASSERT_EQ(ledger.Size(), 0);
+    ASSERT_EQ(GetQueueSize(queue), 0);
 
     ledger.Append(Decree(Replica("an_author"), 1, "decree_contents", DecreeType::UserDecree));
 
-    ASSERT_EQ(ledger.Size(), 1);
+    ASSERT_EQ(GetQueueSize(queue), 1);
 }
 
 
 TEST_F(LedgerUnitTest, testAppendSystemDecreeIncrementsTheSize)
 {
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+    auto queue = std::make_shared<VolatileQueue<Decree>>();
+    Ledger ledger(queue);
 
-    ASSERT_EQ(ledger.Size(), 0);
+    ASSERT_EQ(GetQueueSize(queue), 0);
 
     ledger.Append(Decree(Replica("an_author"), 1, "decree_contents", DecreeType::AddReplicaDecree));
 
-    ASSERT_EQ(ledger.Size(), 1);
+    ASSERT_EQ(GetQueueSize(queue), 1);
 }
 
 
 TEST_F(LedgerUnitTest, testRemoveDecrementsTheSize)
 {
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+    auto queue = std::make_shared<VolatileQueue<Decree>>();
+    Ledger ledger(queue);
 
     ledger.Append(Decree(Replica("an_author"), 1, "decree_contents", DecreeType::UserDecree));
     ledger.Remove();
 
-    ASSERT_EQ(ledger.Size(), 0);
+    ASSERT_EQ(GetQueueSize(queue), 0);
 }
 
 
@@ -144,21 +158,23 @@ TEST_F(LedgerUnitTest, testNextWithMultipleDecrees)
 
 TEST_F(LedgerUnitTest, testAppendIgnoresOutOfOrderDecrees)
 {
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+    auto queue = std::make_shared<VolatileQueue<Decree>>();
+    Ledger ledger(queue);
     ledger.Append(Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree));
     ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
 
-    ASSERT_EQ(ledger.Size(), 1);
+    ASSERT_EQ(GetQueueSize(queue), 1);
 }
 
 
 TEST_F(LedgerUnitTest, testAppendIgnoresDuplicateDecrees)
 {
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+    auto queue = std::make_shared<VolatileQueue<Decree>>();
+    Ledger ledger(queue);
     ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
     ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
 
-    ASSERT_EQ(ledger.Size(), 1);
+    ASSERT_EQ(GetQueueSize(queue), 1);
 }
 
 
@@ -204,24 +220,4 @@ TEST_F(LedgerUnitTest, testRegisteredDecreeHandlerExecuted)
     ledger.Append(Decree(Replica("a_author"), 1, "AAAAA", DecreeType::AddReplicaDecree));
 
     ASSERT_TRUE(handler->is_executed);
-}
-
-
-TEST_F(LedgerUnitTest, testAppendIncrementsWithPersistentQueue)
-{
-    std::stringstream file;
-
-    Ledger ledger(std::make_shared<PersistentQueue<Decree>>(file));
-
-    ASSERT_EQ(ledger.Size(), 0);
-    ASSERT_TRUE(ledger.IsEmpty());
-
-    ledger.Append(Decree(Replica("an_author"), 1, "some_decree_contents", DecreeType::UserDecree));
-
-    ASSERT_EQ(ledger.Size(), 1);
-    ASSERT_FALSE(ledger.IsEmpty());
-
-    ledger.Append(Decree(Replica("an_author"), 2, "some_other_decree_contents", DecreeType::UserDecree));
-
-    ASSERT_EQ(ledger.Size(), 2);
 }

@@ -88,7 +88,8 @@ class ParliamentTest: public testing::Test
         legislators = std::make_shared<ReplicaSet>();
         legislators->Add(replica);
 
-        ledger = std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>());
+        queue = std::make_shared<VolatileQueue<Decree>>();
+        ledger = std::make_shared<Ledger>(queue);
         receiver = std::make_shared<MockReceiver>();
         sender = std::make_shared<MockSender>();
         auto proposer = std::make_shared<ProposerContext>(
@@ -124,6 +125,16 @@ class ParliamentTest: public testing::Test
 
 public:
 
+    int GetQueueSize(std::shared_ptr<BaseQueue<Decree>> queue)
+    {
+        int size = 0;
+        for (auto d : *queue)
+        {
+            size += 1;
+        }
+        return size;
+    }
+
     Replica replica;
 
     std::shared_ptr<ReplicaSet> legislators;
@@ -131,6 +142,8 @@ public:
     std::shared_ptr<MockSender> sender;
 
     std::shared_ptr<MockReceiver> receiver;
+
+    std::shared_ptr<BaseQueue<Decree>> queue;
 
     std::shared_ptr<Ledger> ledger;
 
@@ -186,7 +199,7 @@ TEST_F(ParliamentTest, testSetActiveEnablesAppendIntoLedger)
         )
     );
 
-    ASSERT_EQ(1, ledger->Size());
+    ASSERT_EQ(1, GetQueueSize(queue));
 }
 
 
@@ -203,7 +216,7 @@ TEST_F(ParliamentTest, testSetInactiveDisablesAppendIntoLedger)
         )
     );
 
-    ASSERT_EQ(0, ledger->Size());
+    ASSERT_EQ(0, GetQueueSize(queue));
 }
 
 
