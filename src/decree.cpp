@@ -56,3 +56,10 @@ IsDecreeOrdered(Decree lhs, Decree rhs)
 {
     return CompareDecrees(lhs, rhs) == -1;
 }
+
+
+bool
+IsRootDecreeOrdered(Decree lhs, Decree rhs)
+{
+    return lhs.root_number - rhs.root_number == -1;
+}

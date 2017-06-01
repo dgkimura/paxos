@@ -106,15 +106,13 @@ HandleRequest(
         if (!context->ledger->IsEmpty())
         {
             response.decree.number = context->ledger->Tail().number + 1;
-            response.decree.author = message.to;
-            response.root_decree.number = response.decree.number;
         }
         else
         {
             response.decree.number = 1;
-            response.decree.author = message.to;
-            response.root_decree.number = 1;
         }
+        response.decree.author = message.to;
+        response.decree.root_number = response.decree.number;
         response.decree.content = "";
 
         sender->ReplyAll(response);
@@ -406,7 +404,7 @@ HandleAccepted(
 
     if (accepted_quorum >= minimum_quorum)
     {
-        if (IsDecreeOrdered(context->ledger->Tail(), message.root_decree)
+        if (IsRootDecreeOrdered(context->ledger->Tail(), message.decree)
             && !context->is_observer)
         {
             //

@@ -45,6 +45,11 @@ struct Decree
     int number;
 
     //
+    // Number identifying a round of paxos that stays constant during reties.
+    //
+    int root_number;
+
+    //
     // Content is the entry which would be added to every ledger if the decree
     // comes to pass.
     //
@@ -56,12 +61,12 @@ struct Decree
     DecreeType type;
 
     Decree()
-        : author(), number(), content(), type()
+        : author(), number(), root_number(), content(), type()
     {
     }
 
     Decree(Replica a, int n, std::string c, DecreeType dtype)
-        : author(a), number(n), content(c), type(dtype)
+        : author(a), number(n), root_number(n), content(c), type(dtype)
     {
     }
 };
@@ -81,6 +86,8 @@ bool IsDecreeLower(Decree lhs, Decree rhs);
 bool IsDecreeLowerOrEqual(Decree lhs, Decree rhs);
 
 bool IsDecreeOrdered(Decree lhs, Decree rhs);
+
+bool IsRootDecreeOrdered(Decree lhs, Decree rhs);
 
 struct compare_decree
 {

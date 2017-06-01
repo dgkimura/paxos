@@ -18,6 +18,7 @@ void serialize(Archive& ar, Decree& obj, const unsigned int version)
 {
     ar & obj.author;
     ar & obj.number;
+    ar & obj.root_number;
     ar & obj.type;
     ar & obj.content;
 }
@@ -47,7 +48,6 @@ void serialize(Archive& ar, Message& obj, const unsigned int version)
     ar & obj.to;
     ar & obj.type;
     ar & obj.decree;
-    ar & obj.root_decree;
 }
 
 

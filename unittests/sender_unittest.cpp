@@ -39,9 +39,9 @@ TEST(SenderTest, testReplyAllSendsMultipleMessages)
 
     sender.ReplyAll(m);
 
-    ASSERT_EQ("22 serialization::archive 14 0 0 0 0 4 from 111 1 A 111 0 0 0 0  0 0 0 0  0  0 0 0 0 ", transport_writes[0]);
-    ASSERT_EQ("22 serialization::archive 14 0 0 0 0 4 from 111 1 B 222 0 0 0 0  0 0 0 0  0  0 0 0 0 ", transport_writes[1]);
-    ASSERT_EQ("22 serialization::archive 14 0 0 0 0 4 from 111 1 C 333 0 0 0 0  0 0 0 0  0  0 0 0 0 ", transport_writes[2]);
+    ASSERT_EQ("22 serialization::archive 14 0 0 0 0 4 from 111 1 A 111 0 0 0 0  0 0 0 0 0 ", transport_writes[0]);
+    ASSERT_EQ("22 serialization::archive 14 0 0 0 0 4 from 111 1 B 222 0 0 0 0  0 0 0 0 0 ", transport_writes[1]);
+    ASSERT_EQ("22 serialization::archive 14 0 0 0 0 4 from 111 1 C 333 0 0 0 0  0 0 0 0 0 ", transport_writes[2]);
 }
 
 

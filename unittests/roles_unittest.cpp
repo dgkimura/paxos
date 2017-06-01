@@ -706,7 +706,7 @@ TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
         sender
     );
     ASSERT_EQ(sender->sentMessages()[0].decree.number, 1);
-    ASSERT_EQ(sender->sentMessages()[0].root_decree.number, 1);
+    ASSERT_EQ(sender->sentMessages()[0].decree.root_number, 1);
 
     // Our ledger was updated underneath us to 5.
     context->ledger->Append(
@@ -726,7 +726,7 @@ TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
     );
 
     ASSERT_EQ(sender->sentMessages()[1].decree.number, 6);
-    ASSERT_EQ(sender->sentMessages()[1].root_decree.number, 6);
+    ASSERT_EQ(sender->sentMessages()[1].decree.root_number, 6);
     ASSERT_TRUE(IsReplicaEqual(Replica("B"), sender->sentMessages()[1].decree.author));
 }
 
@@ -1207,7 +1207,7 @@ TEST_F(LearnerTest, testAcceptedHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLe
 TEST_F(LearnerTest, testAcceptedHandleAppendsToLedgerAfterComparingAgainstOriginalDecree)
 {
     Message message(Decree(Replica("A"), 42, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
-    message.root_decree = Decree(Replica("A"), 1, "", DecreeType::UserDecree);
+    message.decree.root_number = 1;
     replicaset->Add(Replica("A"));
 
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));

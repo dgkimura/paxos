@@ -110,8 +110,8 @@ TEST(SerializationUnitTest, testSerializationWithPaddedFluffOnTheEndOfTheBuffer)
     Decree expected(Replica("an_author_1", 0), 1, "the_decree_contents", DecreeType::UserDecree), actual;
 
     actual = Deserialize<Decree>(
-        "22 serialization::archive 11 0 0 0 0 11 an_author_1 "
-        "0 1 0 19 the_decree_contents THIS IS FLUFF!!!"
+        "22 serialization::archive 14 0 0 0 0 11 an_author_1 "
+        "0 1 1 0 19 the_decree_contents THIS IS FLUFF!!!"
     );
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
