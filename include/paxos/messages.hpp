@@ -8,24 +8,19 @@
 enum class MessageType
 {
     //
+    // InvalidMessage indicates an error in the message.
+    //
+    InvalidMessage,
+
+    //
     // RequestMessage sent when there is a new proposal.
     //
     RequestMessage,
 
     //
-    // RetryRequestMessage sent to retry a previous proposal.
-    //
-    RetryRequestMessage,
-
-    //
     // PrepareMessage sent to signal beginning of a round of paxos.
     //
     PrepareMessage,
-
-    //
-    // RetryPrepareMessage sent to conditionally undo last promise.
-    //
-    RetryPrepareMessage,
 
     //
     // PromiseMessage sent to acknowledge a prepare.

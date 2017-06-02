@@ -147,3 +147,13 @@ TEST(SerializationUnitTest, testSerializationWithStreamValues)
     ASSERT_EQ(expected.content, actual.content);
     ASSERT_EQ(expected.number, actual.number);
 }
+
+
+TEST(SerializationUnitTest, testMessageDeserializionOfCorruptedStringReturnsInvalidMessage)
+{
+    std::string string_obj = "22 serialization::archiv\x01!14 0 0 0 0 0  0 9 "
+                             "127.0.0.1 8094 9 0 0 9 127.0.0.1 8094 678 678 0 0 ";
+
+    Message message = Deserialize<Message>(string_obj);
+    ASSERT_EQ(MessageType::InvalidMessage, message.type);
+}
