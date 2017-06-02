@@ -483,6 +483,7 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
     auto ledger = std::make_shared<Ledger>(
         std::make_shared<VolatileQueue<Decree>>()
     );
+    ledger->Append(decree);
 
     auto context = std::make_shared<ProposerContext>(
         replicaset,
@@ -517,7 +518,7 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
 }
 
 
-TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestProposedDecree)
+TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanLastLedgerDecree)
 {
     auto replica = Replica("host");
     auto decree = Decree(replica, 2, "next", DecreeType::UserDecree);
@@ -527,6 +528,9 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestPro
     auto ledger = std::make_shared<Ledger>(
         std::make_shared<VolatileQueue<Decree>>()
     );
+
+    // Our ledger contains higher decree than messaged decree.
+    ledger->Append(Decree(replica, 3, "future", DecreeType::UserDecree));
 
     auto context = std::make_shared<ProposerContext>(
         replicaset,
@@ -763,8 +767,9 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
 
 TEST_F(ProposerTest, testHandleResumeSendsNextRequestIfThereArePendingProposals)
 {
+    Decree decree(Replica("A"), 1, "content", DecreeType::UserDecree);
     Message message(
-        Decree(Replica("A"), 1, "content", DecreeType::UserDecree),
+        decree,
         Replica("from"),
         Replica("to"),
         MessageType::AcceptMessage);
@@ -773,6 +778,7 @@ TEST_F(ProposerTest, testHandleResumeSendsNextRequestIfThereArePendingProposals)
     auto ledger = std::make_shared<Ledger>(
         std::make_shared<VolatileQueue<Decree>>()
     );
+    ledger->Append(decree);
     auto context = std::make_shared<ProposerContext>(
         replicaset,
         ledger,
@@ -1271,6 +1277,74 @@ TEST_F(LearnerTest, testAcceptedHandleAppendsTrackedFutureDecreesToLedgerWhenThe
 }
 
 
+TEST_F(LearnerTest, testAcceptedHandleSendsResumeWhenMessagedDecreeIsEqualToLedger)
+{
+    Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
+    replicaset->Add(Replica("A"));
+    auto sender = std::make_shared<FakeSender>();
+
+    HandleAccepted(message, context, sender);
+
+    // Reset sender to erase message queue.
+    sender = std::make_shared<FakeSender>();
+    ASSERT_EQ(0, sender->sentMessages().size());
+
+    HandleAccepted(message, context, sender);
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::ResumeMessage);
+    ASSERT_EQ(sender->sentMessages()[0].decree.number, 1);
+}
+
+
+TEST_F(LearnerTest, testAcceptedHandleSendsResumeWhenAcceptedIsGreaterThanQuorum)
+{
+    Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
+    replicaset->Add(Replica("A"));
+    replicaset->Add(Replica("B"));
+    replicaset->Add(Replica("C"));
+    auto sender = std::make_shared<FakeSender>();
+
+    // A replica accepted.
+    HandleAccepted(
+        Message(
+            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
+            Replica("A"),
+            Replica("A"),
+            MessageType::AcceptedMessage),
+        context, sender);
+
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::ResumeMessage);
+
+    // B replica accepted.
+    HandleAccepted(
+        Message(
+            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
+            Replica("B"),
+            Replica("A"),
+            MessageType::AcceptedMessage),
+        context, sender);
+
+    // Have quorum, should send resume.
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::ResumeMessage);
+
+    // Reset sender to erase message queue.
+    sender = std::make_shared<FakeSender>();
+
+    // C replica accepted.
+    HandleAccepted(
+        Message(
+            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
+            Replica("C"),
+            Replica("A"),
+            MessageType::AcceptedMessage),
+        context, sender);
+
+    // Still have quorum, should send resume, again.
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::ResumeMessage);
+    ASSERT_EQ(sender->sentMessages()[0].decree.number, 1);
+}
+
+
 TEST_F(LearnerTest, testHandleUpdatedWithEmptyLedger)
 {
     replicaset->Add(Replica("A"));
@@ -1297,6 +1371,7 @@ TEST_F(LearnerTest, testHandleUpdatedWithEmptyLedger)
 TEST_F(LearnerTest, testHandleUpdatedReceivedMessageWithZeroDecree)
 {
     replicaset->Add(Replica("A"));
+    context->ledger->Append(Decree(Replica("A"), 10, "", DecreeType::UserDecree));
     auto sender = std::make_shared<FakeSender>();
 
     // Sending zero decree.
@@ -1312,6 +1387,9 @@ TEST_F(LearnerTest, testHandleUpdatedReceivedMessageWithZeroDecree)
 
     // We are up to date so send resume.
     ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::ResumeMessage);
+
+    // Decree number in resume message should be last ledger decree number.
+    ASSERT_EQ(sender->sentMessages()[0].decree.number, 10);
 }
 
 

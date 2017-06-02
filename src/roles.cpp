@@ -222,7 +222,7 @@ HandleNackTie(
     LOG(LogLevel::Info) << "HandleNackTie | " << message.decree.number << "|"
                         << Serialize(message);
 
-    if (IsDecreeEqual(message.decree, context->highest_proposed_decree.Value()))
+    if (IsDecreeEqual(message.decree, context->ledger->Tail()))
     {
         //
         // Iff the current proposed decree is tied then retry with a higher
@@ -296,21 +296,24 @@ HandleResume(
         context->promise_map.erase(message.decree);
     }
 
-    std::atomic_flag_clear(&context->in_progress);
-
-    if (context->requested_values.size() > 0)
+    if (IsDecreeIdentical(context->ledger->Tail(), message.decree))
     {
-        //
-        // Setup next round for pending proposals.
-        //
-        sender->Reply(
-            Message(
-                Decree(),
-                message.to,
-                message.to,
-                MessageType::RequestMessage
-            )
-        );
+        std::atomic_flag_clear(&context->in_progress);
+
+        if (context->requested_values.size() > 0)
+        {
+            //
+            // Setup next round for pending proposals.
+            //
+            sender->Reply(
+                Message(
+                    Decree(),
+                    message.to,
+                    message.to,
+                    MessageType::RequestMessage
+                )
+            );
+        }
     }
 }
 
@@ -413,7 +416,7 @@ HandleAccepted(
             //
             context->ledger->Append(message.decree);
 
-            if (accepted_quorum == minimum_quorum )
+            if (accepted_quorum >= minimum_quorum )
             {
                 //
                 // A quorum has been accepted so we should resume to allow
@@ -422,6 +425,8 @@ HandleAccepted(
                 Message response;
                 response.to = message.to;
                 response.type = MessageType::ResumeMessage;
+                response.decree = context->ledger->Tail();
+                response.decree.content = "";
                 sender->Reply(response);
             }
         }
@@ -432,6 +437,18 @@ HandleAccepted(
             // has not yet been written to our ledger.
             //
             context->tracked_future_decrees.push(message.decree);
+        } else if (IsDecreeEqual(context->ledger->Tail(), message.decree))
+        {
+            //
+            // Decree was already accepted so we should resume to allow
+            // ourselves to send proposals in the next election.
+            //
+            Message response;
+            response.to = message.to;
+            response.type = MessageType::ResumeMessage;
+            response.decree = context->ledger->Tail();
+            response.decree.content = "";
+            sender->Reply(response);
         }
         if (context->tracked_future_decrees.size() > 0 &&
             IsDecreeOrdered(context->ledger->Tail(),
@@ -546,6 +563,8 @@ HandleUpdated(
         Message response;
         response.to = message.to;
         response.type = MessageType::ResumeMessage;
+        response.decree = context->ledger->Tail();
+        response.decree.content = "";
         sender->Reply(response);
     }
 }
