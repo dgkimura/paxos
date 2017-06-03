@@ -388,7 +388,8 @@ HandleAccepted(
     LOG(LogLevel::Info) << "HandleAccepted| " << message.decree.number << "|"
                         << Serialize(message);
 
-    std::lock_guard<std::mutex> lock(context->mutex);
+    static std::mutex mutex;
+    std::lock_guard<std::mutex> lock(mutex);
 
     if (context->accepted_map.find(message.decree) == context->accepted_map.end())
     {

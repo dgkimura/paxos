@@ -83,9 +83,6 @@ struct LearnerContext : public Context
     std::priority_queue<Decree, std::vector<Decree>, ascending_decree> tracked_future_decrees;
     bool is_observer;
 
-    // Used to guard concurrent access of iterable/mutable data structures
-    std::mutex mutex;
-
     LearnerContext(
         std::shared_ptr<ReplicaSet>& replicaset_,
         std::shared_ptr<Ledger>& ledger_,
@@ -95,8 +92,7 @@ struct LearnerContext : public Context
           accepted_map(),
           ledger(ledger_),
           tracked_future_decrees(),
-          is_observer(is_observer),
-          mutex()
+          is_observer(is_observer)
     {
     }
 };

@@ -1,5 +1,3 @@
-#include <mutex>
-
 #include "paxos/parliament.hpp"
 
 
@@ -195,8 +193,6 @@ AbsenteeBallots
 Parliament::GetAbsenteeBallots(int max_ballots)
 {
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> ballots;
-
-    std::lock_guard<std::mutex> lock(learner->mutex);
 
     auto latest = learner->ledger->Tail();
     for (int i=latest.number-max_ballots + 1; i <= latest.number; i++)
