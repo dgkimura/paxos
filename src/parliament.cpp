@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include "paxos/parliament.hpp"
 
 
@@ -204,6 +206,10 @@ Parliament::GetAbsenteeBallots(int max_ballots)
 
         Decree d;
         d.number = i;
+
+        // Lock protects against erase while calculating difference.
+        std::lock_guard<std::mutex> lock(learner->mutex);
+
         if (learner->accepted_map.find(d) != learner->accepted_map.end())
         {
             ballots[d] = learner->replicaset->Difference(learner->accepted_map[d]);

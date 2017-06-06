@@ -82,6 +82,7 @@ struct LearnerContext : public Context
     std::shared_ptr<Ledger>& ledger;
     std::priority_queue<Decree, std::vector<Decree>, ascending_decree> tracked_future_decrees;
     bool is_observer;
+    std::mutex mutex;
 
     LearnerContext(
         std::shared_ptr<ReplicaSet>& replicaset_,
@@ -92,7 +93,8 @@ struct LearnerContext : public Context
           accepted_map(),
           ledger(ledger_),
           tracked_future_decrees(),
-          is_observer(is_observer)
+          is_observer(is_observer),
+          mutex()
     {
     }
 };

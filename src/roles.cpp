@@ -500,6 +500,7 @@ HandleAccepted(
         //
         // All votes for decree have been accounted for. Now clean up memory.
         //
+        std::lock_guard<std::mutex> lock(context->mutex);
         context->accepted_map.erase(message.decree);
     }
 }
