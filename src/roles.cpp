@@ -270,6 +270,14 @@ HandleNack(
         // in_progress set until the next accepted is caught and we are up to
         // date.
         //
+    } else if (message.decree.type == DecreeType::AddReplicaDecree ||
+               message.decree.type == DecreeType::RemoveReplicaDecree)
+    {
+        //
+        // Upon Nack of add replica or remove replica, we must send signal to
+        // unblock waiting thread.
+        //
+        context->signal->Set(false);
     }
 }
 

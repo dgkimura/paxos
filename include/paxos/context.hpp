@@ -16,6 +16,7 @@
 #include "paxos/ledger.hpp"
 #include "paxos/pause.hpp"
 #include "paxos/replicaset.hpp"
+#include "paxos/signal.hpp"
 
 
 struct Context
@@ -36,13 +37,15 @@ struct ProposerContext : public Context
     std::mutex mutex;
     Decree highest_nacked_decree;
     std::shared_ptr<Pause> pause;
+    std::shared_ptr<Signal>& signal;
 
     ProposerContext(
         std::shared_ptr<ReplicaSet>& replicaset_,
         std::shared_ptr<Ledger>& ledger_,
         std::shared_ptr<Storage<Decree>> highest_proposed_decree_,
         std::function<void(std::string)> ignore_handler,
-        std::shared_ptr<Pause> pause
+        std::shared_ptr<Pause> pause,
+        std::shared_ptr<Signal>& signal
     )
         : ledger(ledger_),
           highest_proposed_decree(highest_proposed_decree_),
@@ -52,7 +55,8 @@ struct ProposerContext : public Context
           ignore_handler(ignore_handler),
           mutex(),
           highest_nacked_decree(Replica(""), -1, "first", DecreeType::UserDecree),
-          pause(pause)
+          pause(pause),
+          signal(signal)
     {
         std::atomic_flag_clear(&in_progress);
     }

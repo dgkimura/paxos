@@ -9,18 +9,17 @@
 TEST(SignalTest, x)
 {
     Signal s;
-    bool is_run = false;
+    bool result = false;
 
-    std::thread t([&s, &is_run](){
-        s.Wait();
-        is_run = true;
+    std::thread t([&s, &result](){
+        result = s.Wait();
     });
 
-    ASSERT_FALSE(is_run);
+    ASSERT_FALSE(result);
 
-    s.Set();
+    s.Set(true);
     t.join();
 
-    ASSERT_TRUE(is_run);
+    ASSERT_TRUE(result);
 }
 

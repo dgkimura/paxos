@@ -11,9 +11,9 @@ public:
 
     Signal();
 
-    void Set();
+    void Set(bool success);
 
-    void Wait();
+    bool Wait();
 
 private:
     std::mutex mutex;
@@ -21,6 +21,8 @@ private:
     std::condition_variable condition;
 
     bool flag;
+
+    bool success;
 };
 
 

@@ -92,12 +92,14 @@ class ParliamentTest: public testing::Test
         ledger = std::make_shared<Ledger>(queue);
         receiver = std::make_shared<MockReceiver>();
         sender = std::make_shared<MockSender>();
+        auto signal = std::make_shared<Signal>();
         auto proposer = std::make_shared<ProposerContext>(
             legislators,
             ledger,
             std::make_shared<VolatileDecree>(),
             [](std::string entry){},
-            std::make_shared<NoPause>()
+            std::make_shared<NoPause>(),
+            signal
         );
         auto acceptor = std::make_shared<AcceptorContext>(
             std::make_shared<VolatileDecree>(),
@@ -107,8 +109,7 @@ class ParliamentTest: public testing::Test
             legislators,
             ledger
         );
-        auto signal = std::make_shared<Signal>();
-        signal->Set();
+        signal->Set(true);
 
         parliament = std::make_shared<Parliament>(
             replica,
@@ -118,8 +119,7 @@ class ParliamentTest: public testing::Test
             sender,
             acceptor,
             proposer,
-            learner,
-            signal
+            learner
         );
     }
 

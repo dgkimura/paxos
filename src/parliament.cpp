@@ -56,7 +56,8 @@ Parliament::Parliament(
             location,
             "paxos.highest_proposed_decree"),
         ignore_handler,
-        std::make_shared<RandomPause>(std::chrono::milliseconds(5000)));
+        std::make_shared<RandomPause>(std::chrono::milliseconds(5000)),
+        signal);
     auto acceptor = std::make_shared<AcceptorContext>(
         std::make_shared<PersistentDecree>(location, "paxos.promised_decree"),
         std::make_shared<PersistentDecree>(location, "paxos.accepted_decree"));
@@ -72,15 +73,14 @@ Parliament::Parliament(
     std::shared_ptr<Sender> sender,
     std::shared_ptr<AcceptorContext> acceptor,
     std::shared_ptr<ProposerContext> proposer,
-    std::shared_ptr<LearnerContext> learner,
-    std::shared_ptr<Signal> signal
+    std::shared_ptr<LearnerContext> learner
 ) :
     legislators(legislators),
     receiver(receiver),
     sender(sender),
     ledger(ledger),
     learner(learner),
-    signal(signal)
+    signal(proposer->signal)
 {
     hookup_legislator(legislator, proposer, acceptor);
 }
@@ -117,7 +117,7 @@ Parliament::hookup_legislator(
 }
 
 
-void
+bool
 Parliament::AddLegislator(
     std::string address,
     short port,
@@ -136,11 +136,11 @@ Parliament::AddLegislator(
     send_decree(d);
 
     // Block our main thread until decree handler is finished.
-    signal->Wait();
+    return signal->Wait();
 }
 
 
-void
+bool
 Parliament::RemoveLegislator(
     std::string address,
     short port,
@@ -157,7 +157,7 @@ Parliament::RemoveLegislator(
         }
     );
     send_decree(d);
-    signal->Wait();
+    return signal->Wait();
 }
 
 

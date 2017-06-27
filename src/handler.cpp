@@ -74,7 +74,7 @@ HandleAddReplica::operator()(std::string entry)
             decree.replica,
             location,
             decree.remote_directory);
-        signal->Set();
+        signal->Set(true);
     }
 }
 
@@ -105,6 +105,6 @@ HandleRemoveReplica::operator()(std::string entry)
     if (decree.author.hostname == legislator.hostname &&
         decree.author.port == legislator.port)
     {
-        signal->Set();
+        signal->Set(true);
     }
 }

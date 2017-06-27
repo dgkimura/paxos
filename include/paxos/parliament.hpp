@@ -35,14 +35,13 @@ public:
                std::shared_ptr<Sender> sender,
                std::shared_ptr<AcceptorContext> acceptor,
                std::shared_ptr<ProposerContext> proposer,
-               std::shared_ptr<LearnerContext> learner,
-               std::shared_ptr<Signal> signal);
+               std::shared_ptr<LearnerContext> learner);
 
-    void AddLegislator(std::string address,
+    bool AddLegislator(std::string address,
                        short port,
                        std::string remote=".");
 
-    void RemoveLegislator(std::string address,
+    bool RemoveLegislator(std::string address,
                           short port,
                           std::string remote=".");
 
