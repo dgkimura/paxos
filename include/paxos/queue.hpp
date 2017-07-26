@@ -1,6 +1,7 @@
 #ifndef __QUEUE_HPP_INCLUDED__
 #define __QUEUE_HPP_INCLUDED__
 
+#include <cstdint>
 #include <fstream>
 #include <mutex>
 
@@ -17,19 +18,19 @@ class BaseQueue
 {
 private:
 
-    virtual T getElementAt(int index) = 0;
+    virtual T getElementAt(int64_t index) = 0;
 
-    virtual int getElementSizeAt(int index) = 0;
+    virtual int64_t getElementSizeAt(int64_t index) = 0;
 
-    virtual int getFirstElementIndex() = 0;
+    virtual int64_t getFirstElementIndex() = 0;
 
-    virtual int getLastElementIndex() = 0;
+    virtual int64_t getLastElementIndex() = 0;
 
     class Iterator
     {
     public:
 
-        Iterator(BaseQueue<T> *queue_, int index_)
+        Iterator(BaseQueue<T> *queue_, int64_t index_)
             : queue(queue_), index(index_)
         {
         }
@@ -41,7 +42,7 @@ private:
 
         Iterator& operator++()
         {
-            int size = queue->getElementSizeAt(index);
+            int64_t size = queue->getElementSizeAt(index);
             index += size;
             return *this;
         }
@@ -55,7 +56,7 @@ private:
 
         BaseQueue<T> *queue;
 
-        int index;
+        int64_t index;
     };
 
 public:
@@ -104,22 +105,22 @@ public:
 
 private:
 
-    T getElementAt(int index)
+    T getElementAt(int64_t index)
     {
         return data[index];
     }
 
-    int getElementSizeAt(int index)
+    int64_t getElementSizeAt(int64_t index)
     {
         return 1;
     }
 
-    int getFirstElementIndex()
+    int64_t getFirstElementIndex()
     {
         return 0;
     }
 
-    int getLastElementIndex()
+    int64_t getLastElementIndex()
     {
         return data.size();
     }
@@ -128,7 +129,7 @@ private:
 };
 
 
-constexpr const int INDEX_SIZE = 10;
+constexpr const int64_t INDEX_SIZE = 10;
 
 
 template <typename T>
@@ -253,7 +254,7 @@ public:
 
 private:
 
-    T getElementAt(int index)
+    T getElementAt(int64_t index)
     {
         std::lock_guard<std::recursive_mutex> lock(mutex);
 
@@ -261,7 +262,7 @@ private:
         return Deserialize<T>(stream);
     }
 
-    int getElementSizeAt(int index)
+    int64_t getElementSizeAt(int64_t index)
     {
         std::lock_guard<std::recursive_mutex> lock(mutex);
 
@@ -269,7 +270,7 @@ private:
         return Serialize<T>(Deserialize<T>(stream)).length();
     }
 
-    int getFirstElementIndex()
+    int64_t getFirstElementIndex()
     {
         std::lock_guard<std::recursive_mutex> lock(mutex);
 
@@ -278,7 +279,7 @@ private:
         return start_position;
     }
 
-    int getLastElementIndex()
+    int64_t getLastElementIndex()
     {
         std::lock_guard<std::recursive_mutex> lock(mutex);
 
@@ -294,9 +295,9 @@ private:
 
     std::iostream& insert_stream;
 
-    int start_position;
+    int64_t start_position;
 
-    int end_position;
+    int64_t end_position;
 
     std::recursive_mutex mutex;
 };
