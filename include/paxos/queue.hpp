@@ -129,8 +129,6 @@ private:
 };
 
 
-constexpr const int64_t INDEX_SIZE = 10;
-
 
 template <typename T>
 class PersistentQueue : public BaseQueue<T>
@@ -176,9 +174,9 @@ public:
     void SaveOffsets()
     {
         stream.seekg(0, std::ios::end);
-        if (stream.tellg() < INDEX_SIZE * 2)
+        if (stream.tellg() < HEADER_SIZE)
         {
-            start_position = INDEX_SIZE * 2;
+            start_position = HEADER_SIZE;
             end_position = -1;
         }
 
@@ -300,6 +298,10 @@ private:
     int64_t end_position;
 
     std::recursive_mutex mutex;
+
+    constexpr static const int64_t INDEX_SIZE = 10;
+
+    constexpr static const int64_t HEADER_SIZE = INDEX_SIZE * 2;
 };
 
 
