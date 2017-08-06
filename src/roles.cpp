@@ -100,23 +100,20 @@ HandleRequest(
             std::make_tuple(message.decree.content, message.decree.type));
     }
 
-    if (!context->in_progress.test_and_set())
+    Message response = Response(message, MessageType::PrepareMessage);
+    if (!context->ledger->IsEmpty())
     {
-        Message response = Response(message, MessageType::PrepareMessage);
-        if (!context->ledger->IsEmpty())
-        {
-            response.decree.number = context->ledger->Tail().number + 1;
-        }
-        else
-        {
-            response.decree.number = 1;
-        }
-        response.decree.author = message.to;
-        response.decree.root_number = response.decree.number;
-        response.decree.content = "";
-
-        sender->ReplyAll(response);
+        response.decree.number = context->ledger->Tail().number + 1;
     }
+    else
+    {
+        response.decree.number = 1;
+    }
+    response.decree.author = message.to;
+    response.decree.root_number = response.decree.number;
+    response.decree.content = "";
+
+    sender->ReplyAll(response);
 }
 
 
@@ -264,12 +261,6 @@ HandleNack(
         context->ignore_handler(std::get<0>(context->requested_values.front()));
         context->highest_nacked_decree = message.decree;
         context->requested_values.erase(context->requested_values.begin());
-
-        //
-        // No point in continuing yet since we are behind. Instead keep
-        // in_progress set until the next accepted is caught and we are up to
-        // date.
-        //
     } else if (message.decree.type == DecreeType::AddReplicaDecree ||
                message.decree.type == DecreeType::RemoveReplicaDecree)
     {
@@ -306,8 +297,6 @@ HandleResume(
 
     if (IsDecreeIdentical(context->ledger->Tail(), message.decree))
     {
-        std::atomic_flag_clear(&context->in_progress);
-
         if (context->requested_values.size() > 0)
         {
             //

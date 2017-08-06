@@ -155,7 +155,7 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
 }
 
 
-TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneInProgressProposal)
+TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneUniqueInProgressProposal)
 {
     auto replicaset = std::make_shared<ReplicaSet>();
     auto ledger = std::make_shared<Ledger>(
@@ -205,7 +205,10 @@ TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneInProgressProposal)
         sender
     );
 
-    ASSERT_EQ(1, sender->sentMessages().size());
+    ASSERT_EQ(3, sender->sentMessages().size());
+    ASSERT_EQ(1, sender->sentMessages()[0].decree.number);
+    ASSERT_EQ(1, sender->sentMessages()[1].decree.number);
+    ASSERT_EQ(1, sender->sentMessages()[2].decree.number);
 }
 
 
@@ -447,53 +450,6 @@ TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
 }
 
 
-TEST_F(ProposerTest, testHandleRequestWithMultipleInProgressInSendsSingleProposal)
-{
-    auto replicaset = std::make_shared<ReplicaSet>();
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
-    );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
-        replicaset,
-        ledger,
-        std::make_shared<VolatileDecree>(),
-        [](std::string entry){},
-        std::make_shared<NoPause>(),
-        signal
-    );
-    context->replicaset->Add(Replica("host"));
-
-    auto sender = std::make_shared<FakeSender>(context->replicaset);
-
-    // Increments current by one.
-    HandleRequest(
-        Message(
-            Decree(Replica("host"), -1, "first", DecreeType::UserDecree),
-            Replica("host"),
-            Replica("B"),
-            MessageType::RequestMessage
-        ),
-        context,
-        sender
-    );
-    // Same round, do not increment.
-    HandleRequest(
-        Message(
-            Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
-            Replica("host"),
-            Replica("B"),
-            MessageType::RequestMessage
-        ),
-        context,
-        sender
-    );
-
-    ASSERT_EQ(sender->sentMessages()[0].decree.number, 1);
-    ASSERT_EQ(sender->sentMessages().size(), 1);
-}
-
-
 TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMessage)
 {
     auto replica = Replica("host");
@@ -604,7 +560,6 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
         signal
     );
     context->requested_values.push_back(std::make_tuple("a pending value", DecreeType::UserDecree));
-    context->in_progress.test_and_set();
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
@@ -620,7 +575,6 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
     );
 
     ASSERT_TRUE(was_ignore_handler_run);
-    ASSERT_TRUE(context->in_progress.test_and_set());
     ASSERT_EQ(0, context->requested_values.size());
 }
 
@@ -643,7 +597,6 @@ TEST_F(ProposerTest, testHandleNackWithAddReplicaDecreeSendsFailSignal)
         signal
     );
     context->requested_values.push_back(std::make_tuple("a pending value", DecreeType::UserDecree));
-    context->in_progress.test_and_set();
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
@@ -663,8 +616,6 @@ TEST_F(ProposerTest, testHandleNackWithAddReplicaDecreeSendsFailSignal)
         sender
     );
     t.join();
-
-    ASSERT_TRUE(context->in_progress.test_and_set());
 
     // HandleNack sets result to false.
     ASSERT_FALSE(result);
@@ -692,7 +643,6 @@ TEST_F(ProposerTest, testHandleNackDoesNotRunIgnoreHandlerOnSystemDecrees)
         signal
     );
     context->requested_values.push_back(std::make_tuple("a pending value", DecreeType::AddReplicaDecree));
-    context->in_progress.test_and_set();
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
@@ -794,7 +744,6 @@ TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
     // Our ledger was updated underneath us to 5.
     context->ledger->Append(
         Decree(Replica("the_author"), 5, "", DecreeType::UserDecree));
-    std::atomic_flag_clear(&context->in_progress);
 
     // Next round, increments current by one.
     HandleRequest(
