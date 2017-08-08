@@ -11,8 +11,8 @@ endif()
 set(INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/boost-prefix")
 
 ExternalProject_Add(boost
-   URL "https://sourceforge.net/projects/boost/files/boost/1.63.0/boost_1_63_0.tar.gz"
-   URL_HASH SHA256=fe34a4e119798e10b8cc9e565b3b0284e9fd3977ec8a1b19586ad1dec397088b
+   URL "https://sourceforge.net/projects/boost/files/boost/1.64.0/boost_1_64_0.tar.gz"
+   URL_HASH SHA256=0445c22a5ef3bd69f5dfb48354978421a85ab395254a26b1ffb0aa1bfd63a108
    UPDATE_COMMAND ""
    BUILD_IN_SOURCE 1
    CONFIGURE_COMMAND ./bootstrap.sh --with-libraries=filesystem,iostreams,log,program_options,serialization,system "${CXXFLAGS}" "--prefix=<INSTALL_DIR>"
