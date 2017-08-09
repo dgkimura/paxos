@@ -177,7 +177,7 @@ public:
         if (stream.tellg() < HEADER_SIZE)
         {
             start_position = HEADER_SIZE;
-            end_position = -1;
+            end_position = UNINITIALIZED;
         }
 
         //insert_stream.seekp(0, std::ios::beg);
@@ -242,12 +242,18 @@ public:
     {
         std::lock_guard<std::recursive_mutex> lock(mutex);
 
+        T empty;
+        stream.seekg(0, std::ios::end);
+        if (stream.tellg() <= HEADER_SIZE)
+        {
+            return empty;
+        }
+
         LoadOffsets();
 
-        T empty;
         stream.seekg(end_position, std::ios::beg);
 
-        return end_position == -1 ? empty : Deserialize<T>(stream);
+        return Deserialize<T>(stream);
     }
 
 private:
@@ -302,6 +308,8 @@ private:
     constexpr static const int64_t INDEX_SIZE = 10;
 
     constexpr static const int64_t HEADER_SIZE = INDEX_SIZE * 2;
+
+    constexpr static const int64_t UNINITIALIZED = -1;
 };
 
 
