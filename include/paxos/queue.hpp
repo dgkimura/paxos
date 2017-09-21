@@ -225,16 +225,12 @@ public:
 
         LoadOffsets();
 
-        bool is_head = true;
         for (T element : *this)
         {
-            if (is_head)
-            {
-                is_head = false;
-                start_position += Serialize<T>(element).length();
-                stream.seekp(0, std::ios::beg);
-                stream << std::setw(INDEX_SIZE) << start_position;
-            }
+            start_position += Serialize<T>(element).length();
+            stream.seekp(0, std::ios::beg);
+            stream << std::setw(INDEX_SIZE) << start_position;
+            break;
         }
     }
 
