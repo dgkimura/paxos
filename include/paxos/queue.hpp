@@ -295,9 +295,9 @@ private:
 
     std::iostream& insert_stream;
 
-    int64_t start_position;
+    std::streampos start_position;
 
-    int64_t end_position;
+    std::streampos end_position;
 
     std::recursive_mutex mutex;
 
