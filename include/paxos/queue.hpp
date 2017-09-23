@@ -204,6 +204,8 @@ public:
     {
         std::lock_guard<std::recursive_mutex> lock(mutex);
 
+        std::string element_as_string = Serialize<T>(e);
+
         LoadOffsets();
 
         stream.seekg(0, std::ios::end);
@@ -214,7 +216,6 @@ public:
         insert_stream.flush();
 
         stream.seekp(0, std::ios::end);
-        std::string element_as_string = Serialize<T>(e);
         stream << element_as_string;
         stream.flush();
     }

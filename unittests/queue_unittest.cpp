@@ -136,3 +136,18 @@ TEST(QueueTest, testThatPersistentQueueGetLastElement)
 
     ASSERT_EQ(queue->Last(), "poit");
 }
+
+
+TEST(QueueTest, testThatPersistentQueueEnqueueAfterDequeueReplacesElement)
+{
+    std::stringstream file;
+
+    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
+
+    queue->Enqueue("narf");
+    queue->Dequeue();
+    queue->Enqueue("zoit");
+
+    ASSERT_EQ(queue->Last(), "zoit");
+    ASSERT_EQ(GetQueueSize(queue), 1);
+}
