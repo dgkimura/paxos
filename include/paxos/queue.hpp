@@ -129,7 +129,6 @@ private:
 };
 
 
-
 template <typename T>
 class PersistentQueue : public BaseQueue<T>
 {
@@ -307,6 +306,154 @@ private:
     constexpr static const int64_t HEADER_SIZE = INDEX_SIZE * 2;
 
     constexpr static const int64_t UNINITIALIZED = -1;
+};
+
+
+template <typename T>
+class RolloverQueue
+{
+private:
+
+    std::streampos get_start_position()
+    {
+        stream.seekg(0 * INDEX_SIZE, std::ios::beg);
+        std::string buffer;
+        stream.read(&buffer[0], INDEX_SIZE);
+        boost::trim(buffer);
+        return static_cast<std::streampos>(std::stoi(buffer));
+    }
+
+    std::streampos get_end_position()
+    {
+        stream.seekg(1 * INDEX_SIZE, std::ios::beg);
+        std::string buffer;
+        stream.read(&buffer[0], INDEX_SIZE);
+        boost::trim(buffer);
+        return static_cast<std::streampos>(std::stoi(buffer));
+    }
+
+    std::iostream& stream;
+
+    std::iostream& insert_stream;
+
+    std::streampos rollover_size;
+
+    constexpr static const int64_t INDEX_SIZE = 10;
+
+    constexpr static const int64_t UNINITIALIZED = -1;
+
+    constexpr static const int64_t HEADER_SIZE = INDEX_SIZE * 2;
+
+    class Iterator
+    {
+    public:
+
+        Iterator(
+            std::iostream& stream,
+            std::streampos position,
+            std::streampos rollover
+        )
+            : stream(stream),
+              position(position),
+              rollover(rollover)
+        {
+        }
+
+        T operator*()
+        {
+            stream.seekg(position, std::ios::beg);
+
+            return Deserialize<T>(stream);
+        }
+
+        Iterator& operator++()
+        {
+            if (position <= rollover)
+            {
+                stream.seekg(position, std::ios::beg);
+                position += Serialize<T>(Deserialize<T>(stream)).length();
+            }
+            else
+            {
+                position = HEADER_SIZE;
+            }
+
+            return *this;
+        }
+
+        bool operator!=(const Iterator& iterator)
+        {
+            return position != iterator.position;
+        }
+
+    private:
+
+        std::iostream& stream;
+
+        std::streampos position;
+
+        std::streampos rollover;
+
+        constexpr static const int64_t INDEX_SIZE = 10;
+
+        constexpr static const int64_t HEADER_SIZE = INDEX_SIZE * 3;
+    };
+
+public:
+
+    RolloverQueue(std::iostream& stream, std::streampos rollover_size=65536)
+        : stream(stream),
+          insert_stream(stream),
+          rollover_size(rollover_size)
+    {
+        stream.seekg(0, std::ios::end);
+        if (stream.tellg() < HEADER_SIZE)
+        {
+            insert_stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
+            insert_stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
+        }
+    }
+
+    void Enqueue(T e)
+    {
+        std::string element_as_string = Serialize<T>(e);
+        auto size = element_as_string.length();
+
+        std::streampos position = get_end_position();
+        if (position + static_cast<std::streampos>(size) < rollover_size)
+        {
+            // rollover and over-write existing entries
+        }
+        stream.seekp(position, std::ios::beg);
+        stream << element_as_string;
+        stream.flush();
+    }
+
+    void Dequeue()
+    {
+        auto position = get_start_position();
+        stream.seekg(position, std::ios::beg);
+
+        auto next = position + Serialize<T>(Deserialize<T>(stream)).length();
+
+        insert_stream << std::setw(INDEX_SIZE) << next;
+        // TODO: close and reset insert_stream?
+    }
+
+    T Last()
+    {
+        return *end();
+    }
+
+    Iterator begin()
+    {
+        return Iterator(stream, get_start_position(), rollover_size);
+    }
+
+    Iterator end()
+    {
+        return Iterator(stream, get_end_position(), rollover_size);
+    }
 };
 
 
