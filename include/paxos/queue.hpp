@@ -332,6 +332,12 @@ private:
         return static_cast<std::streampos>(std::stoi(buffer));
     }
 
+    std::streampos get_eof_position()
+    {
+        stream.seekg(0, std::ios::end);
+        return stream.tellg();
+    }
+
     std::iostream& stream;
 
     std::iostream& insert_stream;
@@ -424,7 +430,7 @@ public:
         {
             position = HEADER_SIZE;
         }
-        else if (position + static_cast<std::streampos>(size) < rollover_size)
+        else if (rollover_size < position + static_cast<std::streampos>(size))
         {
             // rollover and over-write existing entries
         }
@@ -465,7 +471,8 @@ public:
     {
         auto start = get_start_position();
         auto end = get_end_position();
-        if (end == UNINITIALIZED)
+        auto eof = get_eof_position();
+        if (end == UNINITIALIZED || end == eof)
         {
             end = start;
         }
