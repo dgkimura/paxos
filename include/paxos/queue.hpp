@@ -340,7 +340,7 @@ private:
 
     constexpr static const int64_t INDEX_SIZE = 10;
 
-    constexpr static const int64_t UNINITIALIZED = -1;
+    constexpr static const int64_t UNINITIALIZED = 0;
 
     constexpr static const int64_t HEADER_SIZE = INDEX_SIZE * 2;
 
@@ -410,7 +410,7 @@ public:
         if (stream.tellg() < HEADER_SIZE)
         {
             insert_stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
-            insert_stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
+            insert_stream << std::setw(INDEX_SIZE) << UNINITIALIZED;
         }
     }
 
@@ -420,13 +420,24 @@ public:
         auto size = element_as_string.length();
 
         std::streampos position = get_end_position();
-        if (position + static_cast<std::streampos>(size) < rollover_size)
+        if (position == UNINITIALIZED)
+        {
+            position = HEADER_SIZE;
+        }
+        else if (position + static_cast<std::streampos>(size) < rollover_size)
         {
             // rollover and over-write existing entries
         }
+
+        // flush element
         stream.seekp(position, std::ios::beg);
         stream << element_as_string;
         stream.flush();
+
+        // update indexes
+        insert_stream.seekp(1 * INDEX_SIZE, std::ios::beg);
+        insert_stream << std::setw(INDEX_SIZE) << position;
+        insert_stream.flush();
     }
 
     void Dequeue()
@@ -452,7 +463,18 @@ public:
 
     Iterator end()
     {
-        return Iterator(stream, get_end_position(), rollover_size);
+        auto start = get_start_position();
+        auto end = get_end_position();
+        if (end == UNINITIALIZED)
+        {
+            end = start;
+        }
+        else
+        {
+            stream.seekg(end, std::ios::beg);
+            end += Serialize<T>(Deserialize<T>(stream)).length();
+        }
+        return Iterator(stream, end, rollover_size);
     }
 };
 
