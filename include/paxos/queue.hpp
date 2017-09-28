@@ -338,9 +338,9 @@ private:
         return stream.tellg();
     }
 
-    std::iostream& stream;
+    std::fstream file;
 
-    std::iostream& insert_stream;
+    std::iostream& stream;
 
     std::streampos rollover_size;
 
@@ -349,6 +349,8 @@ private:
     constexpr static const int64_t UNINITIALIZED = 0;
 
     constexpr static const int64_t HEADER_SIZE = INDEX_SIZE * 2;
+
+    constexpr static const int64_t DEFAULT_ROLLOVER_SIZE = 1000000000;
 
     class Iterator
     {
@@ -407,16 +409,39 @@ private:
 
 public:
 
-    RolloverQueue(std::iostream& stream, std::streampos rollover_size=65536)
-        : stream(stream),
-          insert_stream(stream),
+    RolloverQueue(std::string filename)
+        : RolloverQueue(".", filename)
+    {
+    }
+
+    RolloverQueue(
+        std::string dirname,
+        std::string filename,
+        std::streampos rollover_size=DEFAULT_ROLLOVER_SIZE
+    ) : file((fs::path(dirname) / fs::path(filename)).string(),
+               std::ios::out | std::ios::in | std::ios::binary),
+          stream(file),
           rollover_size(rollover_size)
     {
         stream.seekg(0, std::ios::end);
         if (stream.tellg() < HEADER_SIZE)
         {
-            insert_stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
-            insert_stream << std::setw(INDEX_SIZE) << UNINITIALIZED;
+            stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
+            stream << std::setw(INDEX_SIZE) << UNINITIALIZED;
+        }
+    }
+
+    RolloverQueue(
+        std::iostream& stream,
+        std::streampos rollover_size=DEFAULT_ROLLOVER_SIZE
+    ) : stream(stream),
+        rollover_size(rollover_size)
+    {
+        stream.seekg(0, std::ios::end);
+        if (stream.tellg() < HEADER_SIZE)
+        {
+            stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
+            stream << std::setw(INDEX_SIZE) << UNINITIALIZED;
         }
     }
 
@@ -430,9 +455,34 @@ public:
         {
             position = HEADER_SIZE;
         }
-        else if (rollover_size < position + static_cast<std::streampos>(size))
+        else
         {
+            stream.seekg(position, std::ios::beg);
+            position += Serialize<T>(Deserialize<T>(stream)).length();
+        }
+
+        if (rollover_size < position + static_cast<std::streampos>(size))
+        {
+            std::streampos eof = get_eof_position();
+
             // rollover and over-write existing entries
+            auto start = static_cast<std::streampos>(HEADER_SIZE);
+            while (start - HEADER_SIZE < size && start != eof)
+            {
+                stream.seekg(start, std::ios::beg);
+                start += Serialize<T>(Deserialize<T>(stream)).length();
+            }
+
+            if (start == eof)
+            {
+                start = HEADER_SIZE;
+            }
+
+            // update start position
+            stream.seekp(0 * INDEX_SIZE, std::ios::beg);
+            stream << std::setw(INDEX_SIZE) << start;
+            stream.flush();
+            position = start;
         }
 
         // flush element
@@ -440,10 +490,10 @@ public:
         stream << element_as_string;
         stream.flush();
 
-        // update indexes
-        insert_stream.seekp(1 * INDEX_SIZE, std::ios::beg);
-        insert_stream << std::setw(INDEX_SIZE) << position;
-        insert_stream.flush();
+        // update end position
+        stream.seekp(1 * INDEX_SIZE, std::ios::beg);
+        stream << std::setw(INDEX_SIZE) << position;
+        stream.flush();
     }
 
     void Dequeue()
@@ -451,15 +501,19 @@ public:
         auto position = get_start_position();
         stream.seekg(position, std::ios::beg);
 
-        auto next = position + Serialize<T>(Deserialize<T>(stream)).length();
+        auto next = position + static_cast<std::streampos>(
+            Serialize<T>(Deserialize<T>(stream)).length());
 
-        insert_stream << std::setw(INDEX_SIZE) << next;
-        // TODO: close and reset insert_stream?
+        stream.seekp(0 * INDEX_SIZE, std::ios::beg);
+        stream << std::setw(INDEX_SIZE) << next;
     }
 
     T Last()
     {
-        return *end();
+        auto position = get_end_position();
+        stream.seekg(position, std::ios::beg);
+
+        return Deserialize<T>(stream);
     }
 
     Iterator begin()
