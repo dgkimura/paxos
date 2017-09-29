@@ -316,6 +316,7 @@ private:
 
     std::streampos get_start_position()
     {
+        stream.rdbuf(file.rdbuf());
         stream.seekg(0 * INDEX_SIZE, std::ios::beg);
         std::string buffer;
         stream.read(&buffer[0], INDEX_SIZE);
@@ -325,6 +326,7 @@ private:
 
     std::streampos get_end_position()
     {
+        stream.rdbuf(file.rdbuf());
         stream.seekg(1 * INDEX_SIZE, std::ios::beg);
         std::string buffer;
         stream.read(&buffer[0], INDEX_SIZE);
@@ -334,6 +336,7 @@ private:
 
     std::streampos get_eof_position()
     {
+        stream.rdbuf(file.rdbuf());
         stream.seekg(0, std::ios::end);
         return stream.tellg();
     }
@@ -420,14 +423,20 @@ public:
         std::streampos rollover_size=DEFAULT_ROLLOVER_SIZE
     ) : file((fs::path(dirname) / fs::path(filename)).string(),
                std::ios::out | std::ios::in | std::ios::binary),
-          stream(file),
-          rollover_size(rollover_size)
+        stream(file),
+        rollover_size(rollover_size)
     {
-        stream.seekg(0, std::ios::end);
-        if (stream.tellg() < HEADER_SIZE)
+        if (!boost::filesystem::exists((fs::path(dirname) /
+                                        fs::path(filename)).string()))
         {
-            stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
-            stream << std::setw(INDEX_SIZE) << UNINITIALIZED;
+            file.open((fs::path(dirname) / fs::path(filename)).string(),
+                       std::ios::out | std::ios::app | std::ios::binary);
+            file << std::setw(INDEX_SIZE) << HEADER_SIZE;
+            file << std::setw(INDEX_SIZE) << UNINITIALIZED;
+            file.flush();
+            file.close();
+            file.open((fs::path(dirname) / fs::path(filename)).string(),
+                       std::ios::out | std::ios::in | std::ios::binary);
         }
     }
 
