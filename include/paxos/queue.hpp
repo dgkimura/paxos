@@ -316,7 +316,6 @@ private:
 
     std::streampos get_start_position()
     {
-        stream.rdbuf(file.rdbuf());
         stream.seekg(0 * INDEX_SIZE, std::ios::beg);
         std::string buffer;
         stream.read(&buffer[0], INDEX_SIZE);
@@ -326,7 +325,10 @@ private:
 
     std::streampos get_end_position()
     {
-        stream.rdbuf(file.rdbuf());
+        if (file.is_open())
+        {
+            stream.rdbuf(file.rdbuf());
+        }
         stream.seekg(1 * INDEX_SIZE, std::ios::beg);
         std::string buffer;
         stream.read(&buffer[0], INDEX_SIZE);
@@ -336,7 +338,6 @@ private:
 
     std::streampos get_eof_position()
     {
-        stream.rdbuf(file.rdbuf());
         stream.seekg(0, std::ios::end);
         return stream.tellg();
     }
