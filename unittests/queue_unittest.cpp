@@ -5,7 +5,8 @@
 #include "paxos/queue.hpp"
 
 
-int GetQueueSize(std::shared_ptr<BaseQueue<std::string>> queue)
+template<typename T>
+int GetQueueSize(std::shared_ptr<T> queue)
 {
     int size = 0;
     for (auto d : *queue)
@@ -150,4 +151,68 @@ TEST(QueueTest, testThatPersistentQueueEnqueueAfterDequeueReplacesElement)
 
     ASSERT_EQ(queue->Last(), "zoit");
     ASSERT_EQ(GetQueueSize(queue), 1);
+}
+
+
+TEST(QueueTest, testThatRolloverQueueCanIterateOverContents)
+{
+    std::stringstream file;
+
+    auto queue = std::make_shared<RolloverQueue<std::string>>(file);
+
+    queue->Enqueue("narf");
+    std::cout << file.str() << "\n";
+
+    for (auto e : *queue)
+    {
+        ASSERT_EQ(e, "narf");
+    }
+}
+
+
+TEST(QueueTest, testThatRolloverQueueSizeAfterEnqueue)
+{
+    std::stringstream file;
+
+    std::string element("narf");
+
+    auto queue = std::make_shared<RolloverQueue<std::string>>(file, Serialize(element).length());
+
+    queue->Enqueue(element);
+    queue->Enqueue("zort");
+
+    std::cout << file.str() << "\n";
+
+    ASSERT_EQ(GetQueueSize(queue), 1);
+}
+
+
+TEST(QueueTest, testThatRolloverQueueGetLastLement)
+{
+    std::stringstream file;
+
+    auto queue = std::make_shared<RolloverQueue<std::string>>(file);
+
+    queue->Enqueue("narf");
+    queue->Enqueue("zort");
+    queue->Enqueue("poit");
+
+    ASSERT_EQ(queue->Last(), "poit");
+}
+
+
+TEST(QueueTest, testThatRolloverQueueCanDequeue)
+{
+    std::stringstream file;
+
+    auto queue = std::make_shared<RolloverQueue<std::string>>(file);
+
+    queue->Enqueue("narf");
+    queue->Enqueue("zort");
+    queue->Enqueue("poit");
+    queue->Dequeue();
+
+    std::cout << file.str() << "\n";
+
+    ASSERT_EQ(GetQueueSize(queue), 2);
 }
