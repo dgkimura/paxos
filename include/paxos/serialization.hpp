@@ -97,16 +97,9 @@ T Deserialize(std::string string_obj)
 template <typename T>
 T Deserialize(std::istream& stream)
 {
-    T object;
-    try
-    {
-        boost::archive::text_iarchive oa(stream);
-        oa >> object;
-    }
-    catch (boost::archive::archive_exception& e)
-    {
-    }
-    return object;
+    std::stringstream sstream;
+    sstream << stream.rdbuf();
+    return Deserialize<T>(sstream.str());
 }
 
 
