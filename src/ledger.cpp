@@ -3,13 +3,13 @@
 #include "paxos/ledger.hpp"
 
 
-Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees)
+Ledger::Ledger(std::shared_ptr<RolloverQueue<Decree>> decrees)
     : Ledger(decrees, std::make_shared<EmptyDecreeHandler>())
 {
 }
 
 
-Ledger::Ledger(std::shared_ptr<BaseQueue<Decree>> decrees,
+Ledger::Ledger(std::shared_ptr<RolloverQueue<Decree>> decrees,
                std::shared_ptr<DecreeHandler> handler)
     : decrees(decrees)
 {

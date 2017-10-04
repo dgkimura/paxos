@@ -88,7 +88,7 @@ class ParliamentTest: public testing::Test
         legislators = std::make_shared<ReplicaSet>();
         legislators->Add(replica);
 
-        queue = std::make_shared<VolatileQueue<Decree>>();
+        queue = std::make_shared<RolloverQueue<Decree>>(sstream);
         ledger = std::make_shared<Ledger>(queue);
         receiver = std::make_shared<MockReceiver>();
         sender = std::make_shared<MockSender>();
@@ -125,7 +125,7 @@ class ParliamentTest: public testing::Test
 
 public:
 
-    int GetQueueSize(std::shared_ptr<BaseQueue<Decree>> queue)
+    int GetQueueSize(std::shared_ptr<RolloverQueue<Decree>> queue)
     {
         int size = 0;
         for (auto d : *queue)
@@ -143,7 +143,9 @@ public:
 
     std::shared_ptr<MockReceiver> receiver;
 
-    std::shared_ptr<BaseQueue<Decree>> queue;
+    std::stringstream sstream;
+
+    std::shared_ptr<RolloverQueue<Decree>> queue;
 
     std::shared_ptr<Ledger> ledger;
 

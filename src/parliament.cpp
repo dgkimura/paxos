@@ -23,7 +23,7 @@ Parliament::Parliament(
           )
       ),
       ledger(std::make_shared<Ledger>(
-          std::make_shared<PersistentQueue<Decree>>(location, "paxos.ledger"))),
+          std::make_shared<RolloverQueue<Decree>>(location, "paxos.ledger"))),
       learner(std::make_shared<LearnerContext>(legislators, ledger)),
       location(location),
       signal(std::make_shared<Signal>())

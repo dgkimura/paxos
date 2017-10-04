@@ -1,4 +1,5 @@
-#include "gtest/gtest.h"
+#include <sstream>
+#include <gtest/gtest.h>
 
 #include "paxos/context.hpp"
 #include "paxos/ledger.hpp"
@@ -8,7 +9,9 @@
 TEST(ContextUnitTest, testLearnerContextTrackedFutureDecreeStoredInAscendingOrder)
 {
     auto replicaset = std::make_shared<ReplicaSet>();
-    auto ledger = std::make_shared<Ledger>(std::make_shared<VolatileQueue<Decree>>());
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
+    auto ledger = std::make_shared<Ledger>(queue);
     LearnerContext context(
         replicaset,
         ledger

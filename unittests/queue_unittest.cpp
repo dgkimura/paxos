@@ -161,7 +161,6 @@ TEST(QueueTest, testThatRolloverQueueCanIterateOverContents)
     auto queue = std::make_shared<RolloverQueue<std::string>>(file);
 
     queue->Enqueue("narf");
-    std::cout << file.str() << "\n";
 
     for (auto e : *queue)
     {
@@ -180,8 +179,6 @@ TEST(QueueTest, testThatRolloverQueueSizeAfterEnqueue)
 
     queue->Enqueue(element);
     queue->Enqueue("zort");
-
-    std::cout << file.str() << "\n";
 
     ASSERT_EQ(GetQueueSize(queue), 1);
 }
@@ -211,8 +208,6 @@ TEST(QueueTest, testThatRolloverQueueCanDequeue)
     queue->Enqueue("zort");
     queue->Enqueue("poit");
     queue->Dequeue();
-
-    std::cout << file.str() << "\n";
 
     ASSERT_EQ(GetQueueSize(queue), 2);
 }

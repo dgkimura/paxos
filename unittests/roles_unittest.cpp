@@ -127,8 +127,9 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
     auto receiver = std::make_shared<FakeReceiver>();
     auto sender = std::make_shared<FakeSender>();
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -158,8 +159,9 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
 TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneUniqueInProgressProposal)
 {
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -221,8 +223,9 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromise
         MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -249,8 +252,9 @@ TEST_F(ProposerTest, testHandlePromiseWithoutAnyRequestedValuesDoesNotSendAccept
     Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -280,8 +284,9 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
     Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -311,8 +316,9 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotU
     Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("unknown_host"), Replica("host"), MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -341,8 +347,9 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedV
     Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -377,8 +384,9 @@ TEST_F(ProposerTest, testHandlePromiseWillSendAcceptAgainIfDuplicatePromiseIsSen
     Message message(Decree(Replica("host1"), 1, "", DecreeType::UserDecree), Replica("host1"), Replica("host1"), MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -417,8 +425,9 @@ TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
     Message message(Decree(Replica("host1"), 1, "", DecreeType::UserDecree), Replica("host1"), Replica("host1"), MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -457,8 +466,9 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
     auto replicaset = std::make_shared<ReplicaSet>();
     auto highest_proposed_decree = std::make_shared<VolatileDecree>();
     highest_proposed_decree->Put(decree);
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     ledger->Append(decree);
 
@@ -504,8 +514,9 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanLastLedger
     auto replicaset = std::make_shared<ReplicaSet>();
     auto highest_proposed_decree = std::make_shared<VolatileDecree>();
     highest_proposed_decree->Put(Decree(replica, 1, "first", DecreeType::UserDecree));
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
 
     // Our ledger contains higher decree than messaged decree.
@@ -547,8 +558,9 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
     auto replica = Replica("host");
     auto decree = Decree(replica, 1, "next", DecreeType::UserDecree);
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -584,8 +596,9 @@ TEST_F(ProposerTest, testHandleNackWithAddReplicaDecreeSendsFailSignal)
     auto replica = Replica("host");
     auto decree = Decree(replica, 1, "next", DecreeType::AddReplicaDecree);
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -630,8 +643,9 @@ TEST_F(ProposerTest, testHandleNackDoesNotRunIgnoreHandlerOnSystemDecrees)
     // DecreeType::AddReplicaDecree is a system decree
     auto decree = Decree(replica, 1, "next", DecreeType::AddReplicaDecree);
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -667,8 +681,9 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
     auto replica = Replica("host");
     auto decree = Decree(replica, 1, "next", DecreeType::UserDecree);
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -710,8 +725,9 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
 
 TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
 {
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto replicaset = std::make_shared<ReplicaSet>();
     auto signal = std::make_shared<Signal>();
@@ -772,8 +788,9 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
         MessageType::AcceptMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -805,8 +822,9 @@ TEST_F(ProposerTest, testHandleResumeSendsNextRequestIfThereArePendingProposals)
         MessageType::AcceptMessage);
 
     auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     ledger->Append(decree);
     auto signal = std::make_shared<Signal>();
@@ -984,14 +1002,14 @@ class LearnerTest: public testing::Test
         DisableLogging();
 
         replicaset = std::make_shared<ReplicaSet>();
-        queue = std::make_shared<VolatileQueue<Decree>>();
+        queue = std::make_shared<RolloverQueue<Decree>>(sstream);
         ledger = std::make_shared<Ledger>(queue);
         context = std::make_shared<LearnerContext>(replicaset, ledger);
     }
 
 public:
 
-    int GetQueueSize(std::shared_ptr<BaseQueue<Decree>> queue)
+    int GetQueueSize(std::shared_ptr<RolloverQueue<Decree>> queue)
     {
         int size = 0;
         for (auto d : *queue)
@@ -1002,7 +1020,8 @@ public:
     }
 
     std::shared_ptr<ReplicaSet> replicaset;
-    std::shared_ptr<BaseQueue<Decree>> queue;
+    std::stringstream sstream;
+    std::shared_ptr<RolloverQueue<Decree>> queue;
     std::shared_ptr<Ledger> ledger;
     std::shared_ptr<LearnerContext> context;
 };
@@ -1515,8 +1534,9 @@ TEST_F(UpdaterTest, testRegisterUpdaterWillRegistereMessageTypes)
 {
     auto receiver = std::make_shared<FakeReceiver>();
     auto sender = std::make_shared<FakeSender>();
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto context = std::make_shared<UpdaterContext>(
         ledger
@@ -1538,8 +1558,9 @@ TEST_F(UpdaterTest, testRegisterUpdaterWillRegistereMessageTypes)
 
 TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndHasEmptyLedger)
 {
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto context = std::make_shared<UpdaterContext>(
         ledger
@@ -1565,8 +1586,9 @@ TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndHasEmptyLedger)
 
 TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndLedgerHasNextDecree)
 {
+    std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
-        std::make_shared<VolatileQueue<Decree>>()
+        std::make_shared<RolloverQueue<Decree>>(ss)
     );
     auto context = std::make_shared<UpdaterContext>(
         ledger

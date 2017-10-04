@@ -16,9 +16,9 @@ class Ledger
 {
 public:
 
-    Ledger(std::shared_ptr<BaseQueue<Decree>> decrees);
+    Ledger(std::shared_ptr<RolloverQueue<Decree>> decrees);
 
-    Ledger(std::shared_ptr<BaseQueue<Decree>> decrees,
+    Ledger(std::shared_ptr<RolloverQueue<Decree>> decrees,
            std::shared_ptr<DecreeHandler> handler);
 
     ~Ledger();
@@ -40,7 +40,7 @@ public:
 
 private:
 
-    std::shared_ptr<BaseQueue<Decree>> decrees;
+    std::shared_ptr<RolloverQueue<Decree>> decrees;
 
     std::recursive_mutex mutex;
 

@@ -12,7 +12,7 @@ class LedgerUnitTest: public testing::Test
 };
 
 
-int GetQueueSize(std::shared_ptr<BaseQueue<Decree>> queue)
+int GetQueueSize(const std::shared_ptr<RolloverQueue<Decree>>& queue)
 {
     int size = 0;
     for (auto d : *queue)
@@ -25,7 +25,8 @@ int GetQueueSize(std::shared_ptr<BaseQueue<Decree>> queue)
 
 TEST_F(LedgerUnitTest, testAppendIncrementsTheSize)
 {
-    auto queue = std::make_shared<VolatileQueue<Decree>>();
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
     Ledger ledger(queue);
 
     ASSERT_EQ(GetQueueSize(queue), 0);
@@ -38,7 +39,8 @@ TEST_F(LedgerUnitTest, testAppendIncrementsTheSize)
 
 TEST_F(LedgerUnitTest, testAppendSystemDecreeIncrementsTheSize)
 {
-    auto queue = std::make_shared<VolatileQueue<Decree>>();
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
     Ledger ledger(queue);
 
     ASSERT_EQ(GetQueueSize(queue), 0);
@@ -51,7 +53,8 @@ TEST_F(LedgerUnitTest, testAppendSystemDecreeIncrementsTheSize)
 
 TEST_F(LedgerUnitTest, testRemoveDecrementsTheSize)
 {
-    auto queue = std::make_shared<VolatileQueue<Decree>>();
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
     Ledger ledger(queue);
 
     ledger.Append(Decree(Replica("an_author"), 1, "decree_contents", DecreeType::UserDecree));
@@ -63,7 +66,9 @@ TEST_F(LedgerUnitTest, testRemoveDecrementsTheSize)
 
 TEST_F(LedgerUnitTest, testLedgerAppendChangesIsEmptyStatus)
 {
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
+    Ledger ledger(queue);
 
     ASSERT_TRUE(ledger.IsEmpty());
 
@@ -75,7 +80,9 @@ TEST_F(LedgerUnitTest, testLedgerAppendChangesIsEmptyStatus)
 
 TEST_F(LedgerUnitTest, testEmptyHeadReturnsDefaultDecree)
 {
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
+    Ledger ledger(queue);
     Decree expected, actual = ledger.Head();
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
@@ -87,7 +94,9 @@ TEST_F(LedgerUnitTest, testEmptyHeadReturnsDefaultDecree)
 
 TEST_F(LedgerUnitTest, testEmptyTailReturnsDefaultDecree)
 {
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
+    Ledger ledger(queue);
     Decree expected, actual = ledger.Tail();
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
@@ -99,7 +108,9 @@ TEST_F(LedgerUnitTest, testEmptyTailReturnsDefaultDecree)
 
 TEST_F(LedgerUnitTest, testEmptyNextWithFutureDecree)
 {
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
+    Ledger ledger(queue);
     Decree expected, actual = ledger.Next(Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree));
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
@@ -111,7 +122,9 @@ TEST_F(LedgerUnitTest, testEmptyNextWithFutureDecree)
 
 TEST_F(LedgerUnitTest, testHeadWithMultipleDecrees)
 {
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
+    Ledger ledger(queue);
     ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
     ledger.Append(Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree));
 
@@ -126,7 +139,9 @@ TEST_F(LedgerUnitTest, testHeadWithMultipleDecrees)
 
 TEST_F(LedgerUnitTest, testTailWithMultipleDecrees)
 {
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
+    Ledger ledger(queue);
     ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
     ledger.Append(Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree));
 
@@ -141,7 +156,9 @@ TEST_F(LedgerUnitTest, testTailWithMultipleDecrees)
 
 TEST_F(LedgerUnitTest, testNextWithMultipleDecrees)
 {
-    Ledger ledger(std::make_shared<VolatileQueue<Decree>>());
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
+    Ledger ledger(queue);
     ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
     ledger.Append(Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree));
     ledger.Append(Decree(Replica("c_author"), 3, "c_content", DecreeType::UserDecree));
@@ -158,7 +175,8 @@ TEST_F(LedgerUnitTest, testNextWithMultipleDecrees)
 
 TEST_F(LedgerUnitTest, testAppendIgnoresOutOfOrderDecrees)
 {
-    auto queue = std::make_shared<VolatileQueue<Decree>>();
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
     Ledger ledger(queue);
     ledger.Append(Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree));
     ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
@@ -169,7 +187,8 @@ TEST_F(LedgerUnitTest, testAppendIgnoresOutOfOrderDecrees)
 
 TEST_F(LedgerUnitTest, testAppendIgnoresDuplicateDecrees)
 {
-    auto queue = std::make_shared<VolatileQueue<Decree>>();
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
     Ledger ledger(queue);
     ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
     ledger.Append(Decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree));
@@ -183,8 +202,10 @@ TEST_F(LedgerUnitTest, testDecreeHandlerOnAppend)
     std::string concatenated_content;
     auto handler = [&](std::string entry) { concatenated_content += entry; };
 
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
     Ledger ledger(
-        std::make_shared<VolatileQueue<Decree>>(),
+        queue,
         std::make_shared<CompositeHandler>(handler));
     ledger.Append(Decree(Replica("a_author"), 1, "AAAAA", DecreeType::UserDecree));
     ledger.Append(Decree(Replica("b_author"), 2, "BBBBB", DecreeType::UserDecree));
@@ -214,8 +235,9 @@ TEST_F(LedgerUnitTest, testRegisteredDecreeHandlerExecuted)
 
     auto handler = std::make_shared<CustomHandler>();
 
-    Ledger ledger(
-        std::make_shared<VolatileQueue<Decree>>());
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
+    Ledger ledger(queue);
     ledger.RegisterHandler(DecreeType::AddReplicaDecree, handler);
     ledger.Append(Decree(Replica("a_author"), 1, "AAAAA", DecreeType::AddReplicaDecree));
 

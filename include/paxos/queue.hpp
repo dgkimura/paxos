@@ -330,7 +330,7 @@ private:
             stream.rdbuf(file.rdbuf());
         }
         stream.seekg(1 * INDEX_SIZE, std::ios::beg);
-        std::string buffer;
+        std::string buffer(INDEX_SIZE, '\0');
         stream.read(&buffer[0], INDEX_SIZE);
         boost::trim(buffer);
         return static_cast<std::streampos>(std::stoi(buffer));
@@ -521,8 +521,8 @@ public:
     T Last()
     {
         auto position = get_end_position();
-        stream.seekg(position, std::ios::beg);
 
+        stream.seekg(position, std::ios::beg);
         return Deserialize<T>(stream);
     }
 
