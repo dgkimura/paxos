@@ -422,22 +422,22 @@ public:
         std::string dirname,
         std::string filename,
         std::streampos rollover_size=DEFAULT_ROLLOVER_SIZE
-    ) : file((fs::path(dirname) / fs::path(filename)).string(),
+    ) : file((boost::filesystem::path(dirname) /
+              boost::filesystem::path(filename)).string(),
                std::ios::out | std::ios::in | std::ios::binary),
         stream(file),
         rollover_size(rollover_size)
     {
-        if (!boost::filesystem::exists((fs::path(dirname) /
-                                        fs::path(filename)).string()))
+        auto path = (boost::filesystem::path(dirname) /
+                     boost::filesystem::path(filename)).string();
+        if (!boost::filesystem::exists(path))
         {
-            file.open((fs::path(dirname) / fs::path(filename)).string(),
-                       std::ios::out | std::ios::app | std::ios::binary);
+            file.open(path, std::ios::out | std::ios::app | std::ios::binary);
             file << std::setw(INDEX_SIZE) << HEADER_SIZE;
             file << std::setw(INDEX_SIZE) << UNINITIALIZED;
             file.flush();
             file.close();
-            file.open((fs::path(dirname) / fs::path(filename)).string(),
-                       std::ios::out | std::ios::in | std::ios::binary);
+            file.open(path, std::ios::out | std::ios::in | std::ios::binary);
         }
     }
 
