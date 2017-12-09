@@ -13,6 +13,10 @@ BoostServer::BoostServer(std::string address, short port)
           tcp::endpoint(boost::asio::ip::address::from_string(address), port)),
       socket(io_service)
 {
+    boost::system::error_code ec;
+    socket.set_option(boost::asio::socket_base::reuse_address(true), ec);
+    socket.set_option(boost::asio::socket_base::keep_alive(true), ec);
+    acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
     do_accept();
 }
 
@@ -21,6 +25,7 @@ BoostServer::~BoostServer()
 {
     io_service.stop();
     acceptor.close();
+    socket.close();
 }
 
 

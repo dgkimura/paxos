@@ -2,8 +2,10 @@
 #define __SENDER_HPP_INCLUDED__
 
 
+#include <memory>
 #include <mutex>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/asio.hpp>
@@ -65,13 +67,21 @@ public:
     {
         std::lock_guard<std::mutex> guard(mutex);
 
-        Transport transport(message.to.hostname, message.to.port);
+        std::string key = message.to.hostname + ":" +
+                          std::to_string(message.to.port);
+        if (cached_transports.find(key) == std::end(cached_transports))
+        {
+            cached_transports[key] = std::unique_ptr<Transport>(
+                                        new Transport(message.to.hostname,
+                                                      message.to.port));
+        }
+        auto& transport = cached_transports[key];
 
         // 1. serialize message
         std::string message_str = Serialize(message);
 
         // 2. write message
-        transport.Write(message_str);
+        transport->Write(message_str);
     }
 
     void ReplyAll(Message message)
@@ -87,6 +97,8 @@ public:
 private:
 
     std::shared_ptr<ReplicaSet>& replicaset;
+
+    std::unordered_map<std::string, std::unique_ptr<Transport>> cached_transports;
 
     std::mutex mutex;
 };
