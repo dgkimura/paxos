@@ -15,8 +15,9 @@ BoostServer::BoostServer(std::string address, short port)
 {
     boost::system::error_code ec;
     socket.set_option(boost::asio::socket_base::reuse_address(true), ec);
-    socket.set_option(boost::asio::socket_base::keep_alive(true), ec);
+    socket.set_option(boost::asio::socket_base::keep_alive(false), ec);
     acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+    acceptor.set_option(boost::asio::ip::tcp::acceptor::keep_alive(false));
     do_accept();
 }
 

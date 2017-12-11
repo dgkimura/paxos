@@ -12,7 +12,7 @@ BoostTransport::BoostTransport(std::string hostname, short port)
     endpoint_ = resolver_.resolve({hostname, std::to_string(port)});
     boost::system::error_code ec;
     socket_.set_option(boost::asio::socket_base::reuse_address(true), ec);
-    socket_.set_option(boost::asio::socket_base::keep_alive(true), ec);
+    socket_.set_option(boost::asio::socket_base::keep_alive(false), ec);
 }
 
 
@@ -28,7 +28,6 @@ BoostTransport::Write(std::string content)
     try
     {
         boost::asio::connect(socket_, endpoint_);
-
         boost::asio::write(socket_, boost::asio::buffer(content.c_str(), content.size()));
         socket_.close();
     }
