@@ -50,15 +50,23 @@ the decree, you must create your parliament with a decree handler.
 
 ```cpp
     Parliament p(
+        //
+        // Our replica identity in the parliament.
+        //
         Replica("127.0.0.1", 8080),
+
+        //
+        // Path of directory to contain state information.
+        //
         ".",
-        [](std::string decree)
-        {
-            std::cout << "Processing decree: " << decree << std::endl;
-        });
+
+        //
+        // Decree handler to process passed decrees.
+        //
+        [](std::string decree) { std::cout << "Execute: " << decree << "\n"; });
 ```
-As soon as the instance sees the decree passes it will execute the decree your
-decree handler and append the decree to the ledger.
+As soon as the instance sees the decree passed, it will execute the decree
+handler and append the decree to the ledger.
 
 
 ## References
