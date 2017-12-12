@@ -2,13 +2,16 @@
 #define __PAUSE_HPP_INCLUDED__
 
 #include <chrono>
+#include <functional>
+
+#include <boost/asio.hpp>
 
 
 class Pause
 {
 public:
 
-    virtual void Start() = 0;
+    virtual void Start(std::function<void(void)> callback) = 0;
 };
 
 
@@ -16,7 +19,7 @@ class NoPause : public Pause
 {
 public:
 
-    virtual void Start() override;
+    virtual void Start(std::function<void(void)> callback) override;
 };
 
 
@@ -26,11 +29,13 @@ public:
 
     RandomPause(std::chrono::milliseconds max);
 
-    virtual void Start() override;
+    virtual void Start(std::function<void(void)> callback) override;
 
 private:
 
     std::chrono::milliseconds max;
+
+    boost::asio::io_service io_service;
 };
 
 

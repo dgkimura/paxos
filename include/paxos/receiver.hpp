@@ -47,7 +47,7 @@ public:
         }
     }
 
-    void RegisterCallback(Callback&& callback, MessageType type)
+    void RegisterCallback(Callback&& callback, MessageType type) override
     {
         if (registered_map.find(type) == registered_map.end())
         {

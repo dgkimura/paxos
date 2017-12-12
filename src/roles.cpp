@@ -233,9 +233,9 @@ HandleNackTie(
         );
         nack_response.decree.number += 1;
 
-        // FIXME: sleep leads to connection timeouts
-        // context->pause->Start();
-        sender->ReplyAll(nack_response);
+        context->pause->Start([&nack_response, &sender](){
+            sender->ReplyAll(nack_response);
+        });
     }
 }
 
