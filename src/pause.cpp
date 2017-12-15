@@ -31,6 +31,9 @@ RandomPause::Start(std::function<void(void)> callback)
     auto interval = boost::posix_time::milliseconds(distribution(generator));
     boost::asio::deadline_timer timer(io_service, interval);
     timer.async_wait(
-        [&callback](const boost::system::error_code&){ callback(); }
+        [&callback](const boost::system::error_code&){
+            callback();
+        }
     );
+    io_service.run();
 }
