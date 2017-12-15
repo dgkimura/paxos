@@ -507,20 +507,63 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
 }
 
 
-TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanLastLedgerDecree)
+TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestProposedDecree)
 {
     auto replica = Replica("host");
     auto decree = Decree(replica, 2, "next", DecreeType::UserDecree);
     auto replicaset = std::make_shared<ReplicaSet>();
     auto highest_proposed_decree = std::make_shared<VolatileDecree>();
-    highest_proposed_decree->Put(Decree(replica, 1, "first", DecreeType::UserDecree));
+
+    // Highest proposed decree (3) is higher than decree (2).
+    highest_proposed_decree->Put(Decree(replica, 3, "first", DecreeType::UserDecree));
     std::stringstream ss;
     auto ledger = std::make_shared<Ledger>(
         std::make_shared<RolloverQueue<Decree>>(ss)
     );
 
-    // Our ledger contains higher decree than messaged decree.
-    ledger->Append(Decree(replica, 3, "future", DecreeType::UserDecree));
+    auto signal = std::make_shared<Signal>();
+    auto context = std::make_shared<ProposerContext>(
+        replicaset,
+        ledger,
+        highest_proposed_decree,
+        [](std::string entry){},
+        std::make_shared<NoPause>(),
+        signal
+    );
+
+    // Add replica to known replicas.
+    context->replicaset->Add(replica);
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNackTie(
+        Message(
+            decree,
+            replica,
+            replica,
+            MessageType::NackTieMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::PrepareMessage);
+}
+
+
+TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsHigherThanHighestProposedDecree)
+{
+    auto replica = Replica("host");
+    auto decree = Decree(replica, 2, "next", DecreeType::UserDecree);
+    auto replicaset = std::make_shared<ReplicaSet>();
+    auto highest_proposed_decree = std::make_shared<VolatileDecree>();
+
+    // Highest proposed decree (1) is lower than decree (2).
+    highest_proposed_decree->Put(Decree(replica, 1, "first", DecreeType::UserDecree));
+    std::stringstream ss;
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<RolloverQueue<Decree>>(ss)
+    );
 
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
