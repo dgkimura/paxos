@@ -219,7 +219,7 @@ HandleNackTie(
     LOG(LogLevel::Info) << "HandleNackTie | " << message.decree.number << "|"
                         << Serialize(message);
 
-    if (IsDecreeEqual(message.decree, context->highest_proposed_decree.Value()))
+    if (IsRootDecreeEqual(message.decree, context->highest_proposed_decree.Value()))
     {
         //
         // Iff the current proposed decree is tied then retry with a higher
@@ -336,8 +336,9 @@ HandlePrepare(
         context->promised_decree = message.decree;
         sender->Reply(Response(message, MessageType::PromiseMessage));
     }
-    else if (IsDecreeEqual(message.decree, context->promised_decree.Value()))
-
+    else if (
+        IsDecreeEqual(message.decree, context->promised_decree.Value()) &&
+        IsRootDecreeEqual(message.decree, context->promised_decree.Value()))
     {
         //
         // If the messaged decree is equal to current promised decree and

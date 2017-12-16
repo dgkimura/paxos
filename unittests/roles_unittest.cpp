@@ -949,10 +949,13 @@ TEST_F(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree
 }
 
 
-TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromMultipleReplicasSendsSinglePromise)
+TEST_F(AcceptorTest, testHandlePrepareWithEqualRootDecreeNumberFromMultipleReplicasSendsSinglePromise)
 {
     Message author_a(Decree(Replica("author_a"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
     Message author_b(Decree(Replica("author_b"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+
+    // The root number of author_a (1) equals root number of author_b (1).
+    author_b.decree.root_number = 1;
 
     auto context = createAcceptorContext();
     context->promised_decree = Decree(Replica("the_author"), 0, "", DecreeType::UserDecree);

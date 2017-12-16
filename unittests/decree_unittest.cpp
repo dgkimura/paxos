@@ -210,3 +210,47 @@ TEST(DecreeUnitTest, testIsDecreeOrderedWithIdenticalDecrees)
 
     ASSERT_FALSE(IsDecreeOrdered(higher, lower));
 }
+
+
+TEST(DecreeUnitTest, testIsRootDecreeOrderedWithIdenticalRootDecrees)
+{
+    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    lower.root_number = 1;
+    Decree higher(Replica("an_author_1"), 2, "", DecreeType::UserDecree);
+    higher.root_number = 1;
+
+    ASSERT_FALSE(IsRootDecreeOrdered(lower, higher));
+}
+
+
+TEST(DecreeUnitTest, testIsRootDecreeOrderedWithOrderedRootDecrees)
+{
+    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    lower.root_number = 1;
+    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    higher.root_number = 2;
+
+    ASSERT_TRUE(IsRootDecreeOrdered(lower, higher));
+}
+
+
+TEST(DecreeUnitTest, testIsRootDecreeEqualWithIdenticalRootDecrees)
+{
+    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    lower.root_number = 1;
+    Decree higher(Replica("an_author_1"), 2, "", DecreeType::UserDecree);
+    higher.root_number = 1;
+
+    ASSERT_TRUE(IsRootDecreeEqual(lower, higher));
+}
+
+
+TEST(DecreeUnitTest, testIsRootDecreeEqualWithOrderedRootDecrees)
+{
+    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    lower.root_number = 1;
+    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    higher.root_number = 2;
+
+    ASSERT_FALSE(IsRootDecreeEqual(lower, higher));
+}

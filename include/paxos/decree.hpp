@@ -89,6 +89,8 @@ bool IsDecreeOrdered(Decree lhs, Decree rhs);
 
 bool IsRootDecreeOrdered(Decree lhs, Decree rhs);
 
+bool IsRootDecreeEqual(Decree lhs, Decree rhs);
+
 struct compare_decree
 {
     bool operator()(const Decree& lhs, const Decree& rhs) const
