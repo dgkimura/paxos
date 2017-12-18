@@ -114,16 +114,26 @@ public:
     {
         std::lock_guard<std::mutex> guard(mutex);
 
-        Transport transport(replica.hostname, replica.port + 1);
+        std::string key = replica.hostname + ":" +
+                          std::to_string(replica.port + 1);
+        if (cached_transports.find(key) == std::end(cached_transports))
+        {
+            cached_transports[key] = std::unique_ptr<Transport>(
+                                        new Transport(replica.hostname,
+                                                      replica.port + 1));
+        }
+        auto& transport = cached_transports[key];
 
         // 1. serialize file
         std::string file_str = Serialize(file);
 
         // 2. write file
-        transport.Write(file_str);
+        transport->Write(file_str);
     }
 
 private:
+
+    std::unordered_map<std::string, std::unique_ptr<Transport>> cached_transports;
 
     std::mutex mutex;
 };
