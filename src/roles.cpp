@@ -101,9 +101,16 @@ HandleRequest(
     }
 
     Message response = Response(message, MessageType::PrepareMessage);
-    if (!context->ledger->IsEmpty())
+    if (!context->ledger->IsEmpty() ||
+        context->highest_proposed_decree.Value().number != 0)
     {
-        response.decree.number = context->ledger->Tail().number + 1;
+        //
+        // If ledger has an entry or we have previously proposed a decree then
+        // the next decree we want to issue is the max between those sources.
+        //
+        response.decree.number = std::max(
+            context->highest_proposed_decree.Value().number,
+            context->ledger->Tail().number + 1);
     }
     else
     {

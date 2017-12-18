@@ -156,6 +156,42 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
 }
 
 
+TEST_F(ProposerTest, testHandleRequestWillSendHigestProposedDecreeIfItExists)
+{
+    auto replicaset = std::make_shared<ReplicaSet>();
+    std::stringstream ss;
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<RolloverQueue<Decree>>(ss)
+    );
+    auto signal = std::make_shared<Signal>();
+    auto context = std::make_shared<ProposerContext>(
+        replicaset,
+        ledger,
+        std::make_shared<VolatileDecree>(),
+        [](std::string entry){},
+        std::make_shared<NoPause>(),
+        signal
+    );
+    context->replicaset->Add(Replica("host"));
+    context->highest_proposed_decree = Decree(Replica("the_author"), 42, "", DecreeType::UserDecree);
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleRequest(
+        Message(
+            Decree(Replica("host"), -1, "first", DecreeType::UserDecree),
+            Replica("host"),
+            Replica("B"),
+            MessageType::RequestMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_EQ(42, sender->sentMessages()[0].decree.number);
+}
+
+
 TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneUniqueInProgressProposal)
 {
     auto replicaset = std::make_shared<ReplicaSet>();
