@@ -9,6 +9,8 @@
 #include <vector>
 
 #include <boost/asio.hpp>
+#include <boost/asio/deadline_timer.hpp>
+
 
 #include "paxos/messages.hpp"
 #include "paxos/replicaset.hpp"
@@ -43,6 +45,8 @@ public:
 
 private:
 
+    void check_deadline();
+
     boost::asio::io_service io_service_;
 
     boost::asio::ip::tcp::socket socket_;
@@ -50,6 +54,8 @@ private:
     boost::asio::ip::tcp::resolver resolver_;
 
     boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> endpoint_;
+
+    boost::asio::deadline_timer timer_;
 };
 
 
