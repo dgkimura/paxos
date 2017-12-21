@@ -240,6 +240,12 @@ HandleNackTie(
         );
         nack_response.decree.number += 1;
 
+        //
+        // We purposefully do not increment the highest_proposed_decree here in
+        // order to prevent contention of competing decrees. If it were updated
+        // here then every new request and nack tie response would create more
+        // completing decree. So we instead update it in HandlePromise.
+        //
         context->pause->Start([&nack_response, &sender](){
             sender->ReplyAll(nack_response);
         });
