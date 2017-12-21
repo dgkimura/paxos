@@ -1,7 +1,6 @@
+#include <chrono>
 #include <random>
 #include <thread>
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "paxos/pause.hpp"
 
@@ -28,12 +27,11 @@ RandomPause::Start(std::function<void(void)> callback)
     std::mt19937 generator(r());
     std::uniform_int_distribution<> distribution(0, max.count());
 
-    auto interval = boost::posix_time::milliseconds(distribution(generator));
-    boost::asio::deadline_timer timer(io_service, interval);
-    timer.async_wait(
-        [&callback](const boost::system::error_code&){
-            callback();
-        }
-    );
-    io_service.run();
+    std::thread t([&distribution, &generator, &callback]()
+    {
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(distribution(generator)));
+        callback();
+    });
+    t.join();
 }

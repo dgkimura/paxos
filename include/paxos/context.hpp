@@ -35,6 +35,7 @@ struct ProposerContext : public Context
 
     std::mutex mutex;
     Decree highest_nacked_decree;
+    Decree highest_nacktie_decree;
     std::shared_ptr<Pause> pause;
     std::shared_ptr<Signal>& signal;
 
@@ -54,6 +55,7 @@ struct ProposerContext : public Context
           ignore_handler(ignore_handler),
           mutex(),
           highest_nacked_decree(Replica(""), -1, "first", DecreeType::UserDecree),
+          highest_nacktie_decree(Replica(""), -1, "first", DecreeType::UserDecree),
           pause(pause),
           signal(signal)
     {

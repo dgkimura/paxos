@@ -506,7 +506,7 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
     auto ledger = std::make_shared<Ledger>(
         std::make_shared<RolloverQueue<Decree>>(ss)
     );
-    ledger->Append(decree);
+    ledger->Append(Decree(replica, 0, "previous", DecreeType::UserDecree));
 
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -556,6 +556,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestPro
     auto ledger = std::make_shared<Ledger>(
         std::make_shared<RolloverQueue<Decree>>(ss)
     );
+    ledger->Append(Decree(replica, 1, "first", DecreeType::UserDecree));
 
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -600,6 +601,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsHigherThanHighestPr
     auto ledger = std::make_shared<Ledger>(
         std::make_shared<RolloverQueue<Decree>>(ss)
     );
+    ledger->Append(Decree(replica, 1, "first", DecreeType::UserDecree));
 
     auto signal = std::make_shared<Signal>();
     auto context = std::make_shared<ProposerContext>(
@@ -612,6 +614,130 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsHigherThanHighestPr
     );
 
     // Add replica to known replicas.
+    context->replicaset->Add(replica);
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNackTie(
+        Message(
+            decree,
+            replica,
+            replica,
+            MessageType::NackTieMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::PrepareMessage);
+}
+
+
+class EventfulPause : public NoPause
+{
+public:
+
+    void RunBefore(std::function<void(void)> callback)
+    {
+        before.push_back(callback);
+    }
+
+    virtual void
+    Start(std::function<void(void)> callback)
+    {
+        for (auto& f : before)
+        {
+            f();
+        }
+        callback();
+    }
+
+private:
+
+    std::vector<std::function<void(void)>> before;
+};
+
+
+TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenHighestNackTieIsIncrementedBetweenPause)
+{
+    auto replica = Replica("host");
+    auto decree = Decree(replica, 1, "first", DecreeType::UserDecree);
+    auto replicaset = std::make_shared<ReplicaSet>();
+    auto highest_proposed_decree = std::make_shared<VolatileDecree>();
+    highest_proposed_decree->Put(decree);
+    std::stringstream ss;
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<RolloverQueue<Decree>>(ss)
+    );
+    ledger->Append(Decree(replica, 0, "first", DecreeType::UserDecree));
+
+    auto signal = std::make_shared<Signal>();
+    auto pause = std::make_shared<EventfulPause>();
+
+    auto context = std::make_shared<ProposerContext>(
+        replicaset,
+        ledger,
+        highest_proposed_decree,
+        [](std::string entry){},
+        pause,
+        signal
+    );
+
+    // Highest nack tied decree is incremented before our pause is run.
+    pause->RunBefore([&context](){ context->highest_nacktie_decree.number += 1; });
+
+    context->replicaset->Add(replica);
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNackTie(
+        Message(
+            decree,
+            replica,
+            replica,
+            MessageType::NackTieMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::PrepareMessage);
+}
+
+
+TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenLedgerIsIncrementedBetweenPause)
+{
+    auto replica = Replica("host");
+    auto decree = Decree(replica, 1, "first", DecreeType::UserDecree);
+    auto replicaset = std::make_shared<ReplicaSet>();
+    auto highest_proposed_decree = std::make_shared<VolatileDecree>();
+    highest_proposed_decree->Put(decree);
+    std::stringstream ss;
+    auto ledger = std::make_shared<Ledger>(
+        std::make_shared<RolloverQueue<Decree>>(ss)
+    );
+    ledger->Append(Decree(replica, 0, "first", DecreeType::UserDecree));
+
+    auto signal = std::make_shared<Signal>();
+    auto pause = std::make_shared<EventfulPause>();
+
+    auto context = std::make_shared<ProposerContext>(
+        replicaset,
+        ledger,
+        highest_proposed_decree,
+        [](std::string entry){},
+        pause,
+        signal
+    );
+
+    // Ledger is updated before our pause is run.
+    pause->RunBefore([&context](){
+        Decree d;
+        d.number = context->ledger->Tail().number + 1;
+        d.root_number = context->ledger->Tail().root_number+ 1;
+        context->ledger->Append(d);
+    });
+
     context->replicaset->Add(replica);
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);

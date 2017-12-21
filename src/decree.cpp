@@ -70,3 +70,9 @@ IsRootDecreeEqual(Decree lhs, Decree rhs)
 {
     return lhs.root_number == rhs.root_number;
 }
+
+bool
+IsRootDecreeHigher(Decree lhs, Decree rhs)
+{
+    return lhs.root_number - rhs.root_number > 0;
+}

@@ -133,8 +133,8 @@ HandlePromise(
     LOG(LogLevel::Info) << "HandlePromise | " << message.decree.number << "|"
                         << Serialize(message);
 
-    if (IsDecreeHigher(message.decree,
-                       context->highest_proposed_decree.Value()) &&
+    if (IsRootDecreeHigher(message.decree,
+                           context->highest_proposed_decree.Value()) &&
         context->replicaset->Contains(message.from))
     {
         //
@@ -226,7 +226,14 @@ HandleNackTie(
     LOG(LogLevel::Info) << "HandleNackTie | " << message.decree.number << "|"
                         << Serialize(message);
 
-    if (IsRootDecreeEqual(message.decree, context->highest_proposed_decree.Value()))
+    //
+    // Acquire mutex to prevent race-conditions relating to compare and set of
+    // the highest_nacktie_decree.
+    //
+    std::lock_guard<std::mutex> lock(context->mutex);
+
+    if (IsRootDecreeEqual(message.decree,
+                          context->highest_proposed_decree.Value()))
     {
         //
         // Iff the current proposed decree is tied then retry with a higher
@@ -239,6 +246,7 @@ HandleNackTie(
             MessageType::PrepareMessage
         );
         nack_response.decree.number += 1;
+        context->highest_nacktie_decree = message.decree;
 
         //
         // We purposefully do not increment the highest_proposed_decree here in
@@ -246,8 +254,20 @@ HandleNackTie(
         // here then every new request and nack tie response would create more
         // completing decree. So we instead update it in HandlePromise.
         //
-        context->pause->Start([&nack_response, &sender](){
-            sender->ReplyAll(nack_response);
+        context->pause->Start([&nack_response, &sender, &context]()
+        {
+            auto next = nack_response.decree;
+
+            //
+            // Check again before sending because during the time that we
+            // paused a higher conflicting nack tie may have come along or the
+            // decree may have already passed for another replica.
+            //
+            if (context->highest_nacktie_decree.number + 1 == next.number &&
+                context->ledger->Tail().root_number + 1 == next.root_number)
+            {
+                sender->ReplyAll(nack_response);
+            }
         });
     }
 }
@@ -338,7 +358,9 @@ HandlePrepare(
     LOG(LogLevel::Info) << "HandlePrepare | " << message.decree.number << "|"
                         << Serialize(message);
 
-    if (IsDecreeHigher(message.decree, context->promised_decree.Value()) ||
+    if (IsRootDecreeHigher(message.decree, context->promised_decree.Value()) ||
+        (IsRootDecreeEqual(message.decree, context->promised_decree.Value()) &&
+         IsDecreeHigher(message.decree, context->promised_decree.Value())) ||
         IsDecreeIdentical(message.decree, context->promised_decree.Value()))
     {
         //

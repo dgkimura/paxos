@@ -56,7 +56,7 @@ Parliament::Parliament(
             location,
             "paxos.highest_proposed_decree"),
         ignore_handler,
-        std::make_shared<RandomPause>(std::chrono::milliseconds(5000)),
+        std::make_shared<RandomPause>(std::chrono::milliseconds(1000)),
         signal);
     auto acceptor = std::make_shared<AcceptorContext>(
         std::make_shared<PersistentDecree>(location, "paxos.promised_decree"),
