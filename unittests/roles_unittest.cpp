@@ -1095,12 +1095,28 @@ TEST_F(AcceptorTest, testHandlePrepareWithHigherDecreeUpdatesPromisedDecree)
 }
 
 
-TEST_F(AcceptorTest, testHandlePrepareWithLowerDecreeDoesNotUpdatePromisedDecree)
+TEST_F(AcceptorTest, testHandlePrepareWithLowerDecreeButSameAuthorAsHighestPromsiedDecreeSendsPromiseMessage)
 {
     Message message(Decree(Replica("the_author"), -1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
 
     auto context = createAcceptorContext();
     context->promised_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
+
+    auto sender = std::make_shared<FakeSender>();
+
+    HandlePrepare(message, context, sender);
+
+    ASSERT_TRUE(IsDecreeLower(message.decree, context->promised_decree.Value()));
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PromiseMessage);
+}
+
+
+TEST_F(AcceptorTest, testHandlePrepareWithLowerAndDifferentAuthorDecreeDoesNotUpdatePromisedDecree)
+{
+    Message message(Decree(Replica("the_author"), -1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+
+    auto context = createAcceptorContext();
+    context->promised_decree = Decree(Replica("another_author"), 1, "", DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 

@@ -111,13 +111,16 @@ HandleRequest(
         response.decree.number = std::max(
             context->highest_proposed_decree.Value().number,
             context->ledger->Tail().number + 1);
+        response.decree.root_number = std::max(
+            context->highest_proposed_decree.Value().root_number,
+            context->ledger->Tail().root_number + 1);
     }
     else
     {
         response.decree.number = 1;
+        response.decree.root_number = 1;
     }
     response.decree.author = message.to;
-    response.decree.root_number = response.decree.number;
     response.decree.content = "";
 
     sender->ReplyAll(response);
@@ -133,8 +136,10 @@ HandlePromise(
     LOG(LogLevel::Info) << "HandlePromise | " << message.decree.number << "|"
                         << Serialize(message);
 
-    if (IsRootDecreeHigher(message.decree,
-                           context->highest_proposed_decree.Value()) &&
+    if ((IsRootDecreeHigher(message.decree,
+                            context->highest_proposed_decree.Value()) ||
+        (IsRootDecreeEqual(message.decree, context->highest_proposed_decree.Value()) &&
+         IsDecreeHigher(message.decree, context->highest_proposed_decree.Value()))) &&
         context->replicaset->Contains(message.from))
     {
         //
@@ -233,7 +238,8 @@ HandleNackTie(
     std::lock_guard<std::mutex> lock(context->mutex);
 
     if (IsRootDecreeEqual(message.decree,
-                          context->highest_proposed_decree.Value()))
+                          context->highest_proposed_decree.Value()) ||
+        IsRootDecreeEqual(message.decree, context->ledger->Tail()))
     {
         //
         // Iff the current proposed decree is tied then retry with a higher
@@ -382,6 +388,18 @@ HandlePrepare(
         //
         sender->Reply(Response(message, MessageType::NackTieMessage));
     }
+    else if (IsReplicaEqual(message.decree.author,
+                            context->promised_decree.Value().author))
+    {
+        //
+        // Even though decree is lower, author is same as promised replica
+        // so we can reply with a promise message of the higher promised
+        // decree.
+        //
+        auto response = Response(message, MessageType::PromiseMessage);
+        response.decree = context->promised_decree.Value();
+        sender->Reply(response);
+    }
     else
     {
         //
@@ -404,7 +422,9 @@ HandleAccept(
 
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree.Value()))
     {
-        if (IsDecreeHigher(message.decree, context->accepted_decree.Value()))
+        if (IsRootDecreeHigher(message.decree, context->accepted_decree.Value()) ||
+            (IsRootDecreeEqual(message.decree, context->accepted_decree.Value()) &&
+             IsDecreeHigher(message.decree, context->accepted_decree.Value())))
         {
             context->accepted_decree = message.decree;
             sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
