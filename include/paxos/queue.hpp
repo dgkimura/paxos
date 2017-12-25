@@ -354,7 +354,7 @@ private:
 
     constexpr static const int64_t HEADER_SIZE = INDEX_SIZE * 2;
 
-    constexpr static const int64_t DEFAULT_ROLLOVER_SIZE = 1000000000;
+    constexpr static const int64_t DEFAULT_ROLLOVER_SIZE = 0x400000000;
 
     class Iterator
     {
