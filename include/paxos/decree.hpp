@@ -73,6 +73,8 @@ struct Decree
 
 int CompareDecrees(Decree lhs, Decree rhs);
 
+int CompareRootDecrees(Decree lhs, Decree rhs);
+
 bool IsDecreeHigher(Decree lhs, Decree rhs);
 
 bool IsDecreeHigherOrEqual(Decree lhs, Decree rhs);

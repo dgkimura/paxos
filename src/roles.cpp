@@ -136,10 +136,7 @@ HandlePromise(
     LOG(LogLevel::Info) << "HandlePromise | " << message.decree.number << "|"
                         << Serialize(message);
 
-    if ((IsRootDecreeHigher(message.decree,
-                            context->highest_proposed_decree.Value()) ||
-        (IsRootDecreeEqual(message.decree, context->highest_proposed_decree.Value()) &&
-         IsDecreeHigher(message.decree, context->highest_proposed_decree.Value()))) &&
+    if (IsDecreeHigher(message.decree, context->highest_proposed_decree.Value()) &&
         context->replicaset->Contains(message.from))
     {
         //
@@ -364,9 +361,7 @@ HandlePrepare(
     LOG(LogLevel::Info) << "HandlePrepare | " << message.decree.number << "|"
                         << Serialize(message);
 
-    if (IsRootDecreeHigher(message.decree, context->promised_decree.Value()) ||
-        (IsRootDecreeEqual(message.decree, context->promised_decree.Value()) &&
-         IsDecreeHigher(message.decree, context->promised_decree.Value())) ||
+    if (IsDecreeHigher(message.decree, context->promised_decree.Value()) ||
         IsDecreeIdentical(message.decree, context->promised_decree.Value()))
     {
         //
@@ -422,9 +417,7 @@ HandleAccept(
 
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree.Value()))
     {
-        if (IsRootDecreeHigher(message.decree, context->accepted_decree.Value()) ||
-            (IsRootDecreeEqual(message.decree, context->accepted_decree.Value()) &&
-             IsDecreeHigher(message.decree, context->accepted_decree.Value())))
+        if (IsDecreeHigher(message.decree, context->accepted_decree.Value()))
         {
             context->accepted_decree = message.decree;
             sender->ReplyAll(Response(message, MessageType::AcceptedMessage));

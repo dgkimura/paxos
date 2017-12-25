@@ -8,10 +8,18 @@ CompareDecrees(Decree lhs, Decree rhs)
 }
 
 
+int
+CompareRootDecrees(Decree lhs, Decree rhs)
+{
+    return lhs.root_number - rhs.root_number;
+}
+
+
 bool
 IsDecreeHigher(Decree lhs, Decree rhs)
 {
-    return CompareDecrees(lhs, rhs) > 0;
+    return (IsRootDecreeEqual(lhs, rhs) && CompareDecrees(lhs, rhs) > 0) ||
+            IsRootDecreeHigher(lhs, rhs);
 }
 
 
@@ -25,7 +33,8 @@ IsDecreeHigherOrEqual(Decree lhs, Decree rhs)
 bool
 IsDecreeEqual(Decree lhs, Decree rhs)
 {
-    return CompareDecrees(lhs, rhs) == 0;
+    return CompareDecrees(lhs, rhs) == 0 &&
+           CompareRootDecrees(lhs, rhs) == 0;
 }
 
 
@@ -33,6 +42,7 @@ bool
 IsDecreeIdentical(Decree lhs, Decree rhs)
 {
     return CompareDecrees(lhs, rhs) == 0 &&
+           CompareRootDecrees(lhs, rhs) == 0 &&
            IsReplicaEqual(lhs.author, rhs.author);
 }
 
@@ -61,18 +71,18 @@ IsDecreeOrdered(Decree lhs, Decree rhs)
 bool
 IsRootDecreeOrdered(Decree lhs, Decree rhs)
 {
-    return lhs.root_number - rhs.root_number == -1;
+    return CompareRootDecrees(lhs, rhs) == -1;
 }
 
 
 bool
 IsRootDecreeEqual(Decree lhs, Decree rhs)
 {
-    return lhs.root_number == rhs.root_number;
+    return CompareRootDecrees(lhs, rhs) == 0;
 }
 
 bool
 IsRootDecreeHigher(Decree lhs, Decree rhs)
 {
-    return lhs.root_number - rhs.root_number > 0;
+    return CompareRootDecrees(lhs, rhs) > 0;
 }

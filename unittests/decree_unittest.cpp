@@ -95,6 +95,28 @@ TEST(DecreeUnitTest, testIsDecreeEqualWithIdenticalDecrees)
 }
 
 
+TEST(DecreeUnitTest, testIsDecreeHigherWithHigherRootDecreeNumberOnRightHandSide)
+{
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 1, "", DecreeType::UserDecree);
+
+    higher.root_number = 2;
+
+    ASSERT_FALSE(IsDecreeHigher(lower, higher));
+}
+
+
+TEST(DecreeUnitTest, testIsDecreeHigherWithHigherRootDecreeNumberOnLeftHandSide)
+{
+    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    Decree higher(Replica("an_author"), 1, "", DecreeType::UserDecree);
+
+    lower.root_number = 2;
+
+    ASSERT_FALSE(IsDecreeHigher(higher, lower));
+}
+
+
 TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeNumberOnRightHandSide)
 {
     Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
