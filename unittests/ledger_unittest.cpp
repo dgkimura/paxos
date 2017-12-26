@@ -185,6 +185,21 @@ TEST_F(LedgerUnitTest, testAppendIgnoresOutOfOrderDecrees)
 }
 
 
+TEST_F(LedgerUnitTest, testAppendWritesOutOfOrderDecreeWithOrderedRoot)
+{
+    std::stringstream ss;
+    auto queue = std::make_shared<RolloverQueue<Decree>>(ss);
+    Ledger ledger(queue);
+    ledger.Append(Decree(Replica("b_author"), 2, "b_content", DecreeType::UserDecree));
+
+    Decree next_decree(Replica("a_author"), 1, "a_content", DecreeType::UserDecree);
+    next_decree.root_number = 3;
+    ledger.Append(next_decree);
+
+    ASSERT_EQ(GetQueueSize(queue), 2);
+}
+
+
 TEST_F(LedgerUnitTest, testAppendIgnoresDuplicateDecrees)
 {
     std::stringstream ss;
