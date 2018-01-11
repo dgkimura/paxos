@@ -1203,6 +1203,24 @@ TEST_F(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
 }
 
 
+TEST_F(AcceptorTest, testHandleAcceptWithIdenticalAcceptedDecreeResendsAcceptedMessage)
+{
+    Message message(Decree(Replica("the_author"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::AcceptMessage);
+
+    auto context = createAcceptorContext();
+    context->promised_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
+    context->accepted_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
+
+    auto replicaset = std::make_shared<ReplicaSet>();;
+    replicaset->Add(Replica("the_author"));
+    auto sender = std::make_shared<FakeSender>(replicaset);
+
+    HandleAccept(message, context, sender);
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::AcceptedMessage);
+}
+
+
 TEST_F(AcceptorTest, testHandleAcceptWithHigherDecreeDoesUpdateAcceptedDecree)
 {
     Message message(Decree(Replica("the_author"), 2, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::AcceptMessage);
