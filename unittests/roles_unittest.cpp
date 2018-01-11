@@ -1203,7 +1203,7 @@ TEST_F(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
 }
 
 
-TEST_F(AcceptorTest, testHandleAcceptWithIdenticalAcceptedDecreeResendsAcceptedMessage)
+TEST_F(AcceptorTest, testHandleAcceptWithHigherOrEqualAcceptedDecreeResendsAcceptedMessage)
 {
     Message message(Decree(Replica("the_author"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::AcceptMessage);
 

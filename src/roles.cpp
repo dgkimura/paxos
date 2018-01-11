@@ -417,12 +417,8 @@ HandleAccept(
 
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree.Value()))
     {
-        if (IsDecreeHigher(message.decree, context->accepted_decree.Value()) ||
-            IsDecreeIdentical(message.decree, context->accepted_decree.Value()))
-        {
-            context->accepted_decree = message.decree;
-            sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
-        }
+        context->accepted_decree = message.decree;
+        sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
     }
 }
 
