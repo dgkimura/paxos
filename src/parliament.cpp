@@ -60,7 +60,8 @@ Parliament::Parliament(
         signal);
     auto acceptor = std::make_shared<AcceptorContext>(
         std::make_shared<PersistentDecree>(location, "paxos.promised_decree"),
-        std::make_shared<PersistentDecree>(location, "paxos.accepted_decree"));
+        std::make_shared<PersistentDecree>(location, "paxos.accepted_decree"),
+        std::chrono::milliseconds(1000));
     hookup_legislator(legislator, proposer, acceptor);
 }
 

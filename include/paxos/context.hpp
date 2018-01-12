@@ -3,6 +3,7 @@
 
 
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <map>
 #include <memory>
@@ -67,13 +68,18 @@ struct AcceptorContext : public Context
 {
     Field<Decree> promised_decree;
     Field<Decree> accepted_decree;
+    std::chrono::high_resolution_clock::time_point accepted_time;
+    std::chrono::milliseconds interval;
 
     AcceptorContext(
         std::shared_ptr<Storage<Decree>> promised_decree_,
-        std::shared_ptr<Storage<Decree>> accepted_decree_
+        std::shared_ptr<Storage<Decree>> accepted_decree_,
+        std::chrono::milliseconds interval_
     )
         : promised_decree(promised_decree_),
-          accepted_decree(accepted_decree_)
+          accepted_decree(accepted_decree_),
+          accepted_time(std::chrono::high_resolution_clock::now()),
+          interval(interval_)
     {
     }
 };

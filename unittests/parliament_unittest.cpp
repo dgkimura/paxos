@@ -103,7 +103,8 @@ class ParliamentTest: public testing::Test
         );
         auto acceptor = std::make_shared<AcceptorContext>(
             std::make_shared<VolatileDecree>(),
-            std::make_shared<VolatileDecree>()
+            std::make_shared<VolatileDecree>(),
+            std::chrono::milliseconds(1000)
         );
         auto learner = std::make_shared<LearnerContext>(
             legislators,
