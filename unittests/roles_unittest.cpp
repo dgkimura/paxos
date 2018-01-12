@@ -9,17 +9,17 @@
 #include "paxos/roles.hpp"
 
 
-class FakeSender : public Sender
+class FakeSender : public paxos::Sender
 {
 public:
 
     FakeSender()
         : sent_messages(),
-          replicaset(std::shared_ptr<ReplicaSet>(new ReplicaSet()))
+          replicaset(std::shared_ptr<paxos::ReplicaSet>(new paxos::ReplicaSet()))
     {
     }
 
-    FakeSender(std::shared_ptr<ReplicaSet> replicaset_)
+    FakeSender(std::shared_ptr<paxos::ReplicaSet> replicaset_)
         : sent_messages(),
           replicaset(replicaset_)
     {
@@ -29,12 +29,12 @@ public:
     {
     }
 
-    void Reply(Message message)
+    void Reply(paxos::Message message)
     {
         sent_messages.push_back(message);
     }
 
-    void ReplyAll(Message message)
+    void ReplyAll(paxos::Message message)
     {
         for (auto r : *replicaset)
         {
@@ -42,50 +42,50 @@ public:
         }
     }
 
-    std::vector<Message> sentMessages()
+    std::vector<paxos::Message> sentMessages()
     {
         return sent_messages;
     }
 
 private:
 
-    std::vector<Message> sent_messages;
+    std::vector<paxos::Message> sent_messages;
 
-    std::shared_ptr<ReplicaSet> replicaset;
+    std::shared_ptr<paxos::ReplicaSet> replicaset;
 };
 
 
-class FakeReceiver : public Receiver
+class FakeReceiver : public paxos::Receiver
 {
 public:
 
-    void RegisterCallback(Callback&& callback, MessageType type)
+    void RegisterCallback(paxos::Callback&& callback, paxos::MessageType type)
     {
         registered_set.insert(type);
     }
 
-    bool IsMessageTypeRegister(MessageType type)
+    bool IsMessageTypeRegister(paxos::MessageType type)
     {
         return registered_set.find(type) != registered_set.end();
     }
 
 private:
 
-    std::set<MessageType> registered_set;
+    std::set<paxos::MessageType> registered_set;
 };
 
 
-std::shared_ptr<AcceptorContext> createAcceptorContext()
+std::shared_ptr<paxos::AcceptorContext> createAcceptorContext()
 {
-    return std::make_shared<AcceptorContext>(
-        std::make_shared<VolatileDecree>(),
-        std::make_shared<VolatileDecree>(),
+    return std::make_shared<paxos::AcceptorContext>(
+        std::make_shared<paxos::VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         std::chrono::milliseconds(0)
     );
 }
 
 
-bool WasMessageTypeSent(std::shared_ptr<FakeSender> sender, MessageType type)
+bool WasMessageTypeSent(std::shared_ptr<FakeSender> sender, paxos::MessageType type)
 {
     bool was_sent = false;
     for (auto m : sender->sentMessages())
@@ -101,14 +101,14 @@ bool WasMessageTypeSent(std::shared_ptr<FakeSender> sender, MessageType type)
 
 
 void
-ASSERT_MESSAGE_TYPE_SENT(std::shared_ptr<FakeSender> sender, MessageType type)
+ASSERT_MESSAGE_TYPE_SENT(std::shared_ptr<FakeSender> sender, paxos::MessageType type)
 {
     ASSERT_TRUE(WasMessageTypeSent(sender, type));
 }
 
 
 void
-ASSERT_MESSAGE_TYPE_NOT_SENT(std::shared_ptr<FakeSender> sender, MessageType type)
+ASSERT_MESSAGE_TYPE_NOT_SENT(std::shared_ptr<FakeSender> sender, paxos::MessageType type)
 {
     ASSERT_FALSE(WasMessageTypeSent(sender, type));
 }
@@ -118,7 +118,7 @@ class ProposerTest: public testing::Test
 {
     virtual void SetUp()
     {
-        DisableLogging();
+        paxos::DisableLogging();
     }
 };
 
@@ -127,63 +127,63 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
 {
     auto receiver = std::make_shared<FakeReceiver>();
     auto sender = std::make_shared<FakeSender>();
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
 
     RegisterProposer(receiver, sender, context);
 
-    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
-    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
-    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::NackTieMessage));
-    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::ResumeMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(paxos::MessageType::RequestMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(paxos::MessageType::PromiseMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(paxos::MessageType::NackTieMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(paxos::MessageType::ResumeMessage));
 
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdateMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdatedMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::PrepareMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::AcceptMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::UpdateMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::UpdatedMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::AcceptedMessage));
 }
 
 
 TEST_F(ProposerTest, testHandleRequestWillSendHigestProposedDecreeIfItExists)
 {
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->replicaset->Add(Replica("host"));
-    context->highest_proposed_decree = Decree(Replica("the_author"), 42, "", DecreeType::UserDecree);
+    context->replicaset->Add(paxos::Replica("host"));
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("the_author"), 42, "", paxos::DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleRequest(
-        Message(
-            Decree(Replica("host"), -1, "first", DecreeType::UserDecree),
-            Replica("host"),
-            Replica("B"),
-            MessageType::RequestMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("host"), -1, "first", paxos::DecreeType::UserDecree),
+            paxos::Replica("host"),
+            paxos::Replica("B"),
+            paxos::MessageType::RequestMessage
         ),
         context,
         sender
@@ -195,50 +195,50 @@ TEST_F(ProposerTest, testHandleRequestWillSendHigestProposedDecreeIfItExists)
 
 TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneUniqueInProgressProposal)
 {
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->replicaset->Add(Replica("host"));
+    context->replicaset->Add(paxos::Replica("host"));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleRequest(
-        Message(
-            Decree(Replica("host"), -1, "first", DecreeType::UserDecree),
-            Replica("host"),
-            Replica("B"),
-            MessageType::RequestMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("host"), -1, "first", paxos::DecreeType::UserDecree),
+            paxos::Replica("host"),
+            paxos::Replica("B"),
+            paxos::MessageType::RequestMessage
         ),
         context,
         sender
     );
     HandleRequest(
-        Message(
-            Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
-            Replica("host"),
-            Replica("B"),
-            MessageType::RequestMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("host"), -1, "second", paxos::DecreeType::UserDecree),
+            paxos::Replica("host"),
+            paxos::Replica("B"),
+            paxos::MessageType::RequestMessage
         ),
         context,
         sender
     );
     HandleRequest(
-        Message(
-            Decree(Replica("host"), -1, "third", DecreeType::UserDecree),
-            Replica("host"),
-            Replica("B"),
-            MessageType::RequestMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("host"), -1, "third", paxos::DecreeType::UserDecree),
+            paxos::Replica("host"),
+            paxos::Replica("B"),
+            paxos::MessageType::RequestMessage
         ),
         context,
         sender
@@ -253,58 +253,58 @@ TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneUniqueInProgressProposal)
 
 TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromisedDecree)
 {
-    Message message(
-        Decree(Replica("the_author"), -1, "", DecreeType::UserDecree),
-        Replica("from"),
-        Replica("to"),
-        MessageType::PromiseMessage);
+    paxos::Message message(
+        paxos::Decree(paxos::Replica("the_author"), -1, "", paxos::DecreeType::UserDecree),
+        paxos::Replica("from"),
+        paxos::Replica("to"),
+        paxos::MessageType::PromiseMessage);
 
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->highest_proposed_decree = Decree(Replica("the_author"), 0, "", DecreeType::UserDecree);
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("the_author"), 0, "", paxos::DecreeType::UserDecree);
 
     std::shared_ptr<FakeSender> sender(new FakeSender());
 
     HandlePromise(message, context, sender);
 
     ASSERT_TRUE(IsDecreeLower(message.decree, context->highest_proposed_decree.Value()));
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::AcceptMessage);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::AcceptMessage);
 }
 
 
 TEST_F(ProposerTest, testHandlePromiseWithoutAnyRequestedValuesDoesNotSendAccept)
 {
-    Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("host"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("host"), paxos::Replica("host"), paxos::MessageType::PromiseMessage);
 
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
-    context->replicaset = std::make_shared<ReplicaSet>();
-    context->replicaset->Add(Replica("host"));
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("host"), 0, "", paxos::DecreeType::UserDecree);
+    context->replicaset = std::make_shared<paxos::ReplicaSet>();
+    context->replicaset->Add(paxos::Replica("host"));
 
     // context->requested_values is EMPTY!!
 
@@ -312,138 +312,138 @@ TEST_F(ProposerTest, testHandlePromiseWithoutAnyRequestedValuesDoesNotSendAccept
 
     HandlePromise(message, context, sender);
 
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::AcceptMessage);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::AcceptMessage);
 }
 
 
 TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecree)
 {
-    Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("host"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("host"), paxos::Replica("host"), paxos::MessageType::PromiseMessage);
 
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
-    context->replicaset = std::make_shared<ReplicaSet>();
-    context->replicaset->Add(Replica("host"));
-    context->requested_values.push_back(std::make_tuple("a_requested_value", DecreeType::UserDecree));
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("host"), 0, "", paxos::DecreeType::UserDecree);
+    context->replicaset = std::make_shared<paxos::ReplicaSet>();
+    context->replicaset->Add(paxos::Replica("host"));
+    context->requested_values.push_back(std::make_tuple("a_requested_value", paxos::DecreeType::UserDecree));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandlePromise(message, context, sender);
 
     ASSERT_TRUE(IsDecreeEqual(message.decree, context->highest_proposed_decree.Value()));
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::AcceptMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::AcceptMessage);
 }
 
 
 TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotUpdateHighestPromisedDecree)
 {
-    Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("unknown_host"), Replica("host"), MessageType::PromiseMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("host"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("unknown_host"), paxos::Replica("host"), paxos::MessageType::PromiseMessage);
 
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
-    context->replicaset = std::shared_ptr<ReplicaSet>(new ReplicaSet());
-    context->replicaset->Add(Replica("host"));
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("host"), 0, "", paxos::DecreeType::UserDecree);
+    context->replicaset = std::shared_ptr<paxos::ReplicaSet>(new paxos::ReplicaSet());
+    context->replicaset->Add(paxos::Replica("host"));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandlePromise(message, context, sender);
 
     ASSERT_FALSE(IsDecreeEqual(message.decree, context->highest_proposed_decree.Value()));
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::AcceptMessage);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::AcceptMessage);
 }
 
 
 TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedValueThenUpdateDecreeContents)
 {
-    Message message(Decree(Replica("host"), 1, "", DecreeType::UserDecree), Replica("host"), Replica("host"), MessageType::PromiseMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("host"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("host"), paxos::Replica("host"), paxos::MessageType::PromiseMessage);
 
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
 
     // Highest promised decree content is "".
-    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
-    context->replicaset = std::make_shared<ReplicaSet>();
-    context->replicaset->Add(Replica("host"));
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("host"), 0, "", paxos::DecreeType::UserDecree);
+    context->replicaset = std::make_shared<paxos::ReplicaSet>();
+    context->replicaset->Add(paxos::Replica("host"));
 
     // Requested values contains entry with "new content to be used".
-    context->requested_values.push_back(std::make_tuple("new content to be used", DecreeType::UserDecree));
+    context->requested_values.push_back(std::make_tuple("new content to be used", paxos::DecreeType::UserDecree));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandlePromise(message, context, sender);
 
     ASSERT_EQ("new content to be used", sender->sentMessages()[0].decree.content);
-    ASSERT_EQ(DecreeType::UserDecree, sender->sentMessages()[0].decree.type);
+    ASSERT_EQ(paxos::DecreeType::UserDecree, sender->sentMessages()[0].decree.type);
     ASSERT_EQ(0, context->requested_values.size());
 }
 
 
 TEST_F(ProposerTest, testHandlePromiseWillSendAcceptAgainIfDuplicatePromiseIsSent)
 {
-    Message message(Decree(Replica("host1"), 1, "", DecreeType::UserDecree), Replica("host1"), Replica("host1"), MessageType::PromiseMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("host1"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("host1"), paxos::Replica("host1"), paxos::MessageType::PromiseMessage);
 
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
-    context->replicaset = std::make_shared<ReplicaSet>();
-    context->replicaset->Add(Replica("host1"));
-    context->replicaset->Add(Replica("host2"));
-    context->replicaset->Add(Replica("host3"));
-    context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
-    context->promise_map[message.decree]->Add(Replica("host1"));
-    context->promise_map[message.decree]->Add(Replica("host2"));
-    context->promise_map[message.decree]->Add(Replica("host3"));
-    context->requested_values.push_back(std::make_tuple("a_requested_value",  DecreeType::UserDecree));
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("host"), 0, "", paxos::DecreeType::UserDecree);
+    context->replicaset = std::make_shared<paxos::ReplicaSet>();
+    context->replicaset->Add(paxos::Replica("host1"));
+    context->replicaset->Add(paxos::Replica("host2"));
+    context->replicaset->Add(paxos::Replica("host3"));
+    context->promise_map[message.decree] = std::make_shared<paxos::ReplicaSet>();
+    context->promise_map[message.decree]->Add(paxos::Replica("host1"));
+    context->promise_map[message.decree]->Add(paxos::Replica("host2"));
+    context->promise_map[message.decree]->Add(paxos::Replica("host3"));
+    context->requested_values.push_back(std::make_tuple("a_requested_value",  paxos::DecreeType::UserDecree));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
@@ -451,38 +451,38 @@ TEST_F(ProposerTest, testHandlePromiseWillSendAcceptAgainIfDuplicatePromiseIsSen
 
     // Accept message is sent to all 3 replicas.
     ASSERT_EQ(3, sender->sentMessages().size());
-    ASSERT_EQ(MessageType::AcceptMessage, sender->sentMessages()[0].type);
-    ASSERT_EQ(MessageType::AcceptMessage, sender->sentMessages()[1].type);
-    ASSERT_EQ(MessageType::AcceptMessage, sender->sentMessages()[2].type);
+    ASSERT_EQ(paxos::MessageType::AcceptMessage, sender->sentMessages()[0].type);
+    ASSERT_EQ(paxos::MessageType::AcceptMessage, sender->sentMessages()[1].type);
+    ASSERT_EQ(paxos::MessageType::AcceptMessage, sender->sentMessages()[2].type);
 }
 
 
 TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
 {
-    Message message(Decree(Replica("host1"), 1, "", DecreeType::UserDecree), Replica("host1"), Replica("host1"), MessageType::PromiseMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("host1"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("host1"), paxos::Replica("host1"), paxos::MessageType::PromiseMessage);
 
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->highest_proposed_decree = Decree(Replica("host"), 0, "", DecreeType::UserDecree);
-    context->replicaset = std::make_shared<ReplicaSet>();
-    context->replicaset->Add(Replica("host1"));
-    context->replicaset->Add(Replica("host2"));
-    context->replicaset->Add(Replica("host3"));
-    context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
-    context->promise_map[message.decree]->Add(Replica("host2"));
-    context->promise_map[message.decree]->Add(Replica("host3"));
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("host"), 0, "", paxos::DecreeType::UserDecree);
+    context->replicaset = std::make_shared<paxos::ReplicaSet>();
+    context->replicaset->Add(paxos::Replica("host1"));
+    context->replicaset->Add(paxos::Replica("host2"));
+    context->replicaset->Add(paxos::Replica("host3"));
+    context->promise_map[message.decree] = std::make_shared<paxos::ReplicaSet>();
+    context->promise_map[message.decree]->Add(paxos::Replica("host2"));
+    context->promise_map[message.decree]->Add(paxos::Replica("host3"));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
@@ -498,45 +498,45 @@ TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
 
 TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMessage)
 {
-    auto replica = Replica("host");
-    auto decree = Decree(replica, 1, "first", DecreeType::UserDecree);
-    auto replicaset = std::make_shared<ReplicaSet>();
-    auto highest_proposed_decree = std::make_shared<VolatileDecree>();
+    auto replica = paxos::Replica("host");
+    auto decree = paxos::Decree(replica, 1, "first", paxos::DecreeType::UserDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    auto highest_proposed_decree = std::make_shared<paxos::VolatileDecree>();
     highest_proposed_decree->Put(decree);
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    ledger->Append(Decree(replica, 0, "previous", DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(replica, 0, "previous", paxos::DecreeType::UserDecree));
 
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
         highest_proposed_decree,
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
 
     // Add replica to known replicas.
     context->replicaset->Add(replica);
-    context->replicaset->Add(Replica("host-2"));
+    context->replicaset->Add(paxos::Replica("host-2"));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleNackTie(
-        Message(
+        paxos::Message(
             decree,
             replica,
             replica,
-            MessageType::NackTieMessage
+            paxos::MessageType::NackTieMessage
         ),
         context,
         sender
     );
 
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PrepareMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::PrepareMessage);
     ASSERT_EQ(decree.number + 1, sender->sentMessages()[0].decree.number);
 
     // Sends 1 message to each replica
@@ -546,26 +546,26 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
 
 TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestProposedDecree)
 {
-    auto replica = Replica("host");
-    auto decree = Decree(replica, 2, "next", DecreeType::UserDecree);
-    auto replicaset = std::make_shared<ReplicaSet>();
-    auto highest_proposed_decree = std::make_shared<VolatileDecree>();
+    auto replica = paxos::Replica("host");
+    auto decree = paxos::Decree(replica, 2, "next", paxos::DecreeType::UserDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    auto highest_proposed_decree = std::make_shared<paxos::VolatileDecree>();
 
     // Highest proposed decree (3) is higher than decree (2).
-    highest_proposed_decree->Put(Decree(replica, 3, "first", DecreeType::UserDecree));
+    highest_proposed_decree->Put(paxos::Decree(replica, 3, "first", paxos::DecreeType::UserDecree));
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    ledger->Append(Decree(replica, 1, "first", DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(replica, 1, "first", paxos::DecreeType::UserDecree));
 
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
         highest_proposed_decree,
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
 
@@ -575,42 +575,42 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestPro
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleNackTie(
-        Message(
+        paxos::Message(
             decree,
             replica,
             replica,
-            MessageType::NackTieMessage
+            paxos::MessageType::NackTieMessage
         ),
         context,
         sender
     );
 
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::PrepareMessage);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::PrepareMessage);
 }
 
 
 TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsHigherThanHighestProposedDecree)
 {
-    auto replica = Replica("host");
-    auto decree = Decree(replica, 2, "next", DecreeType::UserDecree);
-    auto replicaset = std::make_shared<ReplicaSet>();
-    auto highest_proposed_decree = std::make_shared<VolatileDecree>();
+    auto replica = paxos::Replica("host");
+    auto decree = paxos::Decree(replica, 2, "next", paxos::DecreeType::UserDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    auto highest_proposed_decree = std::make_shared<paxos::VolatileDecree>();
 
     // Highest proposed decree (1) is lower than decree (2).
-    highest_proposed_decree->Put(Decree(replica, 1, "first", DecreeType::UserDecree));
+    highest_proposed_decree->Put(paxos::Decree(replica, 1, "first", paxos::DecreeType::UserDecree));
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    ledger->Append(Decree(replica, 1, "first", DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(replica, 1, "first", paxos::DecreeType::UserDecree));
 
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
         highest_proposed_decree,
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
 
@@ -620,21 +620,21 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsHigherThanHighestPr
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleNackTie(
-        Message(
+        paxos::Message(
             decree,
             replica,
             replica,
-            MessageType::NackTieMessage
+            paxos::MessageType::NackTieMessage
         ),
         context,
         sender
     );
 
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::PrepareMessage);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::PrepareMessage);
 }
 
 
-class EventfulPause : public NoPause
+class EventfulPause : public paxos::NoPause
 {
 public:
 
@@ -661,21 +661,21 @@ private:
 
 TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenHighestNackTieIsIncrementedBetweenPause)
 {
-    auto replica = Replica("host");
-    auto decree = Decree(replica, 1, "first", DecreeType::UserDecree);
-    auto replicaset = std::make_shared<ReplicaSet>();
-    auto highest_proposed_decree = std::make_shared<VolatileDecree>();
+    auto replica = paxos::Replica("host");
+    auto decree = paxos::Decree(replica, 1, "first", paxos::DecreeType::UserDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    auto highest_proposed_decree = std::make_shared<paxos::VolatileDecree>();
     highest_proposed_decree->Put(decree);
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    ledger->Append(Decree(replica, 0, "first", DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(replica, 0, "first", paxos::DecreeType::UserDecree));
 
-    auto signal = std::make_shared<Signal>();
+    auto signal = std::make_shared<paxos::Signal>();
     auto pause = std::make_shared<EventfulPause>();
 
-    auto context = std::make_shared<ProposerContext>(
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
         highest_proposed_decree,
@@ -692,37 +692,37 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenHighestNackTieIsIncremented
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleNackTie(
-        Message(
+        paxos::Message(
             decree,
             replica,
             replica,
-            MessageType::NackTieMessage
+            paxos::MessageType::NackTieMessage
         ),
         context,
         sender
     );
 
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::PrepareMessage);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::PrepareMessage);
 }
 
 
 TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenLedgerIsIncrementedBetweenPause)
 {
-    auto replica = Replica("host");
-    auto decree = Decree(replica, 1, "first", DecreeType::UserDecree);
-    auto replicaset = std::make_shared<ReplicaSet>();
-    auto highest_proposed_decree = std::make_shared<VolatileDecree>();
+    auto replica = paxos::Replica("host");
+    auto decree = paxos::Decree(replica, 1, "first", paxos::DecreeType::UserDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    auto highest_proposed_decree = std::make_shared<paxos::VolatileDecree>();
     highest_proposed_decree->Put(decree);
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    ledger->Append(Decree(replica, 0, "first", DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(replica, 0, "first", paxos::DecreeType::UserDecree));
 
-    auto signal = std::make_shared<Signal>();
+    auto signal = std::make_shared<paxos::Signal>();
     auto pause = std::make_shared<EventfulPause>();
 
-    auto context = std::make_shared<ProposerContext>(
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
         highest_proposed_decree,
@@ -733,7 +733,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenLedgerIsIncrementedBetweenP
 
     // Ledger is updated before our pause is run.
     pause->RunBefore([&context](){
-        Decree d;
+        paxos::Decree d;
         d.number = context->ledger->Tail().number + 1;
         d.root_number = context->ledger->Tail().root_number+ 1;
         context->ledger->Append(d);
@@ -744,49 +744,49 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenLedgerIsIncrementedBetweenP
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleNackTie(
-        Message(
+        paxos::Message(
             decree,
             replica,
             replica,
-            MessageType::NackTieMessage
+            paxos::MessageType::NackTieMessage
         ),
         context,
         sender
     );
 
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::PrepareMessage);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::PrepareMessage);
 }
 
 
 TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
 {
     bool was_ignore_handler_run = false;
-    auto replica = Replica("host");
-    auto decree = Decree(replica, 1, "next", DecreeType::UserDecree);
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replica = paxos::Replica("host");
+    auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::UserDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [&was_ignore_handler_run](std::string entry){ was_ignore_handler_run = true; },
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->requested_values.push_back(std::make_tuple("a pending value", DecreeType::UserDecree));
+    context->requested_values.push_back(std::make_tuple("a pending value", paxos::DecreeType::UserDecree));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleNack(
-        Message(
+        paxos::Message(
             decree,
             replica,
             replica,
-            MessageType::NackMessage
+            paxos::MessageType::NackMessage
         ),
         context,
         sender
@@ -799,23 +799,23 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
 
 TEST_F(ProposerTest, testHandleNackWithAddReplicaDecreeSendsFailSignal)
 {
-    auto replica = Replica("host");
-    auto decree = Decree(replica, 1, "next", DecreeType::AddReplicaDecree);
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replica = paxos::Replica("host");
+    auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::AddReplicaDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){ },
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->requested_values.push_back(std::make_tuple("a pending value", DecreeType::UserDecree));
+    context->requested_values.push_back(std::make_tuple("a pending value", paxos::DecreeType::UserDecree));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
@@ -825,11 +825,11 @@ TEST_F(ProposerTest, testHandleNackWithAddReplicaDecreeSendsFailSignal)
         result = signal->Wait();
     });
     HandleNack(
-        Message(
+        paxos::Message(
             decree,
             replica,
             replica,
-            MessageType::NackMessage
+            paxos::MessageType::NackMessage
         ),
         context,
         sender
@@ -844,34 +844,34 @@ TEST_F(ProposerTest, testHandleNackWithAddReplicaDecreeSendsFailSignal)
 TEST_F(ProposerTest, testHandleNackDoesNotRunIgnoreHandlerOnSystemDecrees)
 {
     bool was_ignore_handler_run = false;
-    auto replica = Replica("host");
+    auto replica = paxos::Replica("host");
 
     // DecreeType::AddReplicaDecree is a system decree
-    auto decree = Decree(replica, 1, "next", DecreeType::AddReplicaDecree);
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::AddReplicaDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [&was_ignore_handler_run](std::string entry){ was_ignore_handler_run = true; },
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->requested_values.push_back(std::make_tuple("a pending value", DecreeType::AddReplicaDecree));
+    context->requested_values.push_back(std::make_tuple("a pending value", paxos::DecreeType::AddReplicaDecree));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleNack(
-        Message(
+        paxos::Message(
             decree,
             replica,
             replica,
-            MessageType::NackMessage
+            paxos::MessageType::NackMessage
         ),
         context,
         sender
@@ -884,41 +884,41 @@ TEST_F(ProposerTest, testHandleNackDoesNotRunIgnoreHandlerOnSystemDecrees)
 TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
 {
     int ignore_handler_run_count = 0;
-    auto replica = Replica("host");
-    auto decree = Decree(replica, 1, "next", DecreeType::UserDecree);
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replica = paxos::Replica("host");
+    auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::UserDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [&ignore_handler_run_count](std::string entry){ ignore_handler_run_count += 1; },
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->requested_values.push_back(std::make_tuple("a pending value", DecreeType::UserDecree));
+    context->requested_values.push_back(std::make_tuple("a pending value", paxos::DecreeType::UserDecree));
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleNack(
-        Message(
+        paxos::Message(
             decree,
             replica,
             replica,
-            MessageType::NackMessage
+            paxos::MessageType::NackMessage
         ),
         context,
         sender
     );
     HandleNack(
-        Message(
+        paxos::Message(
             decree,
             replica,
             replica,
-            MessageType::NackMessage
+            paxos::MessageType::NackMessage
         ),
         context,
         sender
@@ -932,30 +932,30 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
 TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
 {
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto replicaset = std::make_shared<ReplicaSet>();
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->replicaset->Add(Replica("host"));
+    context->replicaset->Add(paxos::Replica("host"));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     // Current decree is one.
     HandleRequest(
-        Message(
-            Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
-            Replica("host"),
-            Replica("B"),
-            MessageType::RequestMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("host"), -1, "second", paxos::DecreeType::UserDecree),
+            paxos::Replica("host"),
+            paxos::Replica("B"),
+            paxos::MessageType::RequestMessage
         ),
         context,
         sender
@@ -965,15 +965,15 @@ TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
 
     // Our ledger was updated underneath us to 5.
     context->ledger->Append(
-        Decree(Replica("the_author"), 5, "", DecreeType::UserDecree));
+        paxos::Decree(paxos::Replica("the_author"), 5, "", paxos::DecreeType::UserDecree));
 
     // Next round, increments current by one.
     HandleRequest(
-        Message(
-            Decree(Replica("host"), -1, "second", DecreeType::UserDecree),
-            Replica("host"),
-            Replica("B"),
-            MessageType::RequestMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("host"), -1, "second", paxos::DecreeType::UserDecree),
+            paxos::Replica("host"),
+            paxos::Replica("B"),
+            paxos::MessageType::RequestMessage
         ),
         context,
         sender
@@ -981,33 +981,33 @@ TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
 
     ASSERT_EQ(sender->sentMessages()[1].decree.number, 6);
     ASSERT_EQ(sender->sentMessages()[1].decree.root_number, 6);
-    ASSERT_TRUE(IsReplicaEqual(Replica("B"), sender->sentMessages()[1].decree.author));
+    ASSERT_TRUE(IsReplicaEqual(paxos::Replica("B"), sender->sentMessages()[1].decree.author));
 }
 
 
 TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
 {
-    Message message(
-        Decree(Replica("A"), 1, "content", DecreeType::UserDecree),
-        Replica("from"),
-        Replica("to"),
-        MessageType::AcceptMessage);
+    paxos::Message message(
+        paxos::Decree(paxos::Replica("A"), 1, "content", paxos::DecreeType::UserDecree),
+        paxos::Replica("from"),
+        paxos::Replica("to"),
+        paxos::MessageType::AcceptMessage);
 
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
+    context->promise_map[message.decree] = std::make_shared<paxos::ReplicaSet>();
     context->promise_map[message.decree]->Add(message.from);
 
     ASSERT_EQ(context->promise_map.size(), 1);
@@ -1020,34 +1020,34 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
 
 TEST_F(ProposerTest, testHandleResumeSendsNextRequestIfThereArePendingProposals)
 {
-    Decree decree(Replica("A"), 1, "content", DecreeType::UserDecree);
-    Message message(
+    paxos::Decree decree(paxos::Replica("A"), 1, "content", paxos::DecreeType::UserDecree);
+    paxos::Message message(
         decree,
-        Replica("from"),
-        Replica("to"),
-        MessageType::AcceptMessage);
+        paxos::Replica("from"),
+        paxos::Replica("to"),
+        paxos::MessageType::AcceptMessage);
 
-    auto replicaset = std::make_shared<ReplicaSet>();
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
     ledger->Append(decree);
-    auto signal = std::make_shared<Signal>();
-    auto context = std::make_shared<ProposerContext>(
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
-        std::make_shared<VolatileDecree>(),
+        std::make_shared<paxos::VolatileDecree>(),
         [](std::string entry){},
-        std::make_shared<NoPause>(),
+        std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->requested_values.push_back(std::make_tuple("another pending value", DecreeType::UserDecree));
+    context->requested_values.push_back(std::make_tuple("another pending value", paxos::DecreeType::UserDecree));
     auto sender = std::shared_ptr<FakeSender>(new FakeSender());
 
     HandleResume(message, context, sender);
 
-    ASSERT_EQ(sender->sentMessages()[0].type, MessageType::RequestMessage);
+    ASSERT_EQ(sender->sentMessages()[0].type, paxos::MessageType::RequestMessage);
 }
 
 
@@ -1055,7 +1055,7 @@ class AcceptorTest: public testing::Test
 {
     virtual void SetUp()
     {
-        DisableLogging();
+        paxos::DisableLogging();
     }
 };
 
@@ -1068,84 +1068,84 @@ TEST_F(AcceptorTest, testRegisterAcceptorWillRegistereMessageTypes)
 
     RegisterAcceptor(receiver, sender, context);
 
-    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
-    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(paxos::MessageType::PrepareMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(paxos::MessageType::AcceptMessage));
 
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackTieMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdateMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdatedMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::RequestMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::PromiseMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::NackTieMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::AcceptedMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::UpdateMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::UpdatedMessage));
 }
 
 
 TEST_F(AcceptorTest, testHandlePrepareWithHigherDecreeUpdatesPromisedDecree)
 {
-    Message message(Decree(Replica("the_author"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::PrepareMessage);
 
-    std::shared_ptr<AcceptorContext> context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 0, "", DecreeType::UserDecree);
+    std::shared_ptr<paxos::AcceptorContext> context = createAcceptorContext();
+    context->promised_decree = paxos::Decree(paxos::Replica("the_author"), 0, "", paxos::DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
     HandlePrepare(message, context, sender);
 
     ASSERT_TRUE(IsDecreeEqual(message.decree, context->promised_decree.Value()));
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PromiseMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::PromiseMessage);
 }
 
 
 TEST_F(AcceptorTest, testHandlePrepareWithLowerDecreeButSameAuthorAsHighestPromsiedDecreeSendsPromiseMessage)
 {
-    Message message(Decree(Replica("the_author"), -1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), -1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::PrepareMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
+    context->promised_decree = paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
     HandlePrepare(message, context, sender);
 
     ASSERT_TRUE(IsDecreeLower(message.decree, context->promised_decree.Value()));
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PromiseMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::PromiseMessage);
 }
 
 
 TEST_F(AcceptorTest, testHandlePrepareWithLowerAndDifferentAuthorDecreeDoesNotUpdatePromisedDecree)
 {
-    Message message(Decree(Replica("the_author"), -1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), -1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::PrepareMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("another_author"), 1, "", DecreeType::UserDecree);
+    context->promised_decree = paxos::Decree(paxos::Replica("another_author"), 1, "", paxos::DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
     HandlePrepare(message, context, sender);
 
     ASSERT_TRUE(IsDecreeLower(message.decree, context->promised_decree.Value()));
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::NackMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::NackMessage);
 }
 
 
 TEST_F(AcceptorTest, testHandlePrepareWithEqualRootDecreeNumberFromMultipleReplicasSendsSinglePromise)
 {
-    Message author_a(Decree(Replica("author_a"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
-    Message author_b(Decree(Replica("author_b"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+    paxos::Message author_a(paxos::Decree(paxos::Replica("author_a"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::PrepareMessage);
+    paxos::Message author_b(paxos::Decree(paxos::Replica("author_b"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::PrepareMessage);
 
     // The root number of author_a (1) equals root number of author_b (1).
     author_b.decree.root_number = 1;
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 0, "", DecreeType::UserDecree);
+    context->promised_decree = paxos::Decree(paxos::Replica("the_author"), 0, "", paxos::DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
     HandlePrepare(author_a, context, sender);
     HandlePrepare(author_b, context, sender);
 
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PromiseMessage);
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::NackTieMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::PromiseMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::NackTieMessage);
 
     // We send 1 accept message and 1 nack message.
     ASSERT_EQ(2, sender->sentMessages().size());
@@ -1154,18 +1154,18 @@ TEST_F(AcceptorTest, testHandlePrepareWithEqualRootDecreeNumberFromMultipleRepli
 
 TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromSingleReplicasResendsPromise)
 {
-    Message message(Decree(Replica("the_author"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::PrepareMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::PrepareMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 0, "", DecreeType::UserDecree);
+    context->promised_decree = paxos::Decree(paxos::Replica("the_author"), 0, "", paxos::DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
     HandlePrepare(message, context, sender);
     HandlePrepare(message, context, sender);
 
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::PromiseMessage);
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::NackTieMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::PromiseMessage);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::NackTieMessage);
 
     // We send 2 accept messages.
     ASSERT_EQ(2, sender->sentMessages().size());
@@ -1174,11 +1174,11 @@ TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromSingleReplicasRes
 
 TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 {
-    Message message(Decree(Replica("the_author"), -1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::AcceptMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), -1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::AcceptMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
-    context->accepted_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
+    context->promised_decree = paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree);
+    context->accepted_decree = paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
@@ -1190,11 +1190,11 @@ TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 
 TEST_F(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
 {
-    Message message(Decree(Replica("the_author"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::AcceptMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::AcceptMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
-    context->accepted_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
+    context->promised_decree = paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree);
+    context->accepted_decree = paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
@@ -1206,29 +1206,29 @@ TEST_F(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
 
 TEST_F(AcceptorTest, testHandleAcceptWithHigherOrEqualAcceptedDecreeResendsAcceptedMessage)
 {
-    Message message(Decree(Replica("the_author"), 1, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::AcceptMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::AcceptMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
-    context->accepted_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
+    context->promised_decree = paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree);
+    context->accepted_decree = paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree);
 
-    auto replicaset = std::make_shared<ReplicaSet>();;
-    replicaset->Add(Replica("the_author"));
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    replicaset->Add(paxos::Replica("the_author"));
     auto sender = std::make_shared<FakeSender>(replicaset);
 
     HandleAccept(message, context, sender);
 
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::AcceptedMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::AcceptedMessage);
 }
 
 
 TEST_F(AcceptorTest, testHandleAcceptWithHigherDecreeDoesUpdateAcceptedDecree)
 {
-    Message message(Decree(Replica("the_author"), 2, "", DecreeType::UserDecree), Replica("from"), Replica("to"), MessageType::AcceptMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 2, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::AcceptMessage);
 
     auto context = createAcceptorContext();
-    context->promised_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
-    context->accepted_decree = Decree(Replica("the_author"), 1, "", DecreeType::UserDecree);
+    context->promised_decree = paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree);
+    context->accepted_decree = paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
@@ -1242,17 +1242,17 @@ class LearnerTest: public testing::Test
 {
     virtual void SetUp()
     {
-        DisableLogging();
+        paxos::DisableLogging();
 
-        replicaset = std::make_shared<ReplicaSet>();
-        queue = std::make_shared<RolloverQueue<Decree>>(sstream);
-        ledger = std::make_shared<Ledger>(queue);
-        context = std::make_shared<LearnerContext>(replicaset, ledger);
+        replicaset = std::make_shared<paxos::ReplicaSet>();
+        queue = std::make_shared<paxos::RolloverQueue<paxos::Decree>>(sstream);
+        ledger = std::make_shared<paxos::Ledger>(queue);
+        context = std::make_shared<paxos::LearnerContext>(replicaset, ledger);
     }
 
 public:
 
-    int GetQueueSize(std::shared_ptr<RolloverQueue<Decree>> queue)
+    int GetQueueSize(std::shared_ptr<paxos::RolloverQueue<paxos::Decree>> queue)
     {
         int size = 0;
         for (auto d : *queue)
@@ -1262,11 +1262,11 @@ public:
         return size;
     }
 
-    std::shared_ptr<ReplicaSet> replicaset;
+    std::shared_ptr<paxos::ReplicaSet> replicaset;
     std::stringstream sstream;
-    std::shared_ptr<RolloverQueue<Decree>> queue;
-    std::shared_ptr<Ledger> ledger;
-    std::shared_ptr<LearnerContext> context;
+    std::shared_ptr<paxos::RolloverQueue<paxos::Decree>> queue;
+    std::shared_ptr<paxos::Ledger> ledger;
+    std::shared_ptr<paxos::LearnerContext> context;
 };
 
 
@@ -1277,22 +1277,22 @@ TEST_F(LearnerTest, testRegisterLearnerWillRegistereMessageTypes)
 
     RegisterLearner(receiver, sender, context);
 
-    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
-    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::UpdatedMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(paxos::MessageType::AcceptedMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(paxos::MessageType::UpdatedMessage));
 
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackTieMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdateMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::RequestMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::PrepareMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::PromiseMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::NackTieMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::AcceptMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::UpdateMessage));
 }
 
 
 TEST_F(LearnerTest, testAcceptedHandleWithSingleReplica)
 {
-    Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
-    replicaset->Add(Replica("A"));
+    paxos::Message message(paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("A"), paxos::Replica("A"), paxos::MessageType::AcceptedMessage);
+    replicaset->Add(paxos::Replica("A"));
 
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
@@ -1302,8 +1302,8 @@ TEST_F(LearnerTest, testAcceptedHandleWithSingleReplica)
 
 TEST_F(LearnerTest, testAcceptedHandleIgnoresMessagesFromUnknownReplica)
 {
-    Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("Unknown"), Replica("A"), MessageType::AcceptedMessage);
-    replicaset->Add(Replica("A"));
+    paxos::Message message(paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("Unknown"), paxos::Replica("A"), paxos::MessageType::AcceptedMessage);
+    replicaset->Add(paxos::Replica("A"));
 
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
@@ -1313,10 +1313,10 @@ TEST_F(LearnerTest, testAcceptedHandleIgnoresMessagesFromUnknownReplica)
 
 TEST_F(LearnerTest, testAcceptedHandleReceivesOneAcceptedWithThreeReplicaSet)
 {
-    Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("A"), Replica("B"), MessageType::AcceptedMessage);
-    replicaset->Add(Replica("A"));
-    replicaset->Add(Replica("B"));
-    replicaset->Add(Replica("C"));
+    paxos::Message message(paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("A"), paxos::Replica("B"), paxos::MessageType::AcceptedMessage);
+    replicaset->Add(paxos::Replica("A"));
+    replicaset->Add(paxos::Replica("B"));
+    replicaset->Add(paxos::Replica("C"));
 
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
@@ -1326,26 +1326,26 @@ TEST_F(LearnerTest, testAcceptedHandleReceivesOneAcceptedWithThreeReplicaSet)
 
 TEST_F(LearnerTest, testAcceptedHandleReceivesTwoAcceptedWithThreeReplicaSet)
 {
-    replicaset->Add(Replica("A"));
-    replicaset->Add(Replica("B"));
-    replicaset->Add(Replica("C"));
+    replicaset->Add(paxos::Replica("A"));
+    replicaset->Add(paxos::Replica("B"));
+    replicaset->Add(paxos::Replica("C"));
 
     HandleAccepted(
-        Message(
-            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
-            Replica("A"),
-            Replica("B"),
-            MessageType::AcceptedMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"),
+            paxos::Replica("B"),
+            paxos::MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
     );
     HandleAccepted(
-        Message(
-            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
-            Replica("B"),
-            Replica("B"),
-            MessageType::AcceptedMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("B"),
+            paxos::Replica("B"),
+            paxos::MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
@@ -1357,18 +1357,18 @@ TEST_F(LearnerTest, testAcceptedHandleReceivesTwoAcceptedWithThreeReplicaSet)
 
 TEST_F(LearnerTest, testAcceptedHandleCleansUpAcceptedMapAfterAllVotesReceived)
 {
-    replicaset->Add(Replica("A"));
-    replicaset->Add(Replica("B"));
-    replicaset->Add(Replica("C"));
+    replicaset->Add(paxos::Replica("A"));
+    replicaset->Add(paxos::Replica("B"));
+    replicaset->Add(paxos::Replica("C"));
 
-    Decree decree(Replica("A"), 1, "", DecreeType::UserDecree);
+    paxos::Decree decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree);
 
     HandleAccepted(
-        Message(
+        paxos::Message(
             decree,
-            Replica("A"),
-            Replica("B"),
-            MessageType::AcceptedMessage
+            paxos::Replica("A"),
+            paxos::Replica("B"),
+            paxos::MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
@@ -1377,11 +1377,11 @@ TEST_F(LearnerTest, testAcceptedHandleCleansUpAcceptedMapAfterAllVotesReceived)
     ASSERT_FALSE(context->accepted_map.find(decree) == context->accepted_map.end());
 
     HandleAccepted(
-        Message(
+        paxos::Message(
             decree,
-            Replica("B"),
-            Replica("B"),
-            MessageType::AcceptedMessage
+            paxos::Replica("B"),
+            paxos::Replica("B"),
+            paxos::MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
@@ -1390,11 +1390,11 @@ TEST_F(LearnerTest, testAcceptedHandleCleansUpAcceptedMapAfterAllVotesReceived)
     ASSERT_FALSE(context->accepted_map.find(decree) == context->accepted_map.end());
 
     HandleAccepted(
-        Message(
+        paxos::Message(
             decree,
-            Replica("C"),
-            Replica("B"),
-            MessageType::AcceptedMessage
+            paxos::Replica("C"),
+            paxos::Replica("B"),
+            paxos::MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
@@ -1406,32 +1406,32 @@ TEST_F(LearnerTest, testAcceptedHandleCleansUpAcceptedMapAfterAllVotesReceived)
 
 TEST_F(LearnerTest, testAcceptedHandleIgnoresPreviouslyAcceptedMessagesFromReplicasRemovedFromReplicaSet)
 {
-    replicaset->Add(Replica("A"));
-    replicaset->Add(Replica("B"));
-    replicaset->Add(Replica("C"));
-    Decree decree(Replica("A"), 1, "", DecreeType::UserDecree);
+    replicaset->Add(paxos::Replica("A"));
+    replicaset->Add(paxos::Replica("B"));
+    replicaset->Add(paxos::Replica("C"));
+    paxos::Decree decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree);
 
     // Accepted from replica A.
     HandleAccepted(
-        Message(
+        paxos::Message(
             decree,
-            Replica("A"),
-            Replica("B"),
-            MessageType::AcceptedMessage
+            paxos::Replica("A"),
+            paxos::Replica("B"),
+            paxos::MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
     );
 
     // Remove replica A from replicaset.
-    context->replicaset->Remove(Replica("A"));
+    context->replicaset->Remove(paxos::Replica("A"));
 
     HandleAccepted(
-        Message(
+        paxos::Message(
             decree,
-            Replica("B"),
-            Replica("B"),
-            MessageType::AcceptedMessage
+            paxos::Replica("B"),
+            paxos::Replica("B"),
+            paxos::MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
@@ -1444,26 +1444,26 @@ TEST_F(LearnerTest, testAcceptedHandleIgnoresPreviouslyAcceptedMessagesFromRepli
 
 TEST_F(LearnerTest, testAcceptedHandleIgnoresDuplicateAcceptedMessages)
 {
-    replicaset->Add(Replica("A"));
-    replicaset->Add(Replica("B"));
-    replicaset->Add(Replica("C"));
+    replicaset->Add(paxos::Replica("A"));
+    replicaset->Add(paxos::Replica("B"));
+    replicaset->Add(paxos::Replica("C"));
 
     HandleAccepted(
-        Message(
-            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
-            Replica("A"),
-            Replica("B"),
-            MessageType::AcceptedMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"),
+            paxos::Replica("B"),
+            paxos::MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
     );
     HandleAccepted(
-        Message(
-            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
-            Replica("A"),
-            Replica("B"),
-            MessageType::AcceptedMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"),
+            paxos::Replica("B"),
+            paxos::MessageType::AcceptedMessage
         ),
         context,
         std::shared_ptr<FakeSender>(new FakeSender())
@@ -1475,14 +1475,14 @@ TEST_F(LearnerTest, testAcceptedHandleIgnoresDuplicateAcceptedMessages)
 
 TEST_F(LearnerTest, testAcceptedHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLedgerIsOutOfOrder)
 {
-    replicaset->Add(Replica("A"));
+    replicaset->Add(paxos::Replica("A"));
     auto sender = std::make_shared<FakeSender>();
 
     HandleAccepted(
-        Message(
-            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
-            Replica("A"), Replica("A"),
-            MessageType::AcceptedMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"), paxos::Replica("A"),
+            paxos::MessageType::AcceptedMessage
         ),
         context,
         sender
@@ -1490,25 +1490,25 @@ TEST_F(LearnerTest, testAcceptedHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLe
 
     // Missing decrees 2-9 so don't write to ledger yet.
     HandleAccepted(
-        Message(
-            Decree(Replica("A"), 10, "", DecreeType::UserDecree),
-            Replica("A"), Replica("A"),
-            MessageType::AcceptedMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 10, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"), paxos::Replica("A"),
+            paxos::MessageType::AcceptedMessage
         ),
         context,
         sender
     );
 
     ASSERT_EQ(GetQueueSize(queue), 1);
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::UpdateMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::UpdateMessage);
 }
 
 
 TEST_F(LearnerTest, testAcceptedHandleAppendsToLedgerAfterComparingAgainstOriginalDecree)
 {
-    Message message(Decree(Replica("A"), 42, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("A"), 42, "", paxos::DecreeType::UserDecree), paxos::Replica("A"), paxos::Replica("A"), paxos::MessageType::AcceptedMessage);
     message.decree.root_number = 1;
-    replicaset->Add(Replica("A"));
+    replicaset->Add(paxos::Replica("A"));
 
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
 
@@ -1523,8 +1523,8 @@ TEST_F(LearnerTest, testAcceptedHandleAppendsToLedgerAfterComparingAgainstOrigin
 
 TEST_F(LearnerTest, testAcceptedHandleTracksFutureDecreesIfReceivedOutOfOrder)
 {
-    Message message(Decree(Replica("A"), 42, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
-    replicaset->Add(Replica("A"));
+    paxos::Message message(paxos::Decree(paxos::Replica("A"), 42, "", paxos::DecreeType::UserDecree), paxos::Replica("A"), paxos::Replica("A"), paxos::MessageType::AcceptedMessage);
+    replicaset->Add(paxos::Replica("A"));
     context->is_observer = true;
 
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
@@ -1537,11 +1537,11 @@ TEST_F(LearnerTest, testAcceptedHandleTracksFutureDecreesIfReceivedOutOfOrder)
 
 TEST_F(LearnerTest, testAcceptedHandleDoesNotTrackPastDecrees)
 {
-    Decree past_decree(Replica("A"), 1, "", DecreeType::UserDecree);
-    Decree future_decree(Replica("A"), 1, "", DecreeType::UserDecree);
+    paxos::Decree past_decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree future_decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree);
 
-    Message message(past_decree, Replica("A"), Replica("A"), MessageType::AcceptedMessage);
-    replicaset->Add(Replica("A"));
+    paxos::Message message(past_decree, paxos::Replica("A"), paxos::Replica("A"), paxos::MessageType::AcceptedMessage);
+    replicaset->Add(paxos::Replica("A"));
     context->is_observer = true;
     context->ledger->Append(future_decree);
 
@@ -1557,11 +1557,11 @@ TEST_F(LearnerTest, testAcceptedHandleDoesNotTrackPastDecrees)
 
 TEST_F(LearnerTest, testAcceptedHandleAppendsTrackedFutureDecreesToLedgerWhenTheyFillInHoles)
 {
-    Decree past_decree(Replica("A"), 1, "", DecreeType::UserDecree);
-    Decree current_decree(Replica("A"), 2, "", DecreeType::UserDecree);
+    paxos::Decree past_decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree current_decree(paxos::Replica("A"), 2, "", paxos::DecreeType::UserDecree);
 
-    Message message(current_decree, Replica("A"), Replica("A"), MessageType::AcceptedMessage);
-    replicaset->Add(Replica("A"));
+    paxos::Message message(current_decree, paxos::Replica("A"), paxos::Replica("A"), paxos::MessageType::AcceptedMessage);
+    replicaset->Add(paxos::Replica("A"));
     context->tracked_future_decrees.push(past_decree);
 
     HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
@@ -1573,8 +1573,8 @@ TEST_F(LearnerTest, testAcceptedHandleAppendsTrackedFutureDecreesToLedgerWhenThe
 
 TEST_F(LearnerTest, testAcceptedHandleSendsResumeWhenMessagedDecreeIsEqualToLedger)
 {
-    Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
-    replicaset->Add(Replica("A"));
+    paxos::Message message(paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("A"), paxos::Replica("A"), paxos::MessageType::AcceptedMessage);
+    replicaset->Add(paxos::Replica("A"));
     auto sender = std::make_shared<FakeSender>();
 
     HandleAccepted(message, context, sender);
@@ -1585,71 +1585,71 @@ TEST_F(LearnerTest, testAcceptedHandleSendsResumeWhenMessagedDecreeIsEqualToLedg
 
     HandleAccepted(message, context, sender);
 
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::ResumeMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::ResumeMessage);
     ASSERT_EQ(sender->sentMessages()[0].decree.number, 1);
 }
 
 
 TEST_F(LearnerTest, testAcceptedHandleSendsResumeWhenAcceptedIsGreaterThanQuorum)
 {
-    Message message(Decree(Replica("A"), 1, "", DecreeType::UserDecree), Replica("A"), Replica("A"), MessageType::AcceptedMessage);
-    replicaset->Add(Replica("A"));
-    replicaset->Add(Replica("B"));
-    replicaset->Add(Replica("C"));
+    paxos::Message message(paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("A"), paxos::Replica("A"), paxos::MessageType::AcceptedMessage);
+    replicaset->Add(paxos::Replica("A"));
+    replicaset->Add(paxos::Replica("B"));
+    replicaset->Add(paxos::Replica("C"));
     auto sender = std::make_shared<FakeSender>();
 
     // A replica accepted.
     HandleAccepted(
-        Message(
-            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
-            Replica("A"),
-            Replica("A"),
-            MessageType::AcceptedMessage),
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"),
+            paxos::Replica("A"),
+            paxos::MessageType::AcceptedMessage),
         context, sender);
 
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::ResumeMessage);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::ResumeMessage);
 
     // B replica accepted.
     HandleAccepted(
-        Message(
-            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
-            Replica("B"),
-            Replica("A"),
-            MessageType::AcceptedMessage),
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("B"),
+            paxos::Replica("A"),
+            paxos::MessageType::AcceptedMessage),
         context, sender);
 
     // Have quorum, should send resume.
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::ResumeMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::ResumeMessage);
 
     // Reset sender to erase message queue.
     sender = std::make_shared<FakeSender>();
 
     // C replica accepted.
     HandleAccepted(
-        Message(
-            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
-            Replica("C"),
-            Replica("A"),
-            MessageType::AcceptedMessage),
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("C"),
+            paxos::Replica("A"),
+            paxos::MessageType::AcceptedMessage),
         context, sender);
 
     // Still have quorum, should send resume, again.
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::ResumeMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::ResumeMessage);
     ASSERT_EQ(sender->sentMessages()[0].decree.number, 1);
 }
 
 
 TEST_F(LearnerTest, testHandleUpdatedWithEmptyLedger)
 {
-    replicaset->Add(Replica("A"));
+    replicaset->Add(paxos::Replica("A"));
     auto sender = std::make_shared<FakeSender>();
 
     // Missing decrees 1-9 so don't write to ledger yet.
     HandleUpdated(
-        Message(
-            Decree(Replica("A"), 10, "", DecreeType::UserDecree),
-            Replica("A"), Replica("A"),
-            MessageType::UpdatedMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 10, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"), paxos::Replica("A"),
+            paxos::MessageType::UpdatedMessage
         ),
         context,
         sender
@@ -1658,29 +1658,29 @@ TEST_F(LearnerTest, testHandleUpdatedWithEmptyLedger)
     ASSERT_EQ(GetQueueSize(queue), 0);
 
     // We are still behind so we should not resume.
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, MessageType::ResumeMessage);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::ResumeMessage);
 }
 
 
 TEST_F(LearnerTest, testHandleUpdatedReceivedMessageWithZeroDecree)
 {
-    replicaset->Add(Replica("A"));
-    context->ledger->Append(Decree(Replica("A"), 10, "", DecreeType::UserDecree));
+    replicaset->Add(paxos::Replica("A"));
+    context->ledger->Append(paxos::Decree(paxos::Replica("A"), 10, "", paxos::DecreeType::UserDecree));
     auto sender = std::make_shared<FakeSender>();
 
     // Sending zero decree.
     HandleUpdated(
-        Message(
-            Decree(Replica("A"), 0, "", DecreeType::UserDecree),
-            Replica("A"), Replica("A"),
-            MessageType::UpdatedMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 0, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"), paxos::Replica("A"),
+            paxos::MessageType::UpdatedMessage
         ),
         context,
         sender
     );
 
     // We are up to date so send resume.
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::ResumeMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::ResumeMessage);
 
     // Decree number in resume message should be last ledger decree number.
     ASSERT_EQ(sender->sentMessages()[0].decree.number, 10);
@@ -1689,18 +1689,18 @@ TEST_F(LearnerTest, testHandleUpdatedReceivedMessageWithZeroDecree)
 
 TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecree)
 {
-    replicaset->Add(Replica("A"));
+    replicaset->Add(paxos::Replica("A"));
     auto sender = std::make_shared<FakeSender>();
 
     // Last decree in ledger is 9.
-    context->ledger->Append(Decree(Replica("A"), 9, "", DecreeType::UserDecree));
+    context->ledger->Append(paxos::Decree(paxos::Replica("A"), 9, "", paxos::DecreeType::UserDecree));
 
     // Receive next ordered decree 10.
     HandleUpdated(
-        Message(
-            Decree(Replica("A"), 10, "", DecreeType::UserDecree),
-            Replica("A"), Replica("A"),
-            MessageType::UpdatedMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 10, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"), paxos::Replica("A"),
+            paxos::MessageType::UpdatedMessage
         ),
         context,
         sender
@@ -1713,19 +1713,19 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecree)
 
 TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrackedAdditionalOrderedDecrees)
 {
-    replicaset->Add(Replica("A"));
+    replicaset->Add(paxos::Replica("A"));
     auto sender = std::make_shared<FakeSender>();
 
     // We have tracked decrees 2, 3.
-    context->tracked_future_decrees.push(Decree(Replica("A"), 2, "", DecreeType::UserDecree));
-    context->tracked_future_decrees.push(Decree(Replica("A"), 3, "", DecreeType::UserDecree));
+    context->tracked_future_decrees.push(paxos::Decree(paxos::Replica("A"), 2, "", paxos::DecreeType::UserDecree));
+    context->tracked_future_decrees.push(paxos::Decree(paxos::Replica("A"), 3, "", paxos::DecreeType::UserDecree));
 
     // Receive next ordered decree 1.
     HandleUpdated(
-        Message(
-            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
-            Replica("A"), Replica("A"),
-            MessageType::UpdatedMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"), paxos::Replica("A"),
+            paxos::MessageType::UpdatedMessage
         ),
         context,
         sender
@@ -1738,19 +1738,19 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrac
 
 TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrackedAdditionalUnorderedDecrees)
 {
-    replicaset->Add(Replica("A"));
+    replicaset->Add(paxos::Replica("A"));
     auto sender = std::make_shared<FakeSender>();
 
     // We have tracked decrees 3, 4.
-    context->tracked_future_decrees.push(Decree(Replica("A"), 3, "", DecreeType::UserDecree));
-    context->tracked_future_decrees.push(Decree(Replica("A"), 4, "", DecreeType::UserDecree));
+    context->tracked_future_decrees.push(paxos::Decree(paxos::Replica("A"), 3, "", paxos::DecreeType::UserDecree));
+    context->tracked_future_decrees.push(paxos::Decree(paxos::Replica("A"), 4, "", paxos::DecreeType::UserDecree));
 
     // Receive next ordered decree 1.
     HandleUpdated(
-        Message(
-            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
-            Replica("A"), Replica("A"),
-            MessageType::UpdatedMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"), paxos::Replica("A"),
+            paxos::MessageType::UpdatedMessage
         ),
         context,
         sender
@@ -1760,7 +1760,7 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecreeAndTrac
     ASSERT_EQ(GetQueueSize(queue), 1);
 
     // Since we still have a hole we should send an update message.
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::UpdateMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::UpdateMessage);
 }
 
 
@@ -1768,7 +1768,7 @@ class UpdaterTest: public testing::Test
 {
     virtual void SetUp()
     {
-        DisableLogging();
+        paxos::DisableLogging();
     }
 };
 
@@ -1778,49 +1778,49 @@ TEST_F(UpdaterTest, testRegisterUpdaterWillRegistereMessageTypes)
     auto receiver = std::make_shared<FakeReceiver>();
     auto sender = std::make_shared<FakeSender>();
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto context = std::make_shared<UpdaterContext>(
+    auto context = std::make_shared<paxos::UpdaterContext>(
         ledger
     );
 
     RegisterUpdater(receiver, sender, context);
 
-    ASSERT_TRUE(receiver->IsMessageTypeRegister(MessageType::UpdateMessage));
+    ASSERT_TRUE(receiver->IsMessageTypeRegister(paxos::MessageType::UpdateMessage));
 
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::RequestMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PrepareMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::PromiseMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::NackTieMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::AcceptedMessage));
-    ASSERT_FALSE(receiver->IsMessageTypeRegister(MessageType::UpdatedMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::RequestMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::PrepareMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::PromiseMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::NackTieMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::AcceptMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::AcceptedMessage));
+    ASSERT_FALSE(receiver->IsMessageTypeRegister(paxos::MessageType::UpdatedMessage));
 }
 
 
 TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndHasEmptyLedger)
 {
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto context = std::make_shared<UpdaterContext>(
+    auto context = std::make_shared<paxos::UpdaterContext>(
         ledger
     );
     auto sender = std::make_shared<FakeSender>();
 
     HandleUpdate(
-        Message(
-            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
-            Replica("A"), Replica("A"),
-            MessageType::UpdateMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"), paxos::Replica("A"),
+            paxos::MessageType::UpdateMessage
         ),
         context,
         sender
     );
 
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::UpdatedMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::UpdatedMessage);
 
     // Our ledger is empty so we will send an zero decree to show we have nothing.
     ASSERT_EQ(sender->sentMessages()[0].decree.number, 0);
@@ -1830,28 +1830,28 @@ TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndHasEmptyLedger)
 TEST_F(UpdaterTest, testHandleUpdateReceivesMessageWithDecreeAndLedgerHasNextDecree)
 {
     std::stringstream ss;
-    auto ledger = std::make_shared<Ledger>(
-        std::make_shared<RolloverQueue<Decree>>(ss)
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto context = std::make_shared<UpdaterContext>(
+    auto context = std::make_shared<paxos::UpdaterContext>(
         ledger
     );
     auto sender = std::make_shared<FakeSender>();
 
-    context->ledger->Append(Decree(Replica("A"), 1, "", DecreeType::UserDecree));
-    context->ledger->Append(Decree(Replica("A"), 2, "", DecreeType::UserDecree));
-    context->ledger->Append(Decree(Replica("A"), 3, "", DecreeType::UserDecree));
+    context->ledger->Append(paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree));
+    context->ledger->Append(paxos::Decree(paxos::Replica("A"), 2, "", paxos::DecreeType::UserDecree));
+    context->ledger->Append(paxos::Decree(paxos::Replica("A"), 3, "", paxos::DecreeType::UserDecree));
 
     HandleUpdate(
-        Message(
-            Decree(Replica("A"), 1, "", DecreeType::UserDecree),
-            Replica("A"), Replica("A"),
-            MessageType::UpdateMessage
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"), paxos::Replica("A"),
+            paxos::MessageType::UpdateMessage
         ),
         context,
         sender
     );
 
     // Our ledger contained next decree so we shoul send an updated message.
-    ASSERT_MESSAGE_TYPE_SENT(sender, MessageType::UpdatedMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::UpdatedMessage);
 }

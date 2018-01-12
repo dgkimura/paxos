@@ -16,6 +16,10 @@
 #include "paxos/server.hpp"
 
 
+namespace paxos
+{
+
+
 class Listener
 {
 };
@@ -78,6 +82,9 @@ void SendBootstrap(
         file.content = buffer.str();
         sender.SendFile(replica, file);
     }
+}
+
+
 }
 
 

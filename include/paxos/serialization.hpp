@@ -13,6 +13,10 @@
 #include "paxos/replicaset.hpp"
 
 
+namespace paxos
+{
+
+
 template <typename Archive>
 void serialize(Archive& ar, Decree& obj, const unsigned int version)
 {
@@ -100,6 +104,9 @@ T Deserialize(std::istream& stream)
     std::stringstream sstream;
     sstream << stream.rdbuf();
     return Deserialize<T>(sstream.str());
+}
+
+
 }
 
 

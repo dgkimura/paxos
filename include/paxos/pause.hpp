@@ -7,6 +7,10 @@
 #include <boost/asio.hpp>
 
 
+namespace paxos
+{
+
+
 class Pause
 {
 public:
@@ -37,6 +41,9 @@ private:
 
     boost::asio::io_service io_service;
 };
+
+
+}
 
 
 #endif

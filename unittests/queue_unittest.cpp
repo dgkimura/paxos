@@ -19,7 +19,7 @@ int GetQueueSize(std::shared_ptr<T> queue)
 
 TEST(QueueTest, testThatVolatileQueueCanEnqueueAnElement)
 {
-    auto queue = std::make_shared<VolatileQueue<std::string>>();
+    auto queue = std::make_shared<paxos::VolatileQueue<std::string>>();
 
     queue->Enqueue("narf");
     ASSERT_EQ(GetQueueSize(queue), 1);
@@ -28,7 +28,7 @@ TEST(QueueTest, testThatVolatileQueueCanEnqueueAnElement)
 
 TEST(QueueTest, testThatVolatileQueueCanDequeueAnElement)
 {
-    auto queue = std::make_shared<VolatileQueue<std::string>>();
+    auto queue = std::make_shared<paxos::VolatileQueue<std::string>>();
 
     queue->Enqueue("narf");
     queue->Dequeue();
@@ -39,7 +39,7 @@ TEST(QueueTest, testThatVolatileQueueCanDequeueAnElement)
 
 TEST(QueueTest, testThatVolatileQueueCanIterateOverContents)
 {
-    auto queue = std::make_shared<VolatileQueue<std::string>>();
+    auto queue = std::make_shared<paxos::VolatileQueue<std::string>>();
 
     queue->Enqueue("narf");
 
@@ -54,7 +54,7 @@ TEST(QueueTest, testThatPersistentQueueCanIterateOverContents)
 {
     std::stringstream file;
 
-    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
+    auto queue = std::make_shared<paxos::PersistentQueue<std::string>>(file);
 
     queue->Enqueue("narf");
 
@@ -69,7 +69,7 @@ TEST(QueueTest, testThatPersistentQueueSizeAfterEnqueue)
 {
     std::stringstream file;
 
-    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
+    auto queue = std::make_shared<paxos::PersistentQueue<std::string>>(file);
 
     queue->Enqueue("narf");
     queue->Enqueue("zort");
@@ -82,7 +82,7 @@ TEST(QueueTest, testThatPersistentQueueCanDequeue)
 {
     std::stringstream file;
 
-    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
+    auto queue = std::make_shared<paxos::PersistentQueue<std::string>>(file);
 
     queue->Enqueue("narf");
     queue->Enqueue("zort");
@@ -97,19 +97,19 @@ TEST(QueueTest, testThatPersistentQueueIsCanRehydrateFromAPrevousPersistentQueue
 {
     std::stringstream file;
 
-    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
+    auto queue = std::make_shared<paxos::PersistentQueue<std::string>>(file);
 
     queue->Enqueue("narf");
     queue->Enqueue("zort");
     queue->Enqueue("poit");
     queue->Dequeue();
 
-    auto next_queue = std::make_shared<PersistentQueue<std::string>>(file);
+    auto next_queue = std::make_shared<paxos::PersistentQueue<std::string>>(file);
 
     ASSERT_EQ(GetQueueSize(next_queue), 2);
 
     next_queue->Dequeue();
-    auto final_queue = std::make_shared<PersistentQueue<std::string>>(file);
+    auto final_queue = std::make_shared<paxos::PersistentQueue<std::string>>(file);
 
     ASSERT_EQ(GetQueueSize(final_queue), 1);
 }
@@ -119,7 +119,7 @@ TEST(QueueTest, testThatPersistentQueueGetLastElementOnEmptyQueue)
 {
     std::stringstream file;
 
-    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
+    auto queue = std::make_shared<paxos::PersistentQueue<std::string>>(file);
 
     ASSERT_EQ(queue->Last(), "");
 }
@@ -129,7 +129,7 @@ TEST(QueueTest, testThatPersistentQueueGetLastElement)
 {
     std::stringstream file;
 
-    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
+    auto queue = std::make_shared<paxos::PersistentQueue<std::string>>(file);
 
     queue->Enqueue("narf");
     queue->Enqueue("zort");
@@ -143,7 +143,7 @@ TEST(QueueTest, testThatPersistentQueueEnqueueAfterDequeueReplacesElement)
 {
     std::stringstream file;
 
-    auto queue = std::make_shared<PersistentQueue<std::string>>(file);
+    auto queue = std::make_shared<paxos::PersistentQueue<std::string>>(file);
 
     queue->Enqueue("narf");
     queue->Dequeue();
@@ -158,7 +158,7 @@ TEST(QueueTest, testThatRolloverQueueCanIterateOverContents)
 {
     std::stringstream file;
 
-    auto queue = std::make_shared<RolloverQueue<std::string>>(file);
+    auto queue = std::make_shared<paxos::RolloverQueue<std::string>>(file);
 
     queue->Enqueue("narf");
 
@@ -175,7 +175,7 @@ TEST(QueueTest, testThatRolloverQueueSizeAfterEnqueue)
 
     std::string element("narf");
 
-    auto queue = std::make_shared<RolloverQueue<std::string>>(file, Serialize(element).length());
+    auto queue = std::make_shared<paxos::RolloverQueue<std::string>>(file, paxos::Serialize(element).length());
 
     queue->Enqueue(element);
     queue->Enqueue("zort");
@@ -188,7 +188,7 @@ TEST(QueueTest, testThatRolloverQueueGetLastLement)
 {
     std::stringstream file;
 
-    auto queue = std::make_shared<RolloverQueue<std::string>>(file);
+    auto queue = std::make_shared<paxos::RolloverQueue<std::string>>(file);
 
     queue->Enqueue("narf");
     queue->Enqueue("zort");
@@ -202,7 +202,7 @@ TEST(QueueTest, testThatRolloverQueueCanDequeue)
 {
     std::stringstream file;
 
-    auto queue = std::make_shared<RolloverQueue<std::string>>(file);
+    auto queue = std::make_shared<paxos::RolloverQueue<std::string>>(file);
 
     queue->Enqueue("narf");
     queue->Enqueue("zort");

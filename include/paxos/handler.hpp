@@ -9,6 +9,10 @@
 #include "paxos/signal.hpp"
 
 
+namespace paxos
+{
+
+
 //
 // Handler that will be executed after a decree has been accepted. It
 // is expected to be idempotent.
@@ -96,6 +100,9 @@ private:
 
     std::shared_ptr<Signal> signal;
 };
+
+
+}
 
 
 #endif

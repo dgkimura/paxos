@@ -23,18 +23,18 @@ TEST(SenderTest, testReplyAllSendsMultipleMessages)
         }
     };
 
-    auto replicaset = std::make_shared<ReplicaSet>();
-    replicaset->Add(Replica("A", 111));
-    replicaset->Add(Replica("B", 222));
-    replicaset->Add(Replica("C", 333));
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    replicaset->Add(paxos::Replica("A", 111));
+    replicaset->Add(paxos::Replica("B", 222));
+    replicaset->Add(paxos::Replica("C", 333));
 
-    NetworkSender<MockTransport> sender(replicaset);
+    paxos::NetworkSender<MockTransport> sender(replicaset);
 
-    Message m(
-        Decree(),
-        Replica("from", 111),
-        Replica("to", 111),
-        MessageType::RequestMessage
+    paxos::Message m(
+        paxos::Decree(),
+        paxos::Replica("from", 111),
+        paxos::Replica("to", 111),
+        paxos::MessageType::RequestMessage
     );
 
     sender.ReplyAll(m);
@@ -61,13 +61,13 @@ TEST(SenderTest, testSendFileAlongTransport)
         }
     };
 
-    NetworkFileSender<MockTransport> sender;
+    paxos::NetworkFileSender<MockTransport> sender;
 
     sender.SendFile(
-        Replica("A", 111),
-        BootstrapFile("filename", "the file contents")
+        paxos::Replica("A", 111),
+        paxos::BootstrapFile("filename", "the file contents")
     );
 
-    ASSERT_EQ("filename", Deserialize<BootstrapFile>(transport_writes[0]).name);
-    ASSERT_EQ("the file contents", Deserialize<BootstrapFile>(transport_writes[0]).content);
+    ASSERT_EQ("filename", paxos::Deserialize<paxos::BootstrapFile>(transport_writes[0]).name);
+    ASSERT_EQ("the file contents", paxos::Deserialize<paxos::BootstrapFile>(transport_writes[0]).content);
 }

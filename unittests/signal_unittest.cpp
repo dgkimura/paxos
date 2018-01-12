@@ -8,7 +8,7 @@
 
 TEST(SignalTest, x)
 {
-    Signal s;
+    paxos::Signal s;
     bool result = false;
 
     std::thread t([&s, &result](){

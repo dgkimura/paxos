@@ -25,7 +25,7 @@ TEST(BootstrapTest, testBootstrapListenerRegistersAction)
         }
     };
 
-    auto legislators = std::make_shared<ReplicaSet>();
-    BootstrapListener<MockServer> listener(legislators, "my-address", 111);
+    auto legislators = std::make_shared<paxos::ReplicaSet>();
+    paxos::BootstrapListener<MockServer> listener(legislators, "my-address", 111);
     ASSERT_TRUE(is_action_registered);
 }

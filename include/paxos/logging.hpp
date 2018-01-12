@@ -5,6 +5,10 @@
 #include <boost/log/common.hpp>
 
 
+namespace paxos
+{
+
+
 enum class LogLevel
 {
     Info,
@@ -20,6 +24,9 @@ const int LogFileRotationSize = 10 * 1024 * 1024;
 
 
 void DisableLogging();
+
+
+}
 
 
 #endif

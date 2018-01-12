@@ -20,6 +20,10 @@
 #include "paxos/signal.hpp"
 
 
+namespace paxos
+{
+
+
 struct Context
 {
 };
@@ -121,6 +125,9 @@ struct UpdaterContext : public Context
     {
     }
 };
+
+
+}
 
 
 #endif

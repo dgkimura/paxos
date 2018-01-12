@@ -6,6 +6,10 @@
 #include <paxos/logging.hpp>
 
 
+namespace paxos
+{
+
+
 BOOST_LOG_GLOBAL_LOGGER_INIT(global_logger, boost::log::sources::severity_logger_mt)
 {
     boost::log::sources::severity_logger_mt<LogLevel> logger;
@@ -48,4 +52,7 @@ void
 DisableLogging()
 {
     boost::log::core::get()->set_logging_enabled(false);
+}
+
+
 }

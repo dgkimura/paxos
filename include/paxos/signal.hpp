@@ -5,6 +5,10 @@
 #include <mutex>
 
 
+namespace paxos
+{
+
+
 class Signal
 {
 public:
@@ -24,6 +28,9 @@ private:
 
     bool success;
 };
+
+
+}
 
 
 #endif

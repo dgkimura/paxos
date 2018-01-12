@@ -6,17 +6,17 @@
 
 namespace std
 {
-    template<> struct hash<MessageType>
+    template<> struct hash<paxos::MessageType>
     {
-        std::size_t operator()(MessageType const& m) const
+        std::size_t operator()(paxos::MessageType const& m) const
         {
             return static_cast<std::size_t>(m);
         }
     };
 
-    template<> struct hash<DecreeType>
+    template<> struct hash<paxos::DecreeType>
     {
-        std::size_t operator()(DecreeType const& d) const
+        std::size_t operator()(paxos::DecreeType const& d) const
         {
             return static_cast<std::size_t>(d);
         }

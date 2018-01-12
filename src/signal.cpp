@@ -1,6 +1,10 @@
 #include "paxos/signal.hpp"
 
 
+namespace paxos
+{
+
+
 Signal::Signal()
 {
     flag = false;
@@ -22,4 +26,7 @@ Signal::Wait()
     condition.wait(lock, [&] { return flag; });
     flag = false;
     return success;
+}
+
+
 }

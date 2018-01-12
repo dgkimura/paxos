@@ -11,10 +11,14 @@
 #include <boost/asio.hpp>
 #include <boost/asio/deadline_timer.hpp>
 
-
 #include "paxos/messages.hpp"
 #include "paxos/replicaset.hpp"
 #include "paxos/serialization.hpp"
+
+
+namespace paxos
+{
+
 
 class Sender
 {
@@ -143,6 +147,9 @@ private:
 
     std::mutex mutex;
 };
+
+
+}
 
 
 #endif

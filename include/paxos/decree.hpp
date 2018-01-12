@@ -6,6 +6,10 @@
 #include "paxos/replicaset.hpp"
 
 
+namespace paxos
+{
+
+
 enum class DecreeType
 {
     //
@@ -129,6 +133,9 @@ struct UpdateReplicaSetDecree
     //
     std::string remote_directory;
 };
+
+
+}
 
 
 #endif

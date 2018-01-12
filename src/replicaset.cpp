@@ -8,6 +8,10 @@
 #include "paxos/replicaset.hpp"
 
 
+namespace paxos
+{
+
+
 bool
 IsReplicaEqual(const Replica& lhs, const Replica& rhs)
 {
@@ -134,4 +138,7 @@ SaveReplicaSet(std::shared_ptr<ReplicaSet> replicaset, std::ostream& replicasetf
         replicasetfile << r.hostname << ":" << r.port << "\n";
     }
     replicasetfile.flush();
+}
+
+
 }

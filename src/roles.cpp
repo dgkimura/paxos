@@ -2,6 +2,10 @@
 #include "paxos/roles.hpp"
 
 
+namespace paxos
+{
+
+
 void
 RegisterProposer(
     std::shared_ptr<Receiver> receiver,
@@ -650,4 +654,7 @@ HandleUpdate(
     //
     message.decree = context->ledger->Next(message.decree);
     sender->Reply(Response(message, MessageType::UpdatedMessage));
+}
+
+
 }

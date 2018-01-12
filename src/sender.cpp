@@ -6,6 +6,10 @@
 #include <boost/lambda/lambda.hpp>
 
 
+namespace paxos
+{
+
+
 BoostTransport::BoostTransport(std::string hostname, short port)
     : io_service_(),
       socket_(io_service_),
@@ -83,4 +87,7 @@ BoostTransport::check_deadline()
 
     timer_.async_wait(
         boost::lambda::bind(&BoostTransport::check_deadline, this));
+}
+
+
 }

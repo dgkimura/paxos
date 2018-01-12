@@ -5,7 +5,7 @@
 
 TEST(DecreeUnitTest, testDecreeDefaultConstructor)
 {
-    Decree decree;
+    paxos::Decree decree;
 
     ASSERT_EQ(decree.author.hostname, "");
     ASSERT_EQ(decree.author.port, 0);
@@ -16,263 +16,263 @@ TEST(DecreeUnitTest, testDecreeDefaultConstructor)
 
 TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_TRUE(CompareDecrees(lower, higher) < 0);
+    ASSERT_TRUE(paxos::CompareDecrees(lower, higher) < 0);
 }
 
 
 TEST(DecreeUnitTest, testCompareDecreesWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_TRUE(CompareDecrees(higher, lower) > 0);
+    ASSERT_TRUE(paxos::CompareDecrees(higher, lower) > 0);
 }
 
 
 TEST(DecreeUnitTest, testCompareDecreesWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_TRUE(CompareDecrees(higher, lower) == 0);
+    ASSERT_TRUE(paxos::CompareDecrees(higher, lower) == 0);
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_TRUE(IsDecreeLower(lower, higher));
+    ASSERT_TRUE(paxos::IsDecreeLower(lower, higher));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_FALSE(IsDecreeLower(higher, lower));
+    ASSERT_FALSE(paxos::IsDecreeLower(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeLowerWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_FALSE(IsDecreeLower(higher, lower));
+    ASSERT_FALSE(paxos::IsDecreeLower(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_FALSE(IsDecreeEqual(lower, higher));
+    ASSERT_FALSE(paxos::IsDecreeEqual(lower, higher));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeEqualWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_FALSE(IsDecreeEqual(higher, lower));
+    ASSERT_FALSE(paxos::IsDecreeEqual(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeEqualWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_TRUE(IsDecreeEqual(higher, lower));
+    ASSERT_TRUE(paxos::IsDecreeEqual(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithHigherRootDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
 
     higher.root_number = 2;
 
-    ASSERT_FALSE(IsDecreeHigher(lower, higher));
+    ASSERT_FALSE(paxos::IsDecreeHigher(lower, higher));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithHigherRootDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
 
     lower.root_number = 2;
 
-    ASSERT_FALSE(IsDecreeHigher(higher, lower));
+    ASSERT_FALSE(paxos::IsDecreeHigher(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_FALSE(IsDecreeHigher(lower, higher));
+    ASSERT_FALSE(paxos::IsDecreeHigher(lower, higher));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_TRUE(IsDecreeHigher(higher, lower));
+    ASSERT_TRUE(paxos::IsDecreeHigher(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeHigherWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_FALSE(IsDecreeHigher(higher, lower));
+    ASSERT_FALSE(paxos::IsDecreeHigher(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_FALSE(IsDecreeHigherOrEqual(lower, higher));
+    ASSERT_FALSE(paxos::IsDecreeHigherOrEqual(lower, higher));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_TRUE(IsDecreeHigherOrEqual(higher, lower));
+    ASSERT_TRUE(paxos::IsDecreeHigherOrEqual(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeHigherOrEqualWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_TRUE(IsDecreeHigherOrEqual(higher, lower));
+    ASSERT_TRUE(paxos::IsDecreeHigherOrEqual(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_TRUE(IsDecreeLowerOrEqual(lower, higher));
+    ASSERT_TRUE(paxos::IsDecreeLowerOrEqual(lower, higher));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_FALSE(IsDecreeLowerOrEqual(higher, lower));
+    ASSERT_FALSE(paxos::IsDecreeLowerOrEqual(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeLowerOrEqualWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_TRUE(IsDecreeLowerOrEqual(higher, lower));
+    ASSERT_TRUE(paxos::IsDecreeLowerOrEqual(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeOrderedWithHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_TRUE(IsDecreeOrdered(lower, higher));
+    ASSERT_TRUE(paxos::IsDecreeOrdered(lower, higher));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeOrderedWithMuchHigherDecreeNumberOnRightHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 99, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 99, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_FALSE(IsDecreeOrdered(lower, higher));
+    ASSERT_FALSE(paxos::IsDecreeOrdered(lower, higher));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeOrderedWithHigherDecreeNumberOnLeftHandSide)
 {
-    Decree lower(Replica("an_author"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author"), 2, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 2, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_FALSE(IsDecreeOrdered(higher, lower));
+    ASSERT_FALSE(paxos::IsDecreeOrdered(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsDecreeOrderedWithIdenticalDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
-    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
 
-    ASSERT_FALSE(IsDecreeOrdered(higher, lower));
+    ASSERT_FALSE(paxos::IsDecreeOrdered(higher, lower));
 }
 
 
 TEST(DecreeUnitTest, testIsRootDecreeOrderedWithIdenticalRootDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
     lower.root_number = 1;
-    Decree higher(Replica("an_author_1"), 2, "", DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author_1"), 2, "", paxos::DecreeType::UserDecree);
     higher.root_number = 1;
 
-    ASSERT_FALSE(IsRootDecreeOrdered(lower, higher));
+    ASSERT_FALSE(paxos::IsRootDecreeOrdered(lower, higher));
 }
 
 
 TEST(DecreeUnitTest, testIsRootDecreeOrderedWithOrderedRootDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
     lower.root_number = 1;
-    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
     higher.root_number = 2;
 
-    ASSERT_TRUE(IsRootDecreeOrdered(lower, higher));
+    ASSERT_TRUE(paxos::IsRootDecreeOrdered(lower, higher));
 }
 
 
 TEST(DecreeUnitTest, testIsRootDecreeEqualWithIdenticalRootDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
     lower.root_number = 1;
-    Decree higher(Replica("an_author_1"), 2, "", DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author_1"), 2, "", paxos::DecreeType::UserDecree);
     higher.root_number = 1;
 
-    ASSERT_TRUE(IsRootDecreeEqual(lower, higher));
+    ASSERT_TRUE(paxos::IsRootDecreeEqual(lower, higher));
 }
 
 
 TEST(DecreeUnitTest, testIsRootDecreeEqualWithOrderedRootDecrees)
 {
-    Decree lower(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree lower(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
     lower.root_number = 1;
-    Decree higher(Replica("an_author_1"), 1, "", DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);
     higher.root_number = 2;
 
-    ASSERT_FALSE(IsRootDecreeEqual(lower, higher));
+    ASSERT_FALSE(paxos::IsRootDecreeEqual(lower, higher));
 }

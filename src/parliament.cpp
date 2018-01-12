@@ -3,6 +3,10 @@
 #include "paxos/parliament.hpp"
 
 
+namespace paxos
+{
+
+
 Parliament::Parliament(
     Replica legislator,
     std::string location,
@@ -11,7 +15,8 @@ Parliament::Parliament(
     : legislator(legislator),
       legislators(LoadReplicaSet(
           std::ifstream(
-              (fs::path(location) / fs::path(ReplicasetFilename)).string()))),
+              (boost::filesystem::path(location) /
+               boost::filesystem::path(ReplicasetFilename)).string()))),
       receiver(std::make_shared<NetworkReceiver<BoostServer>>(
                legislator.hostname, legislator.port)),
       sender(std::make_shared<NetworkSender<BoostTransport>>(legislators)),
@@ -236,4 +241,7 @@ void
 Parliament::SetInactive()
 {
     learner->is_observer = true;
+}
+
+
 }

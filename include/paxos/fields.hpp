@@ -7,7 +7,9 @@
 
 #include "serialization.hpp"
 
-namespace fs = boost::filesystem;
+
+namespace paxos
+{
 
 
 template <typename T>
@@ -53,7 +55,8 @@ public:
     }
 
     PersistentStorage(std::string dirname, std::string filename)
-        : file((fs::path(dirname) / fs::path(filename)).string(),
+        : file((boost::filesystem::path(dirname) /
+                boost::filesystem::path(filename)).string(),
                std::ios::out |
                std::ios::in |
                std::ios::binary
@@ -103,7 +106,8 @@ public:
 
     PersistentStorageWrapper(std::string dirname, std::string filename)
     {
-        std::string fullpath((fs::path(dirname) / fs::path(filename)).string());
+        std::string fullpath((boost::filesystem::path(dirname) /
+                              boost::filesystem::path(filename)).string());
         if (!boost::filesystem::exists(fullpath))
         {
             std::fstream f(fullpath, std::ios::out | std::ios::trunc);
@@ -165,6 +169,9 @@ using PersistentDecree = PersistentStorageWrapper<Decree>;
 using VolatileDecree = VolatileStorage<Decree>;
 
 using DecreeField = Field<Decree>;
+
+
+}
 
 
 #endif

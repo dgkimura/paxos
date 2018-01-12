@@ -12,6 +12,10 @@
 #include "paxos/queue.hpp"
 
 
+namespace paxos
+{
+
+
 class Ledger
 {
 public:
@@ -46,6 +50,9 @@ private:
 
     std::unordered_map<DecreeType, std::shared_ptr<DecreeHandler>> handlers;
 };
+
+
+}
 
 
 #endif

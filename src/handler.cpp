@@ -7,6 +7,10 @@
 #include "paxos/serialization.hpp"
 
 
+namespace paxos
+{
+
+
 void
 EmptyDecreeHandler::operator()(std::string entry)
 {
@@ -107,4 +111,7 @@ HandleRemoveReplica::operator()(std::string entry)
     {
         signal->Set(true);
     }
+}
+
+
 }

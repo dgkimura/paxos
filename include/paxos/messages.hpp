@@ -5,6 +5,10 @@
 #include "paxos/replicaset.hpp"
 
 
+namespace paxos
+{
+
+
 enum class MessageType
 {
     //
@@ -84,6 +88,9 @@ struct Message
 
 
 Message Response(Message message, MessageType type);
+
+
+}
 
 
 #endif

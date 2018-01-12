@@ -4,17 +4,17 @@
 #include "paxos/parliament.hpp"
 
 
-class MockSender : public Sender
+class MockSender : public paxos::Sender
 {
 public:
 
     MockSender()
         : sent_messages(),
-          replicaset(std::shared_ptr<ReplicaSet>(new ReplicaSet()))
+          replicaset(std::shared_ptr<paxos::ReplicaSet>(new paxos::ReplicaSet()))
     {
     }
 
-    MockSender(std::shared_ptr<ReplicaSet> replicaset_)
+    MockSender(std::shared_ptr<paxos::ReplicaSet> replicaset_)
         : sent_messages(),
           replicaset(replicaset_)
     {
@@ -24,12 +24,12 @@ public:
     {
     }
 
-    void Reply(Message message)
+    void Reply(paxos::Message message)
     {
         sent_messages.push_back(message);
     }
 
-    void ReplyAll(Message message)
+    void ReplyAll(paxos::Message message)
     {
         for (auto r : *replicaset)
         {
@@ -37,28 +37,28 @@ public:
         }
     }
 
-    std::vector<Message> sentMessages()
+    std::vector<paxos::Message> sentMessages()
     {
         return sent_messages;
     }
 
 private:
 
-    std::vector<Message> sent_messages;
+    std::vector<paxos::Message> sent_messages;
 
-    std::shared_ptr<ReplicaSet> replicaset;
+    std::shared_ptr<paxos::ReplicaSet> replicaset;
 };
 
 
-class MockReceiver : public Receiver
+class MockReceiver : public paxos::Receiver
 {
 public:
 
-    void RegisterCallback(Callback&& callback, MessageType type)
+    void RegisterCallback(paxos::Callback&& callback, paxos::MessageType type)
     {
         if (registered_map.find(type) == registered_map.end())
         {
-            registered_map[type] = std::vector<Callback> { std::move(callback) };
+            registered_map[type] = std::vector<paxos::Callback> { std::move(callback) };
         }
         else
         {
@@ -66,7 +66,7 @@ public:
         }
     }
 
-    void ReceiveMessage(Message message)
+    void ReceiveMessage(paxos::Message message)
     {
         for (auto callback : registered_map[message.type])
         {
@@ -76,7 +76,7 @@ public:
 
 private:
 
-    std::unordered_map<MessageType, std::vector<Callback>> registered_map;
+    std::unordered_map<paxos::MessageType, std::vector<paxos::Callback>> registered_map;
 };
 
 
@@ -84,35 +84,35 @@ class ParliamentTest: public testing::Test
 {
     virtual void SetUp()
     {
-        replica = Replica("myhost", 111);
-        legislators = std::make_shared<ReplicaSet>();
+        replica = paxos::Replica("myhost", 111);
+        legislators = std::make_shared<paxos::ReplicaSet>();
         legislators->Add(replica);
 
-        queue = std::make_shared<RolloverQueue<Decree>>(sstream);
-        ledger = std::make_shared<Ledger>(queue);
+        queue = std::make_shared<paxos::RolloverQueue<paxos::Decree>>(sstream);
+        ledger = std::make_shared<paxos::Ledger>(queue);
         receiver = std::make_shared<MockReceiver>();
         sender = std::make_shared<MockSender>();
-        auto signal = std::make_shared<Signal>();
-        auto proposer = std::make_shared<ProposerContext>(
+        auto signal = std::make_shared<paxos::Signal>();
+        auto proposer = std::make_shared<paxos::ProposerContext>(
             legislators,
             ledger,
-            std::make_shared<VolatileDecree>(),
+            std::make_shared<paxos::VolatileDecree>(),
             [](std::string entry){},
-            std::make_shared<NoPause>(),
+            std::make_shared<paxos::NoPause>(),
             signal
         );
-        auto acceptor = std::make_shared<AcceptorContext>(
-            std::make_shared<VolatileDecree>(),
-            std::make_shared<VolatileDecree>(),
+        auto acceptor = std::make_shared<paxos::AcceptorContext>(
+            std::make_shared<paxos::VolatileDecree>(),
+            std::make_shared<paxos::VolatileDecree>(),
             std::chrono::milliseconds(1000)
         );
-        auto learner = std::make_shared<LearnerContext>(
+        auto learner = std::make_shared<paxos::LearnerContext>(
             legislators,
             ledger
         );
         signal->Set(true);
 
-        parliament = std::make_shared<Parliament>(
+        parliament = std::make_shared<paxos::Parliament>(
             replica,
             legislators,
             ledger,
@@ -126,7 +126,7 @@ class ParliamentTest: public testing::Test
 
 public:
 
-    int GetQueueSize(std::shared_ptr<RolloverQueue<Decree>> queue)
+    int GetQueueSize(std::shared_ptr<paxos::RolloverQueue<paxos::Decree>> queue)
     {
         int size = 0;
         for (auto d : *queue)
@@ -136,9 +136,9 @@ public:
         return size;
     }
 
-    Replica replica;
+    paxos::Replica replica;
 
-    std::shared_ptr<ReplicaSet> legislators;
+    std::shared_ptr<paxos::ReplicaSet> legislators;
 
     std::shared_ptr<MockSender> sender;
 
@@ -146,11 +146,11 @@ public:
 
     std::stringstream sstream;
 
-    std::shared_ptr<RolloverQueue<Decree>> queue;
+    std::shared_ptr<paxos::RolloverQueue<paxos::Decree>> queue;
 
-    std::shared_ptr<Ledger> ledger;
+    std::shared_ptr<paxos::Ledger> ledger;
 
-    std::shared_ptr<Parliament> parliament;
+    std::shared_ptr<paxos::Parliament> parliament;
 };
 
 
@@ -158,9 +158,9 @@ TEST_F(ParliamentTest, testAddLegislatorSendsRequestMessage)
 {
     parliament->AddLegislator("yourhost", 222);
 
-    ASSERT_EQ(DecreeType::AddReplicaDecree,
+    ASSERT_EQ(paxos::DecreeType::AddReplicaDecree,
               sender->sentMessages()[0].decree.type);
-    ASSERT_EQ(MessageType::RequestMessage, sender->sentMessages()[0].type);
+    ASSERT_EQ(paxos::MessageType::RequestMessage, sender->sentMessages()[0].type);
 }
 
 
@@ -168,9 +168,9 @@ TEST_F(ParliamentTest, testRemoveLegislatorSendsRequestMessage)
 {
     parliament->RemoveLegislator("yourhost", 222);
 
-    ASSERT_EQ(DecreeType::RemoveReplicaDecree,
+    ASSERT_EQ(paxos::DecreeType::RemoveReplicaDecree,
               sender->sentMessages()[0].decree.type);
-    ASSERT_EQ(MessageType::RequestMessage, sender->sentMessages()[0].type);
+    ASSERT_EQ(paxos::MessageType::RequestMessage, sender->sentMessages()[0].type);
 }
 
 
@@ -184,7 +184,7 @@ TEST_F(ParliamentTest, testBasicSendProposalSendsProposal)
 {
     parliament->SendProposal("Pinky says, 'Narf!'");
 
-    ASSERT_EQ(MessageType::RequestMessage, sender->sentMessages()[0].type);
+    ASSERT_EQ(paxos::MessageType::RequestMessage, sender->sentMessages()[0].type);
     ASSERT_EQ("Pinky says, 'Narf!'", sender->sentMessages()[0].decree.content);
 }
 
@@ -194,11 +194,11 @@ TEST_F(ParliamentTest, testSetActiveEnablesAppendIntoLedger)
     parliament->SetActive();
 
     receiver->ReceiveMessage(
-        Message(
-            Decree(replica, 1, "my decree content", DecreeType::UserDecree),
+        paxos::Message(
+            paxos::Decree(replica, 1, "my decree content", paxos::DecreeType::UserDecree),
             replica,
             replica,
-            MessageType::AcceptedMessage
+            paxos::MessageType::AcceptedMessage
         )
     );
 
@@ -211,11 +211,11 @@ TEST_F(ParliamentTest, testSetInactiveDisablesAppendIntoLedger)
     parliament->SetInactive();
 
     receiver->ReceiveMessage(
-        Message(
-            Decree(replica, 1, "my decree content", DecreeType::UserDecree),
+        paxos::Message(
+            paxos::Decree(replica, 1, "my decree content", paxos::DecreeType::UserDecree),
             replica,
             replica,
-            MessageType::AcceptedMessage
+            paxos::MessageType::AcceptedMessage
         )
     );
 
@@ -225,35 +225,35 @@ TEST_F(ParliamentTest, testSetInactiveDisablesAppendIntoLedger)
 
 TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleReplicaSet)
 {
-    legislators->Add(Replica("yourhost", 2222));
-    legislators->Add(Replica("ourhost", 1111));
+    legislators->Add(paxos::Replica("yourhost", 2222));
+    legislators->Add(paxos::Replica("ourhost", 1111));
 
-    Decree decree(replica, 1, "my decree content", DecreeType::UserDecree);
+    paxos::Decree decree(replica, 1, "my decree content", paxos::DecreeType::UserDecree);
     ledger->Append(decree);
     receiver->ReceiveMessage(
-        Message(
+        paxos::Message(
             decree,
             replica,
             replica,
-            MessageType::AcceptedMessage
+            paxos::MessageType::AcceptedMessage
         )
     );
 
     ASSERT_EQ(1, parliament->GetAbsenteeBallots(100).size());
-    ASSERT_TRUE(parliament->GetAbsenteeBallots(100)[decree]->Contains(Replica("yourhost", 2222)));
-    ASSERT_TRUE(parliament->GetAbsenteeBallots(100)[decree]->Contains(Replica("ourhost", 1111)));
+    ASSERT_TRUE(parliament->GetAbsenteeBallots(100)[decree]->Contains(paxos::Replica("yourhost", 2222)));
+    ASSERT_TRUE(parliament->GetAbsenteeBallots(100)[decree]->Contains(paxos::Replica("ourhost", 1111)));
     ASSERT_FALSE(parliament->GetAbsenteeBallots(100)[decree]->Contains(replica));
 }
 
 
 TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleDecrees)
 {
-    ledger->Append(Decree(replica, 1, "my decree 1", DecreeType::UserDecree));
-    ledger->Append(Decree(replica, 2, "my decree 2", DecreeType::UserDecree));
-    ledger->Append(Decree(replica, 3, "my decree 3", DecreeType::UserDecree));
-    ledger->Append(Decree(replica, 4, "my decree 4", DecreeType::UserDecree));
-    ledger->Append(Decree(replica, 5, "my decree 5", DecreeType::UserDecree));
-    ledger->Append(Decree(replica, 6, "my decree 6", DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(replica, 1, "my decree 1", paxos::DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(replica, 2, "my decree 2", paxos::DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(replica, 3, "my decree 3", paxos::DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(replica, 4, "my decree 4", paxos::DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(replica, 5, "my decree 5", paxos::DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(replica, 6, "my decree 6", paxos::DecreeType::UserDecree));
 
     ASSERT_EQ(5, parliament->GetAbsenteeBallots(5).size());
 }
@@ -261,7 +261,7 @@ TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleDecrees)
 
 TEST_F(ParliamentTest, testGetAbsenteeBallotIfDecreeIsNotInPromiseMap)
 {
-    Decree decree1(replica, 1, "my decree 1", DecreeType::UserDecree);
+    paxos::Decree decree1(replica, 1, "my decree 1", paxos::DecreeType::UserDecree);
 
     ledger->Append(decree1);
 

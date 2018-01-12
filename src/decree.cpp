@@ -1,6 +1,10 @@
 #include "paxos/decree.hpp"
 
 
+namespace paxos
+{
+
+
 int
 CompareDecrees(Decree lhs, Decree rhs)
 {
@@ -81,8 +85,12 @@ IsRootDecreeEqual(Decree lhs, Decree rhs)
     return CompareRootDecrees(lhs, rhs) == 0;
 }
 
+
 bool
 IsRootDecreeHigher(Decree lhs, Decree rhs)
 {
     return CompareRootDecrees(lhs, rhs) > 0;
+}
+
+
 }

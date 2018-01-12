@@ -5,10 +5,10 @@
 
 TEST(SerializationUnitTest, testDecreeIsSerializableAndDeserializable)
 {
-    Decree expected(Replica("an_author_1"), 1, "the_decree_contents", DecreeType::UserDecree), actual;
+    paxos::Decree expected(paxos::Replica("an_author_1"), 1, "the_decree_contents", paxos::DecreeType::UserDecree), actual;
 
-    std::string string_obj = Serialize(expected);
-    actual = Deserialize<Decree>(string_obj);
+    std::string string_obj = paxos::Serialize(expected);
+    actual = paxos::Deserialize<paxos::Decree>(string_obj);
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
     ASSERT_EQ(expected.author.port, actual.author.port);
@@ -19,15 +19,15 @@ TEST(SerializationUnitTest, testDecreeIsSerializableAndDeserializable)
 
 TEST(SerializationUnitTest, testUpdateReplicaSetDecreeIsSerializableAndDeserializable)
 {
-    UpdateReplicaSetDecree expected
+    paxos::UpdateReplicaSetDecree expected
     {
-        Replica("author"),
-        Replica("myhost"),
+        paxos::Replica("author"),
+        paxos::Replica("myhost"),
         "remote/directory/path"
     }, actual;
 
-    std::string string_obj = Serialize(expected);
-    actual = Deserialize<UpdateReplicaSetDecree>(string_obj);
+    std::string string_obj = paxos::Serialize(expected);
+    actual = paxos::Deserialize<paxos::UpdateReplicaSetDecree>(string_obj);
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
     ASSERT_EQ(expected.author.port, actual.author.port);
@@ -39,10 +39,10 @@ TEST(SerializationUnitTest, testUpdateReplicaSetDecreeIsSerializableAndDeseriali
 
 TEST(SerializationUnitTest, testReplicaIsSerializableAndDeserializable)
 {
-    Replica expected("hostname", 123), actual;
+    paxos::Replica expected("hostname", 123), actual;
 
-    std::string string_obj = Serialize(expected);
-    actual = Deserialize<Replica>(string_obj);
+    std::string string_obj = paxos::Serialize(expected);
+    actual = paxos::Deserialize<paxos::Replica>(string_obj);
 
     ASSERT_EQ(expected.hostname, actual.hostname);
     ASSERT_EQ(expected.port, actual.port);
@@ -51,15 +51,15 @@ TEST(SerializationUnitTest, testReplicaIsSerializableAndDeserializable)
 
 TEST(SerializationUnitTest, testMessageIsSerializableAndDeserializable)
 {
-    Message expected(
-        Decree(Replica("author-hostname", 0), 1, "the_decree_contents", DecreeType::UserDecree),
-        Replica("hostname-A", 111),
-        Replica("hostname-B", 111),
-        MessageType::PrepareMessage),
+    paxos::Message expected(
+        paxos::Decree(paxos::Replica("author-hostname", 0), 1, "the_decree_contents", paxos::DecreeType::UserDecree),
+        paxos::Replica("hostname-A", 111),
+        paxos::Replica("hostname-B", 111),
+        paxos::MessageType::PrepareMessage),
     actual;
 
-    std::string string_obj = Serialize(expected);
-    actual = Deserialize<Message>(string_obj);
+    std::string string_obj = paxos::Serialize(expected);
+    actual = paxos::Deserialize<paxos::Message>(string_obj);
 
     ASSERT_EQ(expected.decree.author.hostname, actual.decree.author.hostname);
     ASSERT_EQ(expected.decree.author.port, actual.decree.author.port);
@@ -75,15 +75,15 @@ TEST(SerializationUnitTest, testMessageIsSerializableAndDeserializable)
 
 TEST(SerializationUnitTest, testBootstrapMetadataIsSerializableAndDeserializable)
 {
-    BootstrapMetadata expected
+    paxos::BootstrapMetadata expected
     {
         "localpath",
         "remotepath"
     },
     actual;
 
-    std::string string_obj = Serialize(expected);
-    actual = Deserialize<BootstrapMetadata>(string_obj);
+    std::string string_obj = paxos::Serialize(expected);
+    actual = paxos::Deserialize<paxos::BootstrapMetadata>(string_obj);
 
     ASSERT_EQ(expected.local, actual.local);
     ASSERT_EQ(expected.remote, actual.remote);
@@ -92,13 +92,13 @@ TEST(SerializationUnitTest, testBootstrapMetadataIsSerializableAndDeserializable
 
 TEST(SerializationUnitTest, testBootstrapFileIsSerializableAndDeserializable)
 {
-    BootstrapFile expected(
+    paxos::BootstrapFile expected(
         "the_filename",
         "content of the bootstrap file."),
     actual;
 
-    std::string string_obj = Serialize(expected);
-    actual = Deserialize<BootstrapFile>(string_obj);
+    std::string string_obj = paxos::Serialize(expected);
+    actual = paxos::Deserialize<paxos::BootstrapFile>(string_obj);
 
     ASSERT_EQ(expected.name, actual.name);
     ASSERT_EQ(expected.content, actual.content);
@@ -107,9 +107,9 @@ TEST(SerializationUnitTest, testBootstrapFileIsSerializableAndDeserializable)
 
 TEST(SerializationUnitTest, testSerializationWithPaddedFluffOnTheEndOfTheBuffer)
 {
-    Decree expected(Replica("an_author_1", 0), 1, "the_decree_contents", DecreeType::UserDecree), actual;
+    paxos::Decree expected(paxos::Replica("an_author_1", 0), 1, "the_decree_contents", paxos::DecreeType::UserDecree), actual;
 
-    actual = Deserialize<Decree>(
+    actual = paxos::Deserialize<paxos::Decree>(
         "22 serialization::archive 14 0 0 0 0 11 an_author_1 "
         "0 1 1 0 19 the_decree_contents THIS IS FLUFF!!!"
     );
@@ -123,10 +123,10 @@ TEST(SerializationUnitTest, testSerializationWithPaddedFluffOnTheEndOfTheBuffer)
 
 TEST(SerializationUnitTest, testSerializationWithUniversalReferenceValues)
 {
-    Decree expected(Replica("an_author_1", 0), 1, "the_decree_contents", DecreeType::UserDecree), actual;
+    paxos::Decree expected(paxos::Replica("an_author_1", 0), 1, "the_decree_contents", paxos::DecreeType::UserDecree), actual;
 
-    std::string string_obj = Serialize(Decree(Replica("an_author_1", 0), 1, "the_decree_contents", DecreeType::UserDecree));
-    actual = Deserialize<Decree>(string_obj);
+    std::string string_obj = paxos::Serialize(paxos::Decree(paxos::Replica("an_author_1", 0), 1, "the_decree_contents", paxos::DecreeType::UserDecree));
+    actual = paxos::Deserialize<paxos::Decree>(string_obj);
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
     ASSERT_EQ(expected.author.port, actual.author.port);
@@ -137,10 +137,10 @@ TEST(SerializationUnitTest, testSerializationWithUniversalReferenceValues)
 
 TEST(SerializationUnitTest, testSerializationWithStreamValues)
 {
-    Decree expected(Replica("an_author_1", 0), 1, "the_decree_contents", DecreeType::UserDecree), actual;
+    paxos::Decree expected(paxos::Replica("an_author_1", 0), 1, "the_decree_contents", paxos::DecreeType::UserDecree), actual;
 
-    std::istringstream stream_obj(Serialize(expected));
-    actual = Deserialize<Decree>(stream_obj);
+    std::istringstream stream_obj(paxos::Serialize(expected));
+    actual = paxos::Deserialize<paxos::Decree>(stream_obj);
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
     ASSERT_EQ(expected.author.port, actual.author.port);
@@ -154,6 +154,6 @@ TEST(SerializationUnitTest, testMessageDeserializionOfCorruptedStringReturnsInva
     std::string string_obj = "22 serialization::archiv\x01!14 0 0 0 0 0  0 9 "
                              "127.0.0.1 8094 9 0 0 9 127.0.0.1 8094 678 678 0 0 ";
 
-    Message message = Deserialize<Message>(string_obj);
-    ASSERT_EQ(MessageType::InvalidMessage, message.type);
+    paxos::Message message = paxos::Deserialize<paxos::Message>(string_obj);
+    ASSERT_EQ(paxos::MessageType::InvalidMessage, message.type);
 }

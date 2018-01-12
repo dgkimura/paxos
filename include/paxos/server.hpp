@@ -8,6 +8,10 @@
 #include <boost/enable_shared_from_this.hpp>
 
 
+namespace paxos
+{
+
+
 class BoostServer : public boost::enable_shared_from_this<BoostServer>
 {
 public:
@@ -53,6 +57,9 @@ private:
 
     std::function<void(std::string content)> action;
 };
+
+
+}
 
 
 #endif

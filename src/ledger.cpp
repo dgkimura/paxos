@@ -3,6 +3,10 @@
 #include "paxos/ledger.hpp"
 
 
+namespace paxos
+{
+
+
 Ledger::Ledger(std::shared_ptr<RolloverQueue<Decree>> decrees)
     : Ledger(decrees, std::make_shared<EmptyDecreeHandler>())
 {
@@ -119,4 +123,7 @@ Ledger::Next(Decree previous)
         }
     }
     return next;
+}
+
+
 }

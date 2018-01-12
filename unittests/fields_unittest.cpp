@@ -5,13 +5,13 @@
 
 TEST(FieldsTest, testCanCreateFieldWithVolatileStore)
 {
-    Field<int> field(std::make_shared<VolatileStorage<int>>());
+    paxos::Field<int> field(std::make_shared<paxos::VolatileStorage<int>>());
 }
 
 
 TEST(FieldsTest, testCanAssignValueToField)
 {
-    Field<int> field(std::make_shared<VolatileStorage<int>>());
+    paxos::Field<int> field(std::make_shared<paxos::VolatileStorage<int>>());
     field = 1;
 
     ASSERT_EQ(field.Value(), 1);
@@ -20,7 +20,7 @@ TEST(FieldsTest, testCanAssignValueToField)
 
 TEST(FieldsTest, testCanAssignLValueToField)
 {
-    Field<int> field(std::make_shared<VolatileStorage<int>>());
+    paxos::Field<int> field(std::make_shared<paxos::VolatileStorage<int>>());
     int a_number = 1;
     field = a_number;
 
@@ -30,7 +30,7 @@ TEST(FieldsTest, testCanAssignLValueToField)
 
 TEST(FieldsTest, testCanUpdateValueOfField)
 {
-    Field<int> field(std::make_shared<VolatileStorage<int>>());
+    paxos::Field<int> field(std::make_shared<paxos::VolatileStorage<int>>());
     field = 1;
     field = 3;
 
@@ -41,10 +41,10 @@ TEST(FieldsTest, testCanUpdateValueOfField)
 TEST(FieldsTest, testCanDeclareFieldInsideStruct)
 {
     struct Object{
-        Field<int> a_field;
+        paxos::Field<int> a_field;
 
         Object()
-            : a_field(std::make_shared<VolatileStorage<int>>())
+            : a_field(std::make_shared<paxos::VolatileStorage<int>>())
         {
         }
     };
@@ -59,10 +59,10 @@ TEST(FieldsTest, testCanDeclareFieldInsideStruct)
 TEST(FieldsTest, testCanUseConvenienceFieldMacros)
 {
     struct Object{
-        DecreeField a_field;
+        paxos::DecreeField a_field;
 
         Object()
-            : a_field(std::make_shared<VolatileDecree>())
+            : a_field(std::make_shared<paxos::VolatileDecree>())
         {
         }
     };
@@ -73,7 +73,7 @@ TEST(FieldsTest, testCanAssignValueToPersistentStorageField)
 {
     std::stringstream file;
 
-    Field<int> field(std::make_shared<PersistentStorage<int>>(file));
+    paxos::Field<int> field(std::make_shared<paxos::PersistentStorage<int>>(file));
     field = 1;
 
     ASSERT_EQ(field.Value(), 1);
@@ -84,7 +84,7 @@ TEST(FieldsTest, testCanUpdateValueOfPersistentStorageField)
 {
     std::stringstream file;
 
-    Field<int> field(std::make_shared<PersistentStorage<int>>(file));
+    paxos::Field<int> field(std::make_shared<paxos::PersistentStorage<int>>(file));
     field = 1;
     field = 3;
 

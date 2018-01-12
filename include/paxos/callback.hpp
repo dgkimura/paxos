@@ -8,6 +8,10 @@
 #include "paxos/messages.hpp"
 
 
+namespace paxos
+{
+
+
 using MessageHandler = std::function<void(Message message)>;
 
 class Callback
@@ -22,6 +26,9 @@ private:
 
     MessageHandler message_handler;
 };
+
+
+}
 
 
 #endif

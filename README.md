@@ -36,7 +36,7 @@ int main(void)
     //
     // Create a parliament group.
     //
-    Parliament p(Replica("127.0.0.1", 8080));
+    paxos::Parliament p(paxos::Replica("127.0.0.1", 8080));
 
     //
     // Sends a proposal to vote on.
@@ -49,11 +49,11 @@ Each passed proposal is appended to the `paxos.ledger`. If you want to process
 the decree, you must create your parliament with a decree handler.
 
 ```cpp
-    Parliament p(
+    paxos::Parliament p(
         //
         // Our replica identity in the parliament.
         //
-        Replica("127.0.0.1", 8080),
+        paxos::Replica("127.0.0.1", 8080),
 
         //
         // Path of directory to contain state information.

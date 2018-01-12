@@ -16,6 +16,10 @@
 #include "paxos/server.hpp"
 
 
+namespace paxos
+{
+
+
 class Receiver
 {
 public:
@@ -77,6 +81,9 @@ private:
 
     std::unordered_map<MessageType, std::vector<Callback>> registered_map;
 };
+
+
+}
 
 
 #endif

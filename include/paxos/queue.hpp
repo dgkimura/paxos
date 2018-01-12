@@ -10,7 +10,9 @@
 
 #include "serialization.hpp"
 
-namespace fs = boost::filesystem;
+
+namespace paxos
+{
 
 
 template <typename T>
@@ -140,10 +142,12 @@ public:
     }
 
     PersistentQueue(std::string dirname, std::string filename)
-        : file((fs::path(dirname) / fs::path(filename)).string(),
+        : file((boost::filesystem::path(dirname) /
+                boost::filesystem::path(filename)).string(),
                std::ios::out | std::ios::in | std::ios::app | std::ios::binary),
           stream(file),
-          insert_file((fs::path(dirname) / fs::path(filename)).string(),
+          insert_file((boost::filesystem::path(dirname) /
+                       boost::filesystem::path(filename)).string(),
                        std::ios::in | std::ios::out | std::ios::binary),
           insert_stream(insert_file),
           start_position(0),
@@ -548,6 +552,9 @@ public:
         return Iterator(stream, end, rollover_size);
     }
 };
+
+
+}
 
 
 #endif

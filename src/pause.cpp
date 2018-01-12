@@ -5,6 +5,10 @@
 #include "paxos/pause.hpp"
 
 
+namespace paxos
+{
+
+
 void
 NoPause::Start(std::function<void(void)> callback)
 {
@@ -34,4 +38,7 @@ RandomPause::Start(std::function<void(void)> callback)
         callback();
     });
     t.join();
+}
+
+
 }

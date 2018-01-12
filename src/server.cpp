@@ -3,6 +3,10 @@
 #include "paxos/server.hpp"
 
 
+namespace paxos
+{
+
+
 using boost::asio::ip::tcp;
 
 
@@ -103,4 +107,7 @@ BoostServer::Session::handle_read_message(
             boost::asio::buffers_begin(bufs) + response.size());
         action(content);
     }
+}
+
+
 }

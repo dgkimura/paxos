@@ -7,6 +7,10 @@
 #include <string>
 
 
+namespace paxos
+{
+
+
 struct Replica
 {
     std::string hostname;
@@ -88,6 +92,9 @@ LoadReplicaSet(std::istream&& replicasetfile);
 
 void
 SaveReplicaSet(std::shared_ptr<ReplicaSet> replicaset, std::ostream& replicasetfile);
+
+
+}
 
 
 #endif

@@ -4,6 +4,10 @@
 #include <string>
 
 
+namespace paxos
+{
+
+
 struct BootstrapMetadata
 {
     std::string local;
@@ -28,6 +32,9 @@ struct BootstrapFile
     {
     }
 };
+
+
+}
 
 
 #endif

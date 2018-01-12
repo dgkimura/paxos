@@ -12,6 +12,10 @@
 #include <paxos/sender.hpp>
 
 
+namespace paxos
+{
+
+
 //
 // Map of a decree ballots.
 //
@@ -81,6 +85,9 @@ private:
 
     void send_decree(Decree decree);
 };
+
+
+}
 
 
 #endif

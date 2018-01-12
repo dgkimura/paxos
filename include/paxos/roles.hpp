@@ -13,6 +13,10 @@
 #include "paxos/serialization.hpp"
 
 
+namespace paxos
+{
+
+
 /*
  * Registrator functions will setup appropriate handler to the given sender and
  * receiver. After registering, the receiver will send forward all incoming
@@ -106,6 +110,9 @@ void HandleUpdate(
     Message message,
     std::shared_ptr<UpdaterContext> context,
     std::shared_ptr<Sender> sender);
+
+
+}
 
 
 #endif

@@ -8,7 +8,7 @@
 TEST(HandlerTest, testCompositeDecreeHandlerWithSingleHandler)
 {
     bool was_called = false;
-    CompositeHandler handler;
+    paxos::CompositeHandler handler;
     handler.AddHandler([&was_called](std::string entry){ was_called=true; });
 
     ASSERT_FALSE(was_called);
@@ -24,7 +24,7 @@ TEST(HandlerTest, testCompositeDecreeHandlerWithMultipleHandlers)
     bool was_called = false;
     bool was_called_too = false;
 
-    CompositeHandler handler;
+    paxos::CompositeHandler handler;
     handler.AddHandler([&was_called](std::string entry){ was_called=true; });
     handler.AddHandler([&was_called_too](std::string entry){ was_called_too=true; });
 

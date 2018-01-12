@@ -5,15 +5,15 @@
 
 TEST(MessageTest, testMessageResponseUpdatesSenderAndReceiver)
 {
-    Replica from("from_hostname");
-    Replica to("to_hostname");
+    paxos::Replica from("from_hostname");
+    paxos::Replica to("to_hostname");
 
-    Decree the_decree(from, 1, "", DecreeType::UserDecree);
-    Message m(the_decree, from, to, MessageType::RequestMessage);
+    paxos::Decree the_decree(from, 1, "", paxos::DecreeType::UserDecree);
+    paxos::Message m(the_decree, from, to, paxos::MessageType::RequestMessage);
 
-    Message response = Response(m, MessageType::PromiseMessage);
+    paxos::Message response = paxos::Response(m, paxos::MessageType::PromiseMessage);
 
     ASSERT_EQ(response.from.hostname, m.to.hostname);
     ASSERT_EQ(response.to.hostname, m.from.hostname);
-    ASSERT_EQ(response.type, MessageType::PromiseMessage);
+    ASSERT_EQ(response.type, paxos::MessageType::PromiseMessage);
 }
