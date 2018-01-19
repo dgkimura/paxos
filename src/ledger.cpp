@@ -116,7 +116,7 @@ Ledger::Next(Decree previous)
     Decree next;
     for (Decree current : *decrees)
     {
-        if (IsDecreeOrdered(previous, current))
+        if (IsRootDecreeOrdered(previous, current))
         {
             next = current;
             break;

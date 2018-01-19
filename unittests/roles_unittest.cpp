@@ -500,6 +500,7 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
 {
     auto replica = paxos::Replica("host");
     auto decree = paxos::Decree(replica, 1, "first", paxos::DecreeType::UserDecree);
+    auto current_decree = paxos::Decree(replica, 2, "current", paxos::DecreeType::UserDecree);
     auto replicaset = std::make_shared<paxos::ReplicaSet>();
     auto highest_proposed_decree = std::make_shared<paxos::VolatileDecree>();
     highest_proposed_decree->Put(decree);
@@ -507,7 +508,7 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    ledger->Append(paxos::Decree(replica, 0, "previous", paxos::DecreeType::UserDecree));
+    ledger->Append(decree);
 
     auto signal = std::make_shared<paxos::Signal>();
     auto context = std::make_shared<paxos::ProposerContext>(
@@ -527,7 +528,7 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
 
     HandleNackTie(
         paxos::Message(
-            decree,
+            current_decree,
             replica,
             replica,
             paxos::MessageType::NackTieMessage
@@ -537,7 +538,8 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
     );
 
     ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::PrepareMessage);
-    ASSERT_EQ(decree.number + 1, sender->sentMessages()[0].decree.number);
+    ASSERT_EQ(current_decree.number + 1, sender->sentMessages()[0].decree.number);
+    ASSERT_EQ(current_decree.number + 1, context->highest_proposed_decree.Value().number);
 
     // Sends 1 message to each replica
     ASSERT_EQ(2, sender->sentMessages().size());
@@ -589,7 +591,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestPro
 }
 
 
-TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsHigherThanHighestProposedDecree)
+TEST_F(ProposerTest, testHandleNackTieDoesSendWhenDecreeIsHigherThanHighestProposedDecree)
 {
     auto replica = paxos::Replica("host");
     auto decree = paxos::Decree(replica, 2, "next", paxos::DecreeType::UserDecree);
@@ -630,7 +632,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsHigherThanHighestPr
         sender
     );
 
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::PrepareMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::PrepareMessage);
 }
 
 

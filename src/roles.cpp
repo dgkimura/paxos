@@ -238,9 +238,8 @@ HandleNackTie(
     //
     std::lock_guard<std::mutex> lock(context->mutex);
 
-    if (IsRootDecreeEqual(message.decree,
-                          context->highest_proposed_decree.Value()) ||
-        IsRootDecreeEqual(message.decree, context->ledger->Tail()))
+    if (IsRootDecreeHigher(message.decree,
+                           context->highest_proposed_decree.Value()))
     {
         //
         // Iff the current proposed decree is tied then retry with a higher
@@ -273,6 +272,7 @@ HandleNackTie(
             if (context->highest_nacktie_decree.number + 1 == next.number &&
                 context->ledger->Tail().root_number + 1 == next.root_number)
             {
+                context->highest_proposed_decree = next;
                 sender->ReplyAll(nack_response);
             }
         });
@@ -376,17 +376,6 @@ HandlePrepare(
         context->promised_decree = message.decree;
         sender->Reply(Response(message, MessageType::PromiseMessage));
     }
-    else if (
-        IsDecreeEqual(message.decree, context->promised_decree.Value()) &&
-        IsRootDecreeEqual(message.decree, context->promised_decree.Value()))
-    {
-        //
-        // If the messaged decree is equal to current promised decree and
-        // sent from a different replica then there may be dueling
-        // proposers. Send a NackTie and let the proposer handle it.
-        //
-        sender->Reply(Response(message, MessageType::NackTieMessage));
-    }
     else if (IsReplicaEqual(message.decree.author,
                             context->promised_decree.Value().author))
     {
@@ -398,6 +387,17 @@ HandlePrepare(
         auto response = Response(message, MessageType::PromiseMessage);
         response.decree = context->promised_decree.Value();
         sender->Reply(response);
+    }
+    else if (
+        IsDecreeEqual(message.decree, context->promised_decree.Value()) &&
+        IsRootDecreeEqual(message.decree, context->promised_decree.Value()))
+    {
+        //
+        // If the messaged decree is equal to current promised decree and
+        // sent from a different replica then there may be dueling
+        // proposers. Send a NackTie and let the proposer handle it.
+        //
+        sender->Reply(Response(message, MessageType::NackTieMessage));
     }
     else
     {
@@ -582,7 +582,7 @@ HandleUpdated(
     LOG(LogLevel::Info) << "HandleUpdated | " << message.decree.number << "|"
                         << Serialize(message);
 
-    if (IsDecreeOrdered(context->ledger->Tail(), message.decree))
+    if (IsRootDecreeOrdered(context->ledger->Tail(), message.decree))
     {
         //
         // Append the decree iff the decree is in order with the last decree
@@ -595,7 +595,7 @@ HandleUpdated(
         {
             current_decree = context->tracked_future_decrees.top();
 
-            if (IsDecreeOrdered(previous_decree, current_decree))
+            if (IsRootDecreeOrdered(previous_decree, current_decree))
             {
                 //
                 // If tracked_future_decrees contains the next ordered decree
