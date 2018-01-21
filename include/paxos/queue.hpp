@@ -358,7 +358,11 @@ private:
 
     constexpr static const int64_t HEADER_SIZE = INDEX_SIZE * 2;
 
-    constexpr static const int64_t DEFAULT_ROLLOVER_SIZE = 0x400000000;
+    //
+    // If queue rollover size is too large then it will take an unreasonable
+    // amount of time to iterate over items in the queue.
+    //
+    constexpr static const int64_t DEFAULT_ROLLOVER_SIZE = 0x100000;
 
     class Iterator
     {
