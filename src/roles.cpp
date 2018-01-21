@@ -239,8 +239,17 @@ HandleNackTie(
     std::lock_guard<std::mutex> lock(context->mutex);
 
     if (IsRootDecreeHigher(message.decree,
-                           context->highest_proposed_decree.Value()))
+                           context->highest_proposed_decree.Value()) ||
+        (IsRootDecreeEqual(message.decree,
+                           context->highest_proposed_decree.Value()) &&
+         //
+         // If decree is equal to highest proposed decree then we throttle.
+         //
+         context->nacktie_time + context->interval <
+         std::chrono::high_resolution_clock::now()))
     {
+        context->nacktie_time = std::chrono::high_resolution_clock::now();
+
         //
         // Iff the current proposed decree is tied then retry with a higher
         // decree.

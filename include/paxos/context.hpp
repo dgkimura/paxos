@@ -41,6 +41,8 @@ struct ProposerContext : public Context
     std::mutex mutex;
     Decree highest_nacked_decree;
     Decree highest_nacktie_decree;
+    std::chrono::high_resolution_clock::time_point nacktie_time;
+    std::chrono::milliseconds interval;
     std::shared_ptr<Pause> pause;
     std::shared_ptr<Signal>& signal;
 
@@ -61,6 +63,8 @@ struct ProposerContext : public Context
           mutex(),
           highest_nacked_decree(Replica(""), -1, "first", DecreeType::UserDecree),
           highest_nacktie_decree(Replica(""), -1, "first", DecreeType::UserDecree),
+          nacktie_time(std::chrono::high_resolution_clock::now()),
+          interval(std::chrono::milliseconds(1000)),
           pause(pause),
           signal(signal)
     {
