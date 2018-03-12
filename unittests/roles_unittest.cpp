@@ -966,8 +966,11 @@ TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
     ASSERT_EQ(sender->sentMessages()[0].decree.root_number, 1);
 
     // Our ledger was updated underneath us to 5.
-    context->ledger->Append(
-        paxos::Decree(paxos::Replica("the_author"), 5, "", paxos::DecreeType::UserDecree));
+    context->ledger->Append(paxos::Decree(paxos::Replica("a_author"), 1, "", paxos::DecreeType::UserDecree));
+    context->ledger->Append(paxos::Decree(paxos::Replica("a_author"), 2, "", paxos::DecreeType::UserDecree));
+    context->ledger->Append(paxos::Decree(paxos::Replica("a_author"), 3, "", paxos::DecreeType::UserDecree));
+    context->ledger->Append(paxos::Decree(paxos::Replica("a_author"), 4, "", paxos::DecreeType::UserDecree));
+    context->ledger->Append(paxos::Decree(paxos::Replica("a_author"), 5, "", paxos::DecreeType::UserDecree));
 
     // Next round, increments current by one.
     HandleRequest(
@@ -1667,7 +1670,9 @@ TEST_F(LearnerTest, testHandleUpdatedWithEmptyLedger)
 TEST_F(LearnerTest, testHandleUpdatedReceivedMessageWithZeroDecree)
 {
     replicaset->Add(paxos::Replica("A"));
-    context->ledger->Append(paxos::Decree(paxos::Replica("A"), 10, "", paxos::DecreeType::UserDecree));
+    context->ledger->Append(paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree));
+    context->ledger->Append(paxos::Decree(paxos::Replica("A"), 2, "", paxos::DecreeType::UserDecree));
+    context->ledger->Append(paxos::Decree(paxos::Replica("A"), 3, "", paxos::DecreeType::UserDecree));
     auto sender = std::make_shared<FakeSender>();
 
     // Sending zero decree.
@@ -1685,7 +1690,7 @@ TEST_F(LearnerTest, testHandleUpdatedReceivedMessageWithZeroDecree)
     ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::ResumeMessage);
 
     // Decree number in resume message should be last ledger decree number.
-    ASSERT_EQ(sender->sentMessages()[0].decree.number, 10);
+    ASSERT_EQ(sender->sentMessages()[0].decree.number, 3);
 }
 
 
@@ -1694,13 +1699,13 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecree)
     replicaset->Add(paxos::Replica("A"));
     auto sender = std::make_shared<FakeSender>();
 
-    // Last decree in ledger is 9.
-    context->ledger->Append(paxos::Decree(paxos::Replica("A"), 9, "", paxos::DecreeType::UserDecree));
+    // Last decree in ledger is 1.
+    context->ledger->Append(paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree));
 
-    // Receive next ordered decree 10.
+    // Receive next ordered decree 2.
     HandleUpdated(
         paxos::Message(
-            paxos::Decree(paxos::Replica("A"), 10, "", paxos::DecreeType::UserDecree),
+            paxos::Decree(paxos::Replica("A"), 2, "", paxos::DecreeType::UserDecree),
             paxos::Replica("A"), paxos::Replica("A"),
             paxos::MessageType::UpdatedMessage
         ),
@@ -1708,7 +1713,7 @@ TEST_F(LearnerTest, testHandleUpdatedReceivesMessageWithNextOrderedDecree)
         sender
     );
 
-    // We should have appended 9 and 10 to our ledger.
+    // We should have appended 1 and 2 to our ledger.
     ASSERT_EQ(GetQueueSize(queue), 2);
 }
 

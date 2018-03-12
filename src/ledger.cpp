@@ -43,7 +43,7 @@ Ledger::Append(Decree decree)
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
     Decree tail = Tail();
-    if (IsDecreeHigher(decree, tail))
+    if (IsRootDecreeOrdered(tail, decree))
     {
         //
         // Append a system decree before executing handler so that post-

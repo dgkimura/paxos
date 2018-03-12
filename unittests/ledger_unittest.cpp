@@ -185,15 +185,29 @@ TEST_F(LedgerUnitTest, testAppendIgnoresOutOfOrderDecrees)
 }
 
 
+TEST_F(LedgerUnitTest, testAppendIgnoresFutureDecrees)
+{
+    std::stringstream ss;
+    auto queue = std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss);
+    paxos::Ledger ledger(queue);
+    ledger.Append(paxos::Decree(paxos::Replica("a_author"), 1, "a_content", paxos::DecreeType::UserDecree));
+    ledger.Append(paxos::Decree(paxos::Replica("a_author"), 5, "a_content", paxos::DecreeType::UserDecree));
+
+    ASSERT_EQ(GetQueueSize(queue), 1);
+}
+
+
 TEST_F(LedgerUnitTest, testAppendWritesOutOfOrderDecreeWithOrderedRoot)
 {
     std::stringstream ss;
     auto queue = std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss);
     paxos::Ledger ledger(queue);
-    ledger.Append(paxos::Decree(paxos::Replica("b_author"), 2, "b_content", paxos::DecreeType::UserDecree));
+    paxos::Decree current_decree(paxos::Replica("a_author"), 2, "a_content", paxos::DecreeType::UserDecree);
+    current_decree.root_number = 1;
+    ledger.Append(current_decree);
 
     paxos::Decree next_decree(paxos::Replica("a_author"), 1, "a_content", paxos::DecreeType::UserDecree);
-    next_decree.root_number = 3;
+    next_decree.root_number = 2;
     ledger.Append(next_decree);
 
     ASSERT_EQ(GetQueueSize(queue), 2);
