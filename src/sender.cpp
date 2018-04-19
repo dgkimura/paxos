@@ -22,6 +22,18 @@ BoostTransport::BoostTransport(std::string hostname, short port)
     socket_.set_option(boost::asio::socket_base::keep_alive(false), ec);
 
     check_deadline();
+
+    //
+    // Set up the variable that receives the result of the asynchronous
+    // operation. The error code is set to would_block to signal that the
+    // operation is incomplete. Asio guarantees that its asynchronous
+    // operations will never fail with would_block, so any other value in
+    // ec indicates completion.
+    //
+    ec = boost::asio::error::would_block;
+    boost::asio::async_connect(socket_, endpoint_,
+                               boost::lambda::var(ec) = boost::lambda::_1);
+    do io_service_.run_one(); while (ec == boost::asio::error::would_block);
 }
 
 
@@ -36,22 +48,19 @@ BoostTransport::Write(std::string content)
 {
     timer_.expires_from_now(boost::posix_time::seconds(1));
 
-    //
-    // Set up the variable that receives the result of the asynchronous
-    // operation. The error code is set to would_block to signal that the
-    // operation is incomplete. Asio guarantees that its asynchronous
-    // operations will never fail with would_block, so any other value in
-    // ec indicates completion.
-    //
-    boost::system::error_code ec = boost::asio::error::would_block;
-    boost::asio::async_connect(socket_, endpoint_,
-                               boost::lambda::var(ec) = boost::lambda::_1);
-    do io_service_.run_one(); while (ec == boost::asio::error::would_block);
-
     try
     {
-        if (socket_.is_open() && ec == 0)
+        if (socket_.is_open())
         {
+            auto message_size = content.size();
+            std::vector<uint8_t> header(4);
+            header[0] = static_cast<uint8_t>((message_size >> 24) & 0xFF);
+            header[1] = static_cast<uint8_t>((message_size >> 12) & 0xFF);
+            header[2] = static_cast<uint8_t>((message_size >> 8) & 0xFF);
+            header[3] = static_cast<uint8_t>((message_size >> 0) & 0xFF);
+            boost::asio::write(socket_, boost::asio::buffer(header,
+                                                            header.size()));
+
             boost::asio::write(socket_, boost::asio::buffer(content.c_str(),
                                                             content.size()));
         }
@@ -60,7 +69,6 @@ BoostTransport::Write(std::string content)
     {
         LOG(LogLevel::Warning) << "Could not write to transport - " << e.what();
     }
-    socket_.close();
 }
 
 

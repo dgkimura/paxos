@@ -30,7 +30,6 @@ BoostServer::~BoostServer()
 {
     io_service.stop();
     acceptor.close();
-    socket.close();
 }
 
 
@@ -81,31 +80,54 @@ BoostServer::Session::Session(
 void
 BoostServer::Session::Start()
 {
-    boost::asio::async_read(socket, response,
-        boost::asio::transfer_at_least(1),
-        boost::bind(&Session::handle_read_message, shared_from_this(),
+    readbuf.resize(HEADER_SIZE);
+    boost::asio::async_read(socket, boost::asio::buffer(readbuf),
+        boost::bind(&Session::handle_read_header, shared_from_this(),
             boost::asio::placeholders::error));
 }
 
 
 void
-BoostServer::Session::handle_read_message(
+BoostServer::Session::handle_read_header(
     const boost::system::error_code& err)
 {
     if (!err)
     {
-        boost::asio::async_read(socket, response,
-            boost::asio::transfer_at_least(1),
-            boost::bind(&Session::handle_read_message, shared_from_this(),
-                boost::asio::placeholders::error));
+        unsigned int message_size = 0;
+        for (int i=0; i<HEADER_SIZE; i++)
+        {
+            message_size = message_size * 256 +
+                           (static_cast<uint8_t>(readbuf[i]) & 0xFF);
+        }
+        handle_read_message(message_size);
     }
-    if (err == boost::asio::error::eof)
+}
+
+
+void
+BoostServer::Session::handle_read_message(
+    unsigned int message_size)
+{
+    readbuf.resize(HEADER_SIZE + message_size);
+    boost::asio::mutable_buffers_1 buf = boost::asio::buffer(
+        &readbuf[HEADER_SIZE], message_size);
+
+    boost::asio::async_read(socket, buf,
+        boost::bind(&Session::handle_process_message, shared_from_this(),
+            boost::asio::placeholders::error));
+}
+
+
+void
+BoostServer::Session::handle_process_message(
+    const boost::system::error_code& err)
+{
+    if (!err)
     {
-        boost::asio::streambuf::const_buffers_type bufs = response.data();
-        std::string content(
-            boost::asio::buffers_begin(bufs),
-            boost::asio::buffers_begin(bufs) + response.size());
+        std::string content(readbuf.begin() + HEADER_SIZE, readbuf.end());
+
         action(content);
+        Start();
     }
 }
 

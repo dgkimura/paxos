@@ -26,6 +26,8 @@ public:
 
 private:
 
+    static const unsigned int HEADER_SIZE = 4;
+
     void do_accept();
 
     boost::asio::io_service io_service;
@@ -46,11 +48,15 @@ private:
 
     private:
 
-        void handle_read_message(const boost::system::error_code& err);
+        void handle_read_header(const boost::system::error_code& err);
+
+        void handle_read_message(unsigned int message_size);
+
+        void handle_process_message(const boost::system::error_code& err);
 
         boost::asio::ip::tcp::socket socket;
 
-        boost::asio::streambuf response;
+        std::vector<uint8_t> readbuf;
 
         std::function<void(std::string content)> action;
     };
