@@ -430,27 +430,8 @@ HandleAccept(
 
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree.Value()))
     {
-        if (IsDecreeHigher(message.decree, context->accepted_decree.Value()))
-        {
-            //
-            // If the messaged decree is greater than current accepted decree
-            // we can update the accepted decree information and send the
-            // accepted message.
-            //
-            context->accepted_time = std::chrono::high_resolution_clock::now();
-            context->accepted_decree = message.decree;
-            sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
-        }
-        else if (context->accepted_time + context->interval <
-                 std::chrono::high_resolution_clock::now())
-        {
-            //
-            // If the messaged decree is equivalent to than current accepted
-            // decree then we throttle the sending of accepted message.
-            //
-            context->accepted_time = std::chrono::high_resolution_clock::now();
-            sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
-        }
+        context->accepted_decree = message.decree;
+        sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
     }
 }
 

@@ -76,7 +76,6 @@ struct AcceptorContext : public Context
 {
     Field<Decree> promised_decree;
     Field<Decree> accepted_decree;
-    std::chrono::high_resolution_clock::time_point accepted_time;
     std::chrono::milliseconds interval;
 
     AcceptorContext(
@@ -86,7 +85,6 @@ struct AcceptorContext : public Context
     )
         : promised_decree(promised_decree_),
           accepted_decree(accepted_decree_),
-          accepted_time(std::chrono::high_resolution_clock::now()),
           interval(interval_)
     {
     }
