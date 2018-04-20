@@ -78,6 +78,7 @@ struct AcceptorContext : public Context
     Field<Decree> accepted_decree;
     std::chrono::high_resolution_clock::time_point accepted_time;
     std::chrono::milliseconds interval;
+    std::mutex mutex;
 
     AcceptorContext(
         std::shared_ptr<Storage<Decree>> promised_decree_,
@@ -87,7 +88,8 @@ struct AcceptorContext : public Context
         : promised_decree(promised_decree_),
           accepted_decree(accepted_decree_),
           accepted_time(std::chrono::high_resolution_clock::now()),
-          interval(interval_)
+          interval(interval_),
+          mutex()
     {
     }
 };

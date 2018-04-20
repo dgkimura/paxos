@@ -139,6 +139,11 @@ HandlePromise(
 {
     LOG(LogLevel::Info) << "HandlePromise | " << message.decree.number << "|"
                         << Serialize(message);
+    //
+    // Acquire mutex to protect check and erase on requested_values.
+    //
+    std::lock_guard<std::mutex> lock(context->mutex);
+
 
     if (IsDecreeHigher(message.decree, context->highest_proposed_decree.Value()) &&
         context->replicaset->Contains(message.from))
@@ -182,11 +187,6 @@ HandlePromise(
         if (received_promises == minimum_quorum ||
             (received_promises >= minimum_quorum && duplicate))
         {
-            //
-            // Acquire mutex to protect check and erase on requested_values.
-            //
-            std::lock_guard<std::mutex> lock(context->mutex);
-
             if (context->highest_proposed_decree.Value().content.empty() &&
                 !context->requested_values.empty())
             {
@@ -374,6 +374,8 @@ HandlePrepare(
     LOG(LogLevel::Info) << "HandlePrepare | " << message.decree.number << "|"
                         << Serialize(message);
 
+    std::lock_guard<std::mutex> lock(context->mutex);
+
     if (IsDecreeHigher(message.decree, context->promised_decree.Value()) ||
         IsDecreeIdentical(message.decree, context->promised_decree.Value()))
     {
@@ -428,6 +430,8 @@ HandleAccept(
     LOG(LogLevel::Info) << "HandleAccept  | " << message.decree.number << "|"
                         << Serialize(message);
 
+    std::lock_guard<std::mutex> lock(context->mutex);
+
     if (IsDecreeHigherOrEqual(message.decree, context->promised_decree.Value()))
     {
         if (IsDecreeHigher(message.decree, context->accepted_decree.Value()))
@@ -464,8 +468,7 @@ HandleAccepted(
     LOG(LogLevel::Info) << "HandleAccepted| " << message.decree.number << "|"
                         << Serialize(message);
 
-    static std::mutex mutex;
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(context->mutex);
 
     if (context->accepted_map.find(message.decree) == context->accepted_map.end())
     {
@@ -576,7 +579,6 @@ HandleAccepted(
         //
         // All votes for decree have been accounted for. Now clean up memory.
         //
-        std::lock_guard<std::mutex> lock(context->mutex);
         context->accepted_map.erase(message.decree);
     }
 }
@@ -590,6 +592,8 @@ HandleUpdated(
 {
     LOG(LogLevel::Info) << "HandleUpdated | " << message.decree.number << "|"
                         << Serialize(message);
+
+    std::lock_guard<std::mutex> lock(context->mutex);
 
     if (IsRootDecreeOrdered(context->ledger->Tail(), message.decree))
     {
