@@ -1193,6 +1193,25 @@ TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 }
 
 
+TEST_F(AcceptorTest, testHandleAcceptWithIdenticalPromisedDecreeSendsAcceptedDecree)
+{
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::AcceptMessage);
+
+    auto context = createAcceptorContext();
+    context->interval = std::chrono::milliseconds(0);
+    context->promised_decree = paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree);
+    context->accepted_decree = paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree);
+
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    replicaset->Add(paxos::Replica("the_author"));
+    auto sender = std::make_shared<FakeSender>(replicaset);
+
+    HandleAccept(message, context, sender);
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::AcceptedMessage);
+}
+
+
 TEST_F(AcceptorTest, testHandleAcceptWithEqualDecreeDoesNotUpdateAcceptedDecree)
 {
     paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::AcceptMessage);

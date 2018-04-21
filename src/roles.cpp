@@ -432,9 +432,10 @@ HandleAccept(
 
     std::lock_guard<std::mutex> lock(context->mutex);
 
-    if (IsDecreeHigherOrEqual(message.decree, context->promised_decree.Value()))
+    if (IsRootDecreeHigher(message.decree, context->promised_decree.Value()) ||
+        IsDecreeIdentical(message.decree, context->promised_decree.Value()))
     {
-        if (IsDecreeHigher(message.decree, context->accepted_decree.Value()))
+        if (IsRootDecreeHigher(message.decree, context->accepted_decree.Value()))
         {
             //
             // If the messaged decree is greater than current accepted decree
@@ -446,7 +447,9 @@ HandleAccept(
             sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
         }
         else if (context->accepted_time + context->interval <
-                 std::chrono::high_resolution_clock::now())
+                 std::chrono::high_resolution_clock::now() &&
+                 IsDecreeIdentical(message.decree,
+                                   context->promised_decree.Value()))
         {
             //
             // If the messaged decree is equivalent to than current accepted
