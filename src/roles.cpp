@@ -98,6 +98,9 @@ HandleRequest(
 {
     LOG(LogLevel::Info) << "HandleRequest | " << message.decree.number << "|"
                         << Serialize(message);
+
+    std::lock_guard<std::mutex> lock(context->mutex);
+
     if (!message.decree.content.empty())
     {
         context->requested_values.push_back(
@@ -139,11 +142,8 @@ HandlePromise(
 {
     LOG(LogLevel::Info) << "HandlePromise | " << message.decree.number << "|"
                         << Serialize(message);
-    //
-    // Acquire mutex to protect check and erase on requested_values.
-    //
-    std::lock_guard<std::mutex> lock(context->mutex);
 
+    std::lock_guard<std::mutex> lock(context->mutex);
 
     if (IsDecreeHigher(message.decree, context->highest_proposed_decree.Value()) &&
         context->replicaset->Contains(message.from))
@@ -232,10 +232,6 @@ HandleNackTie(
     LOG(LogLevel::Info) << "HandleNackTie | " << message.decree.number << "|"
                         << Serialize(message);
 
-    //
-    // Acquire mutex to prevent race-conditions relating to compare and set of
-    // the highest_nacktie_decree.
-    //
     std::lock_guard<std::mutex> lock(context->mutex);
 
     if (IsRootDecreeHigher(message.decree,
@@ -331,6 +327,8 @@ HandleResume(
 {
     LOG(LogLevel::Info) << "HandleResume  | " << message.decree.number << "|"
                         << Serialize(message);
+
+    std::lock_guard<std::mutex> lock(context->mutex);
 
     if (context->promise_map.find(message.decree) != context->promise_map.end()
         && context->promise_map[message.decree]
