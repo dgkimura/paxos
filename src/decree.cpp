@@ -54,7 +54,8 @@ IsDecreeIdentical(Decree lhs, Decree rhs)
 bool
 IsDecreeLower(Decree lhs, Decree rhs)
 {
-    return CompareDecrees(lhs, rhs) < 0;
+    return CompareDecrees(lhs, rhs) == 0 ?
+           CompareRootDecrees(lhs, rhs) < 0 : CompareDecrees(lhs, rhs) < 0;
 }
 
 

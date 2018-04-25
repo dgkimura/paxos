@@ -20,7 +20,7 @@ namespace paxos
 // Map of a decree ballots.
 //
 using AbsenteeBallots = std::map<Decree, std::shared_ptr<ReplicaSet>,
-                                 compare_decree>;
+                                 compare_map_decree>;
 
 
 class Parliament

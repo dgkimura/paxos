@@ -59,6 +59,26 @@ TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeNumberOnLeftHandSide)
 }
 
 
+TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeRootNumberOnRightHandSide)
+{
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    higher.root_number = 2;
+
+    ASSERT_TRUE(paxos::IsDecreeLower(lower, higher));
+}
+
+
+TEST(DecreeUnitTest, testIsDecreeLowerWithHigherDecreeRootNumberOnLeftHandSide)
+{
+    paxos::Decree lower(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    paxos::Decree higher(paxos::Replica("an_author"), 1, "", paxos::DecreeType::UserDecree);
+    higher.root_number = 2;
+
+    ASSERT_FALSE(paxos::IsDecreeLower(higher, lower));
+}
+
+
 TEST(DecreeUnitTest, testIsDecreeLowerWithIdenticalDecrees)
 {
     paxos::Decree lower(paxos::Replica("an_author_1"), 1, "", paxos::DecreeType::UserDecree);

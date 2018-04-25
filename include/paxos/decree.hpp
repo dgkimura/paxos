@@ -107,6 +107,14 @@ struct compare_decree
     }
 };
 
+struct compare_map_decree
+{
+    bool operator()(const Decree& lhs, const Decree& rhs) const
+    {
+        return CompareDecrees(lhs, rhs) < 0;
+    }
+};
+
 struct ascending_decree
 {
     bool operator()(const Decree& lhs, const Decree& rhs) const

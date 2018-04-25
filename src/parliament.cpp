@@ -200,7 +200,7 @@ Parliament::send_decree(Decree d)
 AbsenteeBallots
 Parliament::GetAbsenteeBallots(int max_ballots)
 {
-    std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> ballots;
+    std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> ballots;
 
     auto latest = learner->ledger->Tail();
     for (int i=latest.number-max_ballots + 1; i <= latest.number; i++)
