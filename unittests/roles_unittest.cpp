@@ -819,7 +819,7 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
             decree,
             replica,
             replica,
-            paxos::MessageType::NackMessage
+            paxos::MessageType::NackPrepareMessage
         ),
         context,
         sender
@@ -862,7 +862,7 @@ TEST_F(ProposerTest, testHandleNackWithAddReplicaDecreeSendsFailSignal)
             decree,
             replica,
             replica,
-            paxos::MessageType::NackMessage
+            paxos::MessageType::NackPrepareMessage
         ),
         context,
         sender
@@ -904,7 +904,7 @@ TEST_F(ProposerTest, testHandleNackDoesNotRunIgnoreHandlerOnSystemDecrees)
             decree,
             replica,
             replica,
-            paxos::MessageType::NackMessage
+            paxos::MessageType::NackPrepareMessage
         ),
         context,
         sender
@@ -941,7 +941,7 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
             decree,
             replica,
             replica,
-            paxos::MessageType::NackMessage
+            paxos::MessageType::NackPrepareMessage
         ),
         context,
         sender
@@ -951,7 +951,7 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
             decree,
             replica,
             replica,
-            paxos::MessageType::NackMessage
+            paxos::MessageType::NackPrepareMessage
         ),
         context,
         sender
@@ -1160,7 +1160,7 @@ TEST_F(AcceptorTest, testHandlePrepareWithLowerAndDifferentAuthorDecreeDoesNotUp
     HandlePrepare(message, context, sender);
 
     ASSERT_TRUE(IsDecreeLower(message.decree, context->promised_decree.Value()));
-    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::NackMessage);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::NackPrepareMessage);
 }
 
 

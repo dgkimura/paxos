@@ -67,6 +67,17 @@ void SendBootstrap(
     for (auto& entry : boost::make_iterator_range(
          boost::filesystem::directory_iterator(local_directory), {}))
     {
+        if (entry.path().filename() == "paxos.accepted_decree")
+        {
+            //
+            // We must ignore accepted decree because action must be completed
+            // before writing to ledger and sending cleanup on accepted decree.
+            // As a result, if accepted decree is copied over then new replica
+            // will incorrectly declare decree as stale accept.
+            //
+            continue;
+        }
+
         NetworkFileSender<Transport> sender;
 
         // 1. serialize file

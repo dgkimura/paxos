@@ -228,7 +228,7 @@ TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleReplicaSet)
     legislators->Add(paxos::Replica("yourhost", 2222));
     legislators->Add(paxos::Replica("ourhost", 1111));
 
-    paxos::Decree decree(replica, 1, "my decree content", paxos::DecreeType::UserDecree);
+    paxos::Decree decree(paxos::Replica(), 1, "my decree content", paxos::DecreeType::UserDecree);
     ledger->Append(decree);
     receiver->ReceiveMessage(
         paxos::Message(
@@ -261,7 +261,7 @@ TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleDecrees)
 
 TEST_F(ParliamentTest, testGetAbsenteeBallotIfDecreeIsNotInPromiseMap)
 {
-    paxos::Decree decree1(replica, 1, "my decree 1", paxos::DecreeType::UserDecree);
+    paxos::Decree decree1(paxos::Replica(), 1, "my decree 1", paxos::DecreeType::UserDecree);
 
     ledger->Append(decree1);
 

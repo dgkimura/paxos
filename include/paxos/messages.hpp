@@ -37,14 +37,19 @@ enum class MessageType
     NackTieMessage,
 
     //
-    // NackMessage sent as a negative response to prepare.
+    // NackPrepareMessage sent as a negative response to prepare.
     //
-    NackMessage,
+    NackPrepareMessage,
 
     //
     // AcceptMessage sent if quorum has elected a leader.
     //
     AcceptMessage,
+
+    //
+    // NackAcceptMessage sent as a negative response to accept.
+    //
+    NackAcceptMessage,
 
     //
     // AcceptedMessage sent to continue to second phase of concensus.

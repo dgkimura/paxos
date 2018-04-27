@@ -76,6 +76,12 @@ void HandleNack(
     std::shared_ptr<Sender> sender);
 
 
+void HandleNackAccept(
+    Message message,
+    std::shared_ptr<ProposerContext> context,
+    std::shared_ptr<Sender> sender);
+
+
 void HandleResume(
     Message message,
     std::shared_ptr<ProposerContext> context,
@@ -89,6 +95,12 @@ void HandlePrepare(
 
 
 void HandleAccept(
+    Message message,
+    std::shared_ptr<AcceptorContext> context,
+    std::shared_ptr<Sender> sender);
+
+
+void HandleCleanup(
     Message message,
     std::shared_ptr<AcceptorContext> context,
     std::shared_ptr<Sender> sender);

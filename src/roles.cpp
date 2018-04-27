@@ -28,7 +28,11 @@ RegisterProposer(
     );
     receiver->RegisterCallback(
         Callback(std::bind(HandleNack, std::placeholders::_1, context, sender)),
-        MessageType::NackMessage
+        MessageType::NackPrepareMessage
+    );
+    receiver->RegisterCallback(
+        Callback(std::bind(HandleNackAccept, std::placeholders::_1, context, sender)),
+        MessageType::NackAcceptMessage
     );
     receiver->RegisterCallback(
         Callback(std::bind(HandleResume, std::placeholders::_1, context, sender)),
@@ -52,6 +56,10 @@ RegisterAcceptor(
     receiver->RegisterCallback(
         Callback(std::bind(HandleAccept, std::placeholders::_1, context, sender)),
         MessageType::AcceptMessage
+    );
+    receiver->RegisterCallback(
+        Callback(std::bind(HandleCleanup, std::placeholders::_1, context, sender)),
+        MessageType::ResumeMessage
     );
 }
 
@@ -219,6 +227,16 @@ HandlePromise(
             }
         }
     }
+    else if (!message.decree.content.empty())
+    {
+        //
+        // Promise with non-empty decree contents suggests that decree was once
+        // in accept state. Therefore we should send accept on this decree
+        // again and let it either propogate through to accepted or if a quorum
+        // rejects then run the ignore handler.
+        //
+        sender->ReplyAll(Response(message, MessageType::AcceptMessage));
+    }
 
 }
 
@@ -294,10 +312,6 @@ HandleNack(
     LOG(LogLevel::Info) << "HandleNack    | " << message.decree.number << "|"
                         << Serialize(message);
 
-    //
-    // Acquire mutex to prevent race-conditions relating to compare and set of
-    // the highest_nacked_decree.
-    //
     std::lock_guard<std::mutex> lock(context->mutex);
 
     if (IsDecreeHigher(message.decree, context->highest_nacked_decree) &&
@@ -315,6 +329,55 @@ HandleNack(
         // unblock waiting thread.
         //
         context->signal->Set(false);
+    }
+}
+
+
+void
+HandleNackAccept(
+    Message message,
+    std::shared_ptr<ProposerContext> context,
+    std::shared_ptr<Sender> sender)
+{
+    LOG(LogLevel::Info) << "HandleNackAccept | " << message.decree.number << "|"
+                        << Serialize(message);
+
+    std::lock_guard<std::mutex> lock(context->mutex);
+
+    if (context->naccept_map.find(message.decree) == context->naccept_map.end())
+    {
+        //
+        // If there is no entry for the messaged decree then make an entry.
+        //
+        context->naccept_map[message.decree] = std::make_shared<ReplicaSet>();
+    }
+
+    context->naccept_map[message.decree]->Add(message.from);
+
+    int minimum_quorum = context->replicaset->GetSize() / 2 + 1;
+    int received_naccepts = context->naccept_map[message.decree]
+                                   ->Intersection(context->replicaset)
+                                   ->GetSize();
+
+    if (received_naccepts >= minimum_quorum)
+    {
+        context->ignore_handler(message.decree.content);
+        context->naccept_map.erase(context->naccept_map.find(message.decree));
+    }
+
+    if (context->requested_values.size() > 0)
+    {
+        //
+        // Setup next round for pending proposals.
+        //
+        sender->Reply(
+            Message(
+                Decree(),
+                message.to,
+                message.to,
+                MessageType::RequestMessage
+            )
+        );
     }
 }
 
@@ -374,7 +437,18 @@ HandlePrepare(
 
     std::lock_guard<std::mutex> lock(context->mutex);
 
-    if (IsDecreeHigher(message.decree, context->promised_decree.Value()) ||
+    if (!context->accepted_decree.Value().content.empty())
+    {
+        //
+        // If there is a pending accepted decree then we must reply with a
+        // promise to the previous accepted decree otherwise we risk losing the
+        // decree.
+        //
+        auto response = Response(message, MessageType::PromiseMessage);
+        response.decree = context->accepted_decree.Value();
+        sender->Reply(response);
+    } else if (
+        IsDecreeHigher(message.decree, context->promised_decree.Value()) ||
         IsDecreeIdentical(message.decree, context->promised_decree.Value()))
     {
         //
@@ -414,7 +488,7 @@ HandlePrepare(
         // If the messaged decree is lower than current promised decree then
         // the other proposer is behind. Send a Nack.
         //
-        sender->Reply(Response(message, MessageType::NackMessage));
+        sender->Reply(Response(message, MessageType::NackPrepareMessage));
     }
 }
 
@@ -447,7 +521,7 @@ HandleAccept(
         else if (context->accepted_time + context->interval <
                  std::chrono::high_resolution_clock::now() &&
                  IsDecreeIdentical(message.decree,
-                                   context->promised_decree.Value()))
+                                   context->accepted_decree.Value()))
         {
             //
             // If the messaged decree is equivalent to than current accepted
@@ -456,6 +530,41 @@ HandleAccept(
             context->accepted_time = std::chrono::high_resolution_clock::now();
             sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
         }
+    }
+    else if (IsDecreeLower(message.decree, context->accepted_decree.Value()) ||
+             (IsRootDecreeEqual(message.decree, context->accepted_decree.Value()) &&
+              !IsDecreeIdentical(message.decree, context->accepted_decree.Value())))
+    {
+        //
+        // If the message decree is not higher than the accepted decree then we
+        // reject it.
+        //
+        sender->Reply(Response(message, MessageType::NackAcceptMessage));
+    }
+}
+
+
+void
+HandleCleanup(
+    Message message,
+    std::shared_ptr<AcceptorContext> context,
+    std::shared_ptr<Sender> sender)
+{
+    LOG(LogLevel::Info) << "HandleCleanup | " << message.decree.number << "|"
+                        << Serialize(message);
+
+    std::lock_guard<std::mutex> lock(context->mutex);
+
+    if (IsDecreeIdentical(message.decree, context->accepted_decree.Value()) &&
+        message.decree.content == context->accepted_decree.Value().content)
+    {
+        //
+        // We reset the accepted decree content to "" to signal to the prepare
+        // handler that there is not at pending accept decree to flush.
+        //
+        Decree d = context->accepted_decree.Value();
+        d.content = "";
+        context->accepted_decree = d;
     }
 }
 
@@ -507,7 +616,6 @@ HandleAccepted(
                 response.to = message.to;
                 response.type = MessageType::ResumeMessage;
                 response.decree = context->ledger->Tail();
-                response.decree.content = "";
                 sender->Reply(response);
             }
         }
@@ -528,11 +636,10 @@ HandleAccepted(
             response.to = message.to;
             response.type = MessageType::ResumeMessage;
             response.decree = context->ledger->Tail();
-            response.decree.content = "";
             sender->Reply(response);
         }
         if (context->tracked_future_decrees.size() > 0 &&
-            IsDecreeOrdered(context->ledger->Tail(),
+            IsRootDecreeOrdered(context->ledger->Tail(),
                             context->tracked_future_decrees.top()) &&
             !context->is_observer)
         {
@@ -540,7 +647,7 @@ HandleAccepted(
             while (context->tracked_future_decrees.size() > 0)
             {
                 current_decree = context->tracked_future_decrees.top();
-                if (IsDecreeOrdered(previous_decree, current_decree))
+                if (IsRootDecreeOrdered(previous_decree, current_decree))
                 {
                     //
                     // If tracked_future_decrees contains the next ordered
@@ -561,7 +668,7 @@ HandleAccepted(
             }
         }
         else if (context->tracked_future_decrees.size() > 0 &&
-                 !IsDecreeOrdered(context->ledger->Tail(),
+                 !IsRootDecreeOrdered(context->ledger->Tail(),
                                   context->tracked_future_decrees.top()))
         {
             //
@@ -647,7 +754,6 @@ HandleUpdated(
         response.to = message.to;
         response.type = MessageType::ResumeMessage;
         response.decree = context->ledger->Tail();
-        response.decree.content = "";
         sender->Reply(response);
     }
 }
