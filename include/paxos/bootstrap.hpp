@@ -9,6 +9,7 @@
 #include <boost/range/iterator_range.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include "paxos/fields.hpp"
 #include "paxos/file.hpp"
 #include "paxos/replicaset.hpp"
 #include "paxos/sender.hpp"
@@ -67,16 +68,6 @@ void SendBootstrap(
     for (auto& entry : boost::make_iterator_range(
          boost::filesystem::directory_iterator(local_directory), {}))
     {
-        if (entry.path().filename() == "paxos.accepted_decree")
-        {
-            //
-            // We must ignore accepted decree because action must be completed
-            // before writing to ledger and sending cleanup on accepted decree.
-            // As a result, if accepted decree is copied over then new replica
-            // will incorrectly declare decree as stale accept.
-            //
-            continue;
-        }
 
         NetworkFileSender<Transport> sender;
 
@@ -93,6 +84,24 @@ void SendBootstrap(
         file.content = buffer.str();
         sender.SendFile(replica, file);
     }
+
+    NetworkFileSender<Transport> sender;
+    BootstrapFile file;
+    boost::filesystem::path remotepath(remote_directory);
+
+    //
+    // We must empty the content of accepted decree because actions must be
+    // completed before writes to ledger. If we do not, then the accepted
+    // decree on the new replica will incorrectly consider current decree as
+    // stale accept from a prevous round.
+    //
+    remotepath /= "paxos.accepted_decree";
+    auto accepted = PersistentDecree(local_directory,
+                                     "paxos.accepted_decree").Get();
+    accepted.content = "";
+    file.name = remotepath.native();
+    file.content = Serialize(accepted);
+    sender.SendFile(replica, file);
 }
 
 
