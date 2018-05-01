@@ -316,6 +316,39 @@ TEST_F(ProposerTest, testHandlePromiseWithoutAnyRequestedValuesDoesNotSendAccept
 }
 
 
+TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeAndNonemptyContentResendsAccept)
+{
+    paxos::Message message(paxos::Decree(paxos::Replica("host"), 1, "previous accepted decree content", paxos::DecreeType::UserDecree), paxos::Replica("host"), paxos::Replica("host"), paxos::MessageType::PromiseMessage);
+
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    std::stringstream ss;
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
+    );
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
+        replicaset,
+        ledger,
+        std::make_shared<paxos::VolatileDecree>(),
+        [](std::string entry){},
+        std::make_shared<paxos::NoPause>(),
+        signal
+    );
+    // highest proposed decree is higher than messaged decree
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("host"), 2, "", paxos::DecreeType::UserDecree);
+    context->replicaset = std::make_shared<paxos::ReplicaSet>();
+    context->replicaset->Add(paxos::Replica("host"));
+    context->requested_values.push_back(std::make_tuple("a_requested_value", paxos::DecreeType::UserDecree));
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandlePromise(message, context, sender);
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::AcceptMessage);
+    ASSERT_EQ("previous accepted decree content", sender->sentMessages()[0].decree.content);
+}
+
+
 TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecree)
 {
     paxos::Message message(paxos::Decree(paxos::Replica("host"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("host"), paxos::Replica("host"), paxos::MessageType::PromiseMessage);
@@ -962,6 +995,47 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
 }
 
 
+TEST_F(ProposerTest, testHandleNackAcceptQuorumRunsIgnoreHandlerAndSendsRequest)
+{
+    bool was_ignore_handler_run = false;
+    auto replica = paxos::Replica("host");
+
+    auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::AddReplicaDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    replicaset->Add(replica);
+    std::stringstream ss;
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
+    );
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
+        replicaset,
+        ledger,
+        std::make_shared<paxos::VolatileDecree>(),
+        [&was_ignore_handler_run](std::string entry){ was_ignore_handler_run = true; },
+        std::make_shared<paxos::NoPause>(),
+        signal
+    );
+    context->requested_values.push_back(std::make_tuple("a pending value", paxos::DecreeType::AddReplicaDecree));
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNackAccept(
+        paxos::Message(
+            decree,
+            replica,
+            replica,
+            paxos::MessageType::NackAcceptMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_TRUE(was_ignore_handler_run);
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::RequestMessage);
+}
+
+
 TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
 {
     std::stringstream ss;
@@ -1208,6 +1282,24 @@ TEST_F(AcceptorTest, testHandlePrepareWithEqualDecreeNumberFromSingleReplicasRes
 }
 
 
+TEST_F(AcceptorTest, testHandlePrepareWithPendingNonEmptyAcceptDecree)
+{
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::PrepareMessage);
+
+    std::shared_ptr<paxos::AcceptorContext> context = createAcceptorContext();
+
+    // We have a pending accepted decree with non-empty content with higher value (2) than messaged decree (1)
+    context->accepted_decree = paxos::Decree(paxos::Replica("the_author"), 2, "pending non-empty contents", paxos::DecreeType::UserDecree);
+
+    auto sender = std::make_shared<FakeSender>();
+
+    HandlePrepare(message, context, sender);
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::PromiseMessage);
+    ASSERT_EQ("pending non-empty contents", sender->sentMessages()[0].decree.content);
+}
+
+
 TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 {
     paxos::Message message(paxos::Decree(paxos::Replica("the_author"), -1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::AcceptMessage);
@@ -1290,6 +1382,39 @@ TEST_F(AcceptorTest, testHandleAcceptWithHigherDecreeDoesUpdateAcceptedDecree)
     HandleAccept(message, context, sender);
 
     ASSERT_TRUE(IsDecreeEqual(message.decree, context->accepted_decree.Value()));
+}
+
+
+TEST_F(AcceptorTest, testHandleCleanupResetsAcceptDecreeContentsWhenDecreeIsEqual)
+{
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 2, "accepted decree content", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::ResumeMessage);
+
+    auto context = createAcceptorContext();
+    context->accepted_decree = paxos::Decree(paxos::Replica("the_author"), 2, "accepted decree content", paxos::DecreeType::UserDecree);
+
+    auto sender = std::make_shared<FakeSender>();
+
+    HandleCleanup(message, context, sender);
+
+    ASSERT_TRUE(IsDecreeEqual(message.decree, context->accepted_decree.Value()));
+    ASSERT_EQ("", context->accepted_decree.Value().content);
+}
+
+
+TEST_F(AcceptorTest, testHandleCleanupDoesNotResetAcceptDecreeContentsWhenDecreeIsNotEqual)
+{
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 2, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::ResumeMessage);
+
+    auto context = createAcceptorContext();
+    context->accepted_decree = paxos::Decree(paxos::Replica("the_author"), 1, "accepted decree content", paxos::DecreeType::UserDecree);
+
+    auto sender = std::make_shared<FakeSender>();
+
+    HandleCleanup(message, context, sender);
+
+    // Messaged decree (2) and accepted decree (1) are not equal so accepted
+    // content should not be erased.
+    ASSERT_EQ("accepted decree content", context->accepted_decree.Value().content);
 }
 
 
