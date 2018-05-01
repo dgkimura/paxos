@@ -26,7 +26,8 @@ public:
 
 TEST(NetworkReceiverTest, testReceiverWithNoRegisteredCallback)
 {
-    paxos::NetworkReceiver<MockServer> receiver("myhost", 1111);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();;
+    paxos::NetworkReceiver<MockServer> receiver("myhost", 1111, replicaset);
 
     ASSERT_EQ(0, receiver.GetRegisteredCallbacks(paxos::MessageType::RequestMessage).size());
 }
@@ -34,7 +35,8 @@ TEST(NetworkReceiverTest, testReceiverWithNoRegisteredCallback)
 
 TEST(NetworkReceiverTest, testReceiverWithRegisteredCallback)
 {
-    paxos::NetworkReceiver<MockServer> receiver("myhost", 1111);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();;
+    paxos::NetworkReceiver<MockServer> receiver("myhost", 1111, replicaset);
 
     receiver.RegisterCallback(
         paxos::Callback([](paxos::Message m){}),
@@ -46,7 +48,8 @@ TEST(NetworkReceiverTest, testReceiverWithRegisteredCallback)
 
 TEST(NetworkReceiverTest, testReceiverWithMultipleRegisteredCallback)
 {
-    paxos::NetworkReceiver<MockServer> receiver("myhost", 1111);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();;
+    paxos::NetworkReceiver<MockServer> receiver("myhost", 1111, replicaset);
 
     receiver.RegisterCallback(
         paxos::Callback([](paxos::Message m){}),
@@ -63,7 +66,9 @@ TEST(NetworkReceiverTest, testProcessMessageRunsCallbacksAssociatedWithRegistere
 {
     bool was_callback_called = false;
 
-    paxos::NetworkReceiver<MockServer> receiver("myhost", 1111);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();;
+    replicaset->Add(paxos::Replica("A"));
+    paxos::NetworkReceiver<MockServer> receiver("myhost", 1111, replicaset);
     receiver.RegisterCallback(
         paxos::Callback([&was_callback_called](paxos::Message m){was_callback_called = true;}),
         paxos::MessageType::RequestMessage);
@@ -80,4 +85,30 @@ TEST(NetworkReceiverTest, testProcessMessageRunsCallbacksAssociatedWithRegistere
     );
 
     ASSERT_TRUE(was_callback_called);
+}
+
+
+TEST(NetworkReceiverTest, testProcessMessageDoesNotRunCallbacksFromUnknownReplica)
+{
+    bool was_callback_called = false;
+
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();;
+    replicaset->Add(paxos::Replica("UNKNOWN"));
+    paxos::NetworkReceiver<MockServer> receiver("myhost", 1111, replicaset);
+    receiver.RegisterCallback(
+        paxos::Callback([&was_callback_called](paxos::Message m){was_callback_called = true;}),
+        paxos::MessageType::RequestMessage);
+
+    receiver.ProcessContent(
+        Serialize(
+            paxos::Message(
+                paxos::Decree(),
+                paxos::Replica("A"),
+                paxos::Replica("B"),
+                paxos::MessageType::RequestMessage
+            )
+        )
+    );
+
+    ASSERT_FALSE(was_callback_called);
 }

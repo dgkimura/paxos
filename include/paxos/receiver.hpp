@@ -32,8 +32,11 @@ class NetworkReceiver : public Receiver
 {
 public:
 
-    NetworkReceiver(std::string address, short port)
-        : server(boost::make_shared<Server>(address, port))
+    NetworkReceiver(std::string address,
+                    short port,
+                    const std::shared_ptr<ReplicaSet>& replicaset)
+        : server(boost::make_shared<Server>(address, port)),
+          replicaset(replicaset)
     {
         server->RegisterAction([this](std::string content){
             ProcessContent(content);
@@ -44,6 +47,17 @@ public:
     void ProcessContent(std::string content)
     {
         Message message = Deserialize<Message>(content);
+
+        if (!replicaset->Contains(message.from) &&
+            !message.from.hostname.empty() && message.from.port != 0)
+        {
+            //
+            // Skip processing content from an unknown replica. This prevents
+            // ostracized replicas from continuing to send messages that should
+            // not be considered for promise or acceptance.
+            //
+            return;
+        }
 
         for (Callback callback : GetRegisteredCallbacks(message.type))
         {
@@ -78,6 +92,8 @@ public:
 private:
 
     boost::shared_ptr<Server> server;
+
+    const std::shared_ptr<ReplicaSet>& replicaset;
 
     std::unordered_map<MessageType, std::vector<Callback>> registered_map;
 };
