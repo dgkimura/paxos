@@ -69,8 +69,12 @@ void SendBootstrap(
         //
         // We must send an empty replicaset file first. This ensures that the
         // replica will ignore any paxos messages send during bootstrap. Else
-        // the replica may incorrectly PROMISE or ACCEPT a decree based on the
-        // previous replica set.
+        // the replica may incorrectly send PROMISE or ACCEPTED messages based
+        // on the previous replica set.
+        //
+        // This also conversely protects the current replica set against the
+        // new replica from issuing PREPARE or ACCEPTED messages before the new
+        // replica has been fully integrated into the replicset.
         //
         BootstrapFile file;
         boost::filesystem::path remotepath(remote_directory);
