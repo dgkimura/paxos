@@ -111,8 +111,15 @@ struct compare_map_decree
 {
     bool operator()(const Decree& lhs, const Decree& rhs) const
     {
-        return CompareDecrees(lhs, rhs) != 0 ?
-               CompareDecrees(lhs, rhs) < 0 : lhs.author.hostname < rhs.author.hostname;
+        if (CompareDecrees(lhs, rhs) != 0)
+        {
+               return CompareDecrees(lhs, rhs) < 0;
+        }
+        if (lhs.author.hostname != rhs.author.hostname)
+        {
+            return lhs.author.hostname < rhs.author.hostname;
+        }
+        return lhs.author.port < rhs.author.port;
     }
 };
 
