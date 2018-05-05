@@ -555,9 +555,15 @@ HandleCleanup(
 
     std::lock_guard<std::mutex> lock(context->mutex);
 
-    if (IsDecreeIdentical(message.decree, context->accepted_decree.Value()) &&
-        message.decree.content == context->accepted_decree.Value().content)
+    if (IsRootDecreeEqual(message.decree, context->accepted_decree.Value()))
     {
+        // if (message.decree.content != context->accepted_decree.Value().content)
+        // {
+        //     XXX: What should we do if the decree is not identical?
+        //          Run ignore handler or resubmit request?
+        //     return;
+        // }
+
         //
         // We reset the accepted decree content to "" to signal to the prepare
         // handler that there is not at pending accept decree to flush.
