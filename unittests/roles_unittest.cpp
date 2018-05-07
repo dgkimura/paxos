@@ -1401,18 +1401,18 @@ TEST_F(AcceptorTest, testHandleCleanupResetsAcceptDecreeContentsWhenDecreeIsEqua
 }
 
 
-TEST_F(AcceptorTest, testHandleCleanupDoesNotResetAcceptDecreeContentsWhenDecreeIsNotEqual)
+TEST_F(AcceptorTest, testHandleCleanupDoesNotResetAcceptDecreeContentsWhenDecreeIsLower)
 {
-    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 2, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::ResumeMessage);
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::ResumeMessage);
 
     auto context = createAcceptorContext();
-    context->accepted_decree = paxos::Decree(paxos::Replica("the_author"), 1, "accepted decree content", paxos::DecreeType::UserDecree);
+    context->accepted_decree = paxos::Decree(paxos::Replica("the_author"), 2, "accepted decree content", paxos::DecreeType::UserDecree);
 
     auto sender = std::make_shared<FakeSender>();
 
     HandleCleanup(message, context, sender);
 
-    // Messaged decree (2) and accepted decree (1) are not equal so accepted
+    // Messaged decree (1) is lower than the accepted decree (2) so accepted
     // content should not be erased.
     ASSERT_EQ("accepted decree content", context->accepted_decree.Value().content);
 }

@@ -555,7 +555,7 @@ HandleCleanup(
 
     std::lock_guard<std::mutex> lock(context->mutex);
 
-    if (IsRootDecreeEqual(message.decree, context->accepted_decree.Value()))
+    if (IsRootDecreeHigherOrEqual(message.decree, context->accepted_decree.Value()))
     {
         // if (message.decree.content != context->accepted_decree.Value().content)
         // {

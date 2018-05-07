@@ -94,4 +94,11 @@ IsRootDecreeHigher(Decree lhs, Decree rhs)
 }
 
 
+bool
+IsRootDecreeHigherOrEqual(Decree lhs, Decree rhs)
+{
+    return CompareRootDecrees(lhs, rhs) >= 0;
+}
+
+
 }
