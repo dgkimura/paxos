@@ -11,14 +11,15 @@ before_script:
   - tar zvfx cmake-3.5.2-Linux-x86_64.tar.gz
   - ./cmake-3.5.2-Linux-x86_64/bin/cmake -DCODE_COVERAGE=1 .
 
-install:
-  - pip install --user --upgrade pip
-  - sudo apt-get install lcov
-  - pip install --user cpp-coveralls
+#install:
+#  - pip install 'requests[security]'
+#  - pip install --user --upgrade pip
+#  - sudo apt-get install lcov
+#  - pip install --user cpp-coveralls
 
 script:
   - make
   - ./unittests/all_unittests
 
-after_success:
-  - coveralls --include src --include include --gcov-options '\-lp'
+#after_success:
+#  - coveralls --include src --include include --gcov-options '\-lp'
