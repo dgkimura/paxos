@@ -113,11 +113,11 @@ void SendBootstrap(
         sender.SendFile(replica, file);
     }
 
-    NetworkFileSender<Transport> sender;
-    BootstrapFile file;
-    boost::filesystem::path remotepath(remote_directory);
-
     {
+        NetworkFileSender<Transport> sender;
+        BootstrapFile file;
+        boost::filesystem::path remotepath(remote_directory);
+
         //
         // We must empty the content of accepted decree because actions must be
         // completed before writes to ledger. If we do not, then the accepted
@@ -131,6 +131,11 @@ void SendBootstrap(
         file.name = remotepath.native();
         file.content = Serialize(accepted);
         sender.SendFile(replica, file);
+    }
+    {
+        NetworkFileSender<Transport> sender;
+        BootstrapFile file;
+        boost::filesystem::path remotepath(remote_directory);
 
         //
         // Now that the replicated files are all sent we can finally send the
@@ -141,7 +146,6 @@ void SendBootstrap(
         std::stringstream buffer;
         buffer << filestream.rdbuf();
 
-        boost::filesystem::path remotepath(remote_directory);
         remotepath /= ReplicasetFilename;
         file.name = remotepath.native();
         file.content = buffer.str();

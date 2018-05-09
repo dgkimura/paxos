@@ -17,11 +17,11 @@ Parliament::Parliament(
           std::ifstream(
               (boost::filesystem::path(location) /
                boost::filesystem::path(ReplicasetFilename)).string()))),
-      receiver(std::make_shared<NetworkReceiver<BoostServer>>(
+      receiver(std::make_shared<NetworkReceiver<AsynchronousServer>>(
                legislator.hostname, legislator.port, legislators)),
       sender(std::make_shared<NetworkSender<BoostTransport>>(legislators)),
       bootstrap(
-          std::make_shared<BootstrapListener<BoostServer>>(
+          std::make_shared<BootstrapListener<SynchronousServer>>(
               legislators,
               legislator.hostname,
               legislator.port + 1

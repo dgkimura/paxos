@@ -10,7 +10,64 @@ namespace paxos
 using boost::asio::ip::tcp;
 
 
-BoostServer::BoostServer(std::string address, short port)
+SynchronousServer::SynchronousServer(std::string address, short port)
+    : io_service(),
+      acceptor(
+          io_service,
+          boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(address), port))
+{
+}
+
+
+void
+SynchronousServer::RegisterAction(
+    std::function<void(std::string content)> action_)
+{
+    action = action_;
+}
+
+
+void
+SynchronousServer::Start()
+{
+    auto self(shared_from_this());
+    std::thread([this, self]() { do_accept(); }).detach();
+}
+
+
+void
+SynchronousServer::do_accept()
+{
+    for (;;)
+    {
+        boost::asio::ip::tcp::socket socket(io_service);
+        acceptor.accept(socket);
+
+        std::vector<uint8_t> read_buffer(HEADER_SIZE);
+        boost::asio::read(socket, boost::asio::buffer(read_buffer),
+                          boost::asio::transfer_exactly(HEADER_SIZE));
+
+        unsigned int message_size = 0;
+        for (int i=0; i<HEADER_SIZE; i++)
+        {
+            message_size = message_size * 256 +
+                           (static_cast<uint8_t>(read_buffer[i]) & 0xFF);
+        }
+        read_buffer.resize(message_size);
+
+        boost::system::error_code ec;
+        boost::asio::read(socket, boost::asio::buffer(read_buffer), ec);
+
+        if (!ec || ec == boost::asio::error::eof)
+        {
+            std::string content(read_buffer.begin(), read_buffer.end());
+            action(content);
+        }
+    }
+}
+
+
+AsynchronousServer::AsynchronousServer(std::string address, short port)
     : io_service(),
       acceptor(
           io_service,
@@ -26,7 +83,7 @@ BoostServer::BoostServer(std::string address, short port)
 }
 
 
-BoostServer::~BoostServer()
+AsynchronousServer::~AsynchronousServer()
 {
     io_service.stop();
     acceptor.close();
@@ -34,7 +91,7 @@ BoostServer::~BoostServer()
 
 
 void
-BoostServer::Start()
+AsynchronousServer::Start()
 {
     // Updating shared reference and asio run must happen after calling the
     // constructor because before that point the object isn't guaranteed to be
@@ -46,14 +103,15 @@ BoostServer::Start()
 
 
 void
-BoostServer::RegisterAction(std::function<void(std::string content)> action_)
+AsynchronousServer::RegisterAction(
+    std::function<void(std::string content)> action_)
 {
     action = action_;
 }
 
 
 void
-BoostServer::do_accept()
+AsynchronousServer::do_accept()
 {
     acceptor.async_accept(socket,
         [this](boost::system::error_code ec_accept)
@@ -67,7 +125,7 @@ BoostServer::do_accept()
 }
 
 
-BoostServer::Session::Session(
+AsynchronousServer::Session::Session(
     boost::asio::ip::tcp::socket socket,
     std::function<void(std::string content)> action
 )
@@ -78,7 +136,7 @@ BoostServer::Session::Session(
 
 
 void
-BoostServer::Session::Start()
+AsynchronousServer::Session::Start()
 {
     readbuf.resize(HEADER_SIZE);
     boost::asio::async_read(socket, boost::asio::buffer(readbuf),
@@ -88,7 +146,7 @@ BoostServer::Session::Start()
 
 
 void
-BoostServer::Session::handle_read_header(
+AsynchronousServer::Session::handle_read_header(
     const boost::system::error_code& err)
 {
     if (!err)
@@ -105,7 +163,7 @@ BoostServer::Session::handle_read_header(
 
 
 void
-BoostServer::Session::handle_read_message(
+AsynchronousServer::Session::handle_read_message(
     unsigned int message_size)
 {
     readbuf.resize(HEADER_SIZE + message_size);
@@ -119,7 +177,7 @@ BoostServer::Session::handle_read_message(
 
 
 void
-BoostServer::Session::handle_process_message(
+AsynchronousServer::Session::handle_process_message(
     const boost::system::error_code& err)
 {
     if (!err)

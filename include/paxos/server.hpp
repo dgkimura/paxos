@@ -12,13 +12,37 @@ namespace paxos
 {
 
 
-class BoostServer : public boost::enable_shared_from_this<BoostServer>
+class SynchronousServer : public boost::enable_shared_from_this<SynchronousServer>
 {
 public:
 
-    BoostServer(std::string address, short port);
+    SynchronousServer(std::string address, short port);
 
-    ~BoostServer();
+    void RegisterAction(std::function<void(std::string content)> action_);
+
+    void Start();
+
+private:
+
+    static const unsigned int HEADER_SIZE = 4;
+
+    void do_accept();
+
+    boost::asio::io_service io_service;
+
+    boost::asio::ip::tcp::acceptor acceptor;
+
+    std::function<void(std::string content)> action;
+};
+
+
+class AsynchronousServer : public boost::enable_shared_from_this<AsynchronousServer>
+{
+public:
+
+    AsynchronousServer(std::string address, short port);
+
+    ~AsynchronousServer();
 
     void RegisterAction(std::function<void(std::string content)> action_);
 
