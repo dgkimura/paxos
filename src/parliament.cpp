@@ -207,7 +207,7 @@ Parliament::GetAbsenteeBallots(int max_ballots)
 
     for (auto kv : learner->accepted_map)
     {
-        if (start < kv.first.root_number)
+        if (start <= kv.first.root_number)
         {
             Decree d(Replica(), kv.first.number, "", DecreeType::UserDecree);
             d.root_number = kv.first.root_number;

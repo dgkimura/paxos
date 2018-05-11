@@ -291,3 +291,24 @@ TEST_F(ParliamentTest, testAbsenteeBallotsIsReplicaInsensitive)
     // your_decree (1) so we expect a new entry in the ballots map
     ASSERT_EQ(2, ballots.size());
 }
+
+
+TEST_F(ParliamentTest, testGetAbsenteeBallotsOf1WithAcceptedDecreeComparesAgainstAcceptedMap)
+{
+    legislators->Add(paxos::Replica("yourhost", 2222));
+
+    paxos::Decree decree(paxos::Replica("myhost"), 1, "my decree content", paxos::DecreeType::UserDecree);
+    ledger->Append(decree);
+    receiver->ReceiveMessage(
+        paxos::Message(
+            decree,
+            replica,
+            replica,
+            paxos::MessageType::AcceptedMessage
+        )
+    );
+
+    // Get 1 ballot compares against accepted map
+    ASSERT_TRUE(parliament->GetAbsenteeBallots(1)[decree]->Contains(paxos::Replica("yourhost", 2222)));
+    ASSERT_FALSE(parliament->GetAbsenteeBallots(1)[decree]->Contains(replica));
+}
