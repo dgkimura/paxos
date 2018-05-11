@@ -200,31 +200,31 @@ Parliament::send_decree(Decree d)
 AbsenteeBallots
 Parliament::GetAbsenteeBallots(int max_ballots)
 {
-    std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> ballots;
+    std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> ballots;
 
-    auto latest = learner->ledger->Tail();
-    for (int i=latest.number-max_ballots + 1; i <= latest.number; i++)
+    auto last = learner->ledger->Tail().root_number;
+    int start = last - max_ballots + 1;
+
+    for (auto kv : learner->accepted_map)
     {
-        if (i <= 0)
+        if (start < kv.first.root_number)
         {
-            continue;
+            Decree d(Replica(), kv.first.number, "", DecreeType::UserDecree);
+            d.root_number = kv.first.root_number;
+            ballots[d] = learner->replicaset->Difference(kv.second);
         }
+    }
 
-        Decree d;
-        d.number = i;
+    for (int i=start; i<=last; i++)
+    {
+        Decree d(Replica(), i, "", DecreeType::UserDecree);
 
-        // Lock protects against erase while calculating difference.
-        std::lock_guard<std::mutex> lock(learner->mutex);
-
-        if (learner->accepted_map.find(d) != learner->accepted_map.end())
-        {
-            ballots[d] = learner->replicaset->Difference(learner->accepted_map[d]);
-        }
-        else
+        if (ballots.find(d) == ballots.end() && 0 < i)
         {
             ballots[d] = std::make_shared<ReplicaSet>();
         }
     }
+
     return ballots;
 
 }

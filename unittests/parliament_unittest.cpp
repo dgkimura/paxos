@@ -228,7 +228,7 @@ TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleReplicaSet)
     legislators->Add(paxos::Replica("yourhost", 2222));
     legislators->Add(paxos::Replica("ourhost", 1111));
 
-    paxos::Decree decree(paxos::Replica(), 1, "my decree content", paxos::DecreeType::UserDecree);
+    paxos::Decree decree(paxos::Replica("myhost"), 111, "my decree content", paxos::DecreeType::UserDecree);
     ledger->Append(decree);
     receiver->ReceiveMessage(
         paxos::Message(
@@ -261,10 +261,33 @@ TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleDecrees)
 
 TEST_F(ParliamentTest, testGetAbsenteeBallotIfDecreeIsNotInPromiseMap)
 {
-    paxos::Decree decree1(paxos::Replica(), 1, "my decree 1", paxos::DecreeType::UserDecree);
+    paxos::Decree decree1(replica, 1, "my decree 1", paxos::DecreeType::UserDecree);
 
     ledger->Append(decree1);
 
     ASSERT_EQ(1, parliament->GetAbsenteeBallots(5).size());
     ASSERT_EQ(0, parliament->GetAbsenteeBallots(5)[decree1]->GetSize());
+}
+
+
+TEST_F(ParliamentTest, testAbsenteeBallotsIsReplicaInsensitive)
+{
+    paxos::AbsenteeBallots ballots;
+
+    paxos::Decree my_decree(paxos::Replica("my_replica", 1), 1, "my decree 1", paxos::DecreeType::UserDecree);
+    paxos::Decree your_decree(paxos::Replica("your_replica", 2), 1, "your decree 1", paxos::DecreeType::UserDecree);
+    paxos::Decree their_decree(paxos::Replica("their_replica", 3), 2, "their decree 2", paxos::DecreeType::UserDecree);
+
+    ballots[my_decree] = std::make_shared<paxos::ReplicaSet>();
+    ballots[your_decree] = std::make_shared<paxos::ReplicaSet>();
+
+    // my_decree (1) and your_decree(1) are the same decree number so we expect
+    // that the first insert is overwritten by the second
+    ASSERT_EQ(1, ballots.size());
+
+    ballots[their_decree] = std::make_shared<paxos::ReplicaSet>();
+
+    // their_decree (2) is a different decree number than my_decree (1) and
+    // your_decree (1) so we expect a new entry in the ballots map
+    ASSERT_EQ(2, ballots.size());
 }
