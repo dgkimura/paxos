@@ -588,8 +588,7 @@ HandleAccepted(
 
     if (context->accepted_map.find(message.decree) == context->accepted_map.end())
     {
-        context->accepted_map[message.decree] = std::shared_ptr<ReplicaSet>(
-                                                    new ReplicaSet());
+        context->accepted_map[message.decree] = std::make_shared<ReplicaSet>();
     }
     if (context->replicaset->Contains(message.from))
     {
