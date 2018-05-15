@@ -44,6 +44,14 @@ public:
                 bootstrap.name,
                 std::ios::out | std::ios::trunc | std::ios::binary);
             file << bootstrap.content;
+
+            //
+            // We should ensure that the files are flushed to disk to prevent
+            // situations where roles on the node operate using data from
+            // previous replica set.
+            //
+            file.flush();
+
             if (boost::algorithm::ends_with(bootstrap.name, ReplicasetFilename))
             {
                 legislators =  LoadReplicaSet(
