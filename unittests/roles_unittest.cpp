@@ -847,7 +847,7 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
-    HandleNack(
+    HandleNackPrepare(
         paxos::Message(
             decree,
             replica,
@@ -890,7 +890,7 @@ TEST_F(ProposerTest, testHandleNackWithAddReplicaDecreeSendsFailSignal)
     std::thread t([&signal, &result](){
         result = signal->Wait();
     });
-    HandleNack(
+    HandleNackPrepare(
         paxos::Message(
             decree,
             replica,
@@ -902,7 +902,7 @@ TEST_F(ProposerTest, testHandleNackWithAddReplicaDecreeSendsFailSignal)
     );
     t.join();
 
-    // HandleNack sets result to false.
+    // HandleNackPrepare sets result to false.
     ASSERT_FALSE(result);
 }
 
@@ -932,7 +932,7 @@ TEST_F(ProposerTest, testHandleNackDoesNotRunIgnoreHandlerOnSystemDecrees)
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
-    HandleNack(
+    HandleNackPrepare(
         paxos::Message(
             decree,
             replica,
@@ -969,7 +969,7 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
     context->requested_values.push_back(std::make_tuple("a pending value", paxos::DecreeType::UserDecree));
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
-    HandleNack(
+    HandleNackPrepare(
         paxos::Message(
             decree,
             replica,
@@ -979,7 +979,7 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
         context,
         sender
     );
-    HandleNack(
+    HandleNackPrepare(
         paxos::Message(
             decree,
             replica,
@@ -990,7 +990,7 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
         sender
     );
 
-    // HandleNack run multiple times on decree, but ignore handler is run once.
+    // HandleNackPrepare run multiple times on decree, but ignore handler is run once.
     ASSERT_EQ(1, ignore_handler_run_count);
 }
 
