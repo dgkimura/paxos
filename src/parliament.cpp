@@ -200,6 +200,11 @@ Parliament::send_decree(Decree d)
 AbsenteeBallots
 Parliament::GetAbsenteeBallots(int max_ballots)
 {
+    //
+    // Guard against changes to accepted_map while counting absentees.
+    //
+    std::lock_guard<std::mutex> lock(learner->mutex);
+
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_decree> ballots;
 
     auto last = learner->ledger->Tail().root_number;
