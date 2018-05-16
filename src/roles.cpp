@@ -27,7 +27,7 @@ RegisterProposer(
         MessageType::NackTieMessage
     );
     receiver->RegisterCallback(
-        Callback(std::bind(HandleNack, std::placeholders::_1, context, sender)),
+        Callback(std::bind(HandleNackPrepare, std::placeholders::_1, context, sender)),
         MessageType::NackPrepareMessage
     );
     receiver->RegisterCallback(
@@ -304,12 +304,12 @@ HandleNackTie(
 
 
 void
-HandleNack(
+HandleNackPrepare(
     Message message,
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleNack    | " << message.decree.number << "|"
+    LOG(LogLevel::Info) << "HandleNackPrepare| " << message.decree.number << "|"
                         << Serialize(message);
 
     std::lock_guard<std::mutex> lock(context->mutex);
