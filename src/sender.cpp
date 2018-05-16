@@ -68,6 +68,13 @@ BoostTransport::Write(std::string content)
     catch (const boost::system::system_error& e)
     {
         LOG(LogLevel::Warning) << "Could not write to transport - " << e.what();
+
+        //
+        // Try to re-establish a connection.
+        //
+        boost::system::error_code ec = boost::asio::error::would_block;
+        boost::asio::async_connect(socket_, endpoint_,
+                                   boost::lambda::var(ec) = boost::lambda::_1);
     }
 }
 
