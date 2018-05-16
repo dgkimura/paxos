@@ -111,6 +111,8 @@ Ledger::Tail()
 Decree
 Ledger::Next(Decree previous)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
     Decree next;
     for (Decree current : *decrees)
     {
