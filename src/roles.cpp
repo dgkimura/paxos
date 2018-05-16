@@ -314,21 +314,17 @@ HandleNackPrepare(
 
     std::lock_guard<std::mutex> lock(context->mutex);
 
-    if (IsDecreeHigher(message.decree, context->highest_nacked_decree) &&
-        message.decree.type == DecreeType::UserDecree &&
-        !context->requested_values.empty())
-    {
-        context->ignore_handler(std::get<0>(context->requested_values.front()));
-        context->highest_nacked_decree = message.decree;
-        context->requested_values.erase(context->requested_values.begin());
-    } else if (message.decree.type == DecreeType::AddReplicaDecree ||
-               message.decree.type == DecreeType::RemoveReplicaDecree)
+    auto tail_decree = context->ledger->Tail();
+    if (IsRootDecreeHigher(message.decree, tail_decree))
     {
         //
-        // Upon Nack of add replica or remove replica, we must send signal to
-        // unblock waiting thread.
+        // If ledger is behind the messaged decree then we should attempt to
+        // catch up to a state that we can re-send a prepare-able decree.
         //
-        context->signal->Set(false);
+        Message response = Response(message, MessageType::UpdateMessage);
+        response.decree = tail_decree;
+        response.to = message.decree.author;
+        sender->Reply(response);
     }
 }
 

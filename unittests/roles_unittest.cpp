@@ -824,9 +824,8 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenLedgerIsIncrementedBetweenP
 }
 
 
-TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
+TEST_F(ProposerTest, testHandleNackPrepareSendsUpdateMessage)
 {
-    bool was_ignore_handler_run = false;
     auto replica = paxos::Replica("host");
     auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::UserDecree);
     auto replicaset = std::make_shared<paxos::ReplicaSet>();
@@ -839,7 +838,7 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [&was_ignore_handler_run](std::string entry){ was_ignore_handler_run = true; },
+        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -858,73 +857,29 @@ TEST_F(ProposerTest, testHandleNackRunsIgnoreHandler)
         sender
     );
 
-    ASSERT_TRUE(was_ignore_handler_run);
-    ASSERT_EQ(0, context->requested_values.size());
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::UpdateMessage);
 }
 
 
-TEST_F(ProposerTest, testHandleNackWithAddReplicaDecreeSendsFailSignal)
+TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateOnLowerRootDecrees)
 {
     auto replica = paxos::Replica("host");
+
+    // Decree (1) is lower than ledger tail decree (2)
     auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::AddReplicaDecree);
     auto replicaset = std::make_shared<paxos::ReplicaSet>();
     std::stringstream ss;
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
+    ledger->Append(paxos::Decree(paxos::Replica(), 1, "", paxos::DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(paxos::Replica(), 2, "", paxos::DecreeType::UserDecree));
     auto signal = std::make_shared<paxos::Signal>();
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){ },
-        std::make_shared<paxos::NoPause>(),
-        signal
-    );
-    context->requested_values.push_back(std::make_tuple("a pending value", paxos::DecreeType::UserDecree));
-
-    auto sender = std::make_shared<FakeSender>(context->replicaset);
-
-
-    bool result = true;
-    std::thread t([&signal, &result](){
-        result = signal->Wait();
-    });
-    HandleNackPrepare(
-        paxos::Message(
-            decree,
-            replica,
-            replica,
-            paxos::MessageType::NackPrepareMessage
-        ),
-        context,
-        sender
-    );
-    t.join();
-
-    // HandleNackPrepare sets result to false.
-    ASSERT_FALSE(result);
-}
-
-
-TEST_F(ProposerTest, testHandleNackDoesNotRunIgnoreHandlerOnSystemDecrees)
-{
-    bool was_ignore_handler_run = false;
-    auto replica = paxos::Replica("host");
-
-    // DecreeType::AddReplicaDecree is a system decree
-    auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::AddReplicaDecree);
-    auto replicaset = std::make_shared<paxos::ReplicaSet>();
-    std::stringstream ss;
-    auto ledger = std::make_shared<paxos::Ledger>(
-        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
-    );
-    auto signal = std::make_shared<paxos::Signal>();
-    auto context = std::make_shared<paxos::ProposerContext>(
-        replicaset,
-        ledger,
-        std::make_shared<paxos::VolatileDecree>(),
-        [&was_ignore_handler_run](std::string entry){ was_ignore_handler_run = true; },
+        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -943,55 +898,7 @@ TEST_F(ProposerTest, testHandleNackDoesNotRunIgnoreHandlerOnSystemDecrees)
         sender
     );
 
-    ASSERT_FALSE(was_ignore_handler_run);
-}
-
-
-TEST_F(ProposerTest, testHandleNackRunsIgnoreHandlerOnceForEachNackedDecree)
-{
-    int ignore_handler_run_count = 0;
-    auto replica = paxos::Replica("host");
-    auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::UserDecree);
-    auto replicaset = std::make_shared<paxos::ReplicaSet>();
-    std::stringstream ss;
-    auto ledger = std::make_shared<paxos::Ledger>(
-        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
-    );
-    auto signal = std::make_shared<paxos::Signal>();
-    auto context = std::make_shared<paxos::ProposerContext>(
-        replicaset,
-        ledger,
-        std::make_shared<paxos::VolatileDecree>(),
-        [&ignore_handler_run_count](std::string entry){ ignore_handler_run_count += 1; },
-        std::make_shared<paxos::NoPause>(),
-        signal
-    );
-    context->requested_values.push_back(std::make_tuple("a pending value", paxos::DecreeType::UserDecree));
-    auto sender = std::make_shared<FakeSender>(context->replicaset);
-
-    HandleNackPrepare(
-        paxos::Message(
-            decree,
-            replica,
-            replica,
-            paxos::MessageType::NackPrepareMessage
-        ),
-        context,
-        sender
-    );
-    HandleNackPrepare(
-        paxos::Message(
-            decree,
-            replica,
-            replica,
-            paxos::MessageType::NackPrepareMessage
-        ),
-        context,
-        sender
-    );
-
-    // HandleNackPrepare run multiple times on decree, but ignore handler is run once.
-    ASSERT_EQ(1, ignore_handler_run_count);
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::UpdateMessage);
 }
 
 
