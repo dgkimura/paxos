@@ -468,7 +468,6 @@ HandlePrepare(
         sender->Reply(response);
     }
     else if (
-        IsDecreeEqual(message.decree, context->promised_decree.Value()) &&
         IsRootDecreeEqual(message.decree, context->promised_decree.Value()))
     {
         //

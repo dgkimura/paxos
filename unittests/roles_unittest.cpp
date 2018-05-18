@@ -1147,11 +1147,11 @@ TEST_F(AcceptorTest, testHandlePrepareWithLowerAndDifferentAuthorDecreeDoesNotUp
 
 TEST_F(AcceptorTest, testHandlePrepareWithEqualRootDecreeNumberFromMultipleReplicasSendsSinglePromise)
 {
-    paxos::Message author_a(paxos::Decree(paxos::Replica("author_a"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::PrepareMessage);
+    paxos::Message author_a(paxos::Decree(paxos::Replica("author_a"), 2, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::PrepareMessage);
     paxos::Message author_b(paxos::Decree(paxos::Replica("author_b"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::PrepareMessage);
 
     // The root number of author_a (1) equals root number of author_b (1).
-    author_b.decree.root_number = 1;
+    author_a.decree.root_number = 1;
 
     auto context = createAcceptorContext();
     context->promised_decree = paxos::Decree(paxos::Replica("the_author"), 0, "", paxos::DecreeType::UserDecree);
