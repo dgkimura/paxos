@@ -35,6 +35,7 @@ struct ProposerContext : public Context
     Field<Decree> highest_proposed_decree;
     std::shared_ptr<ReplicaSet>& replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> promise_map;
+    std::set<Decree, compare_decree> nprepare_map;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> naccept_map;
     std::vector<std::tuple<std::string, DecreeType>> requested_values;
     std::function<void(std::string)> ignore_handler;
@@ -59,6 +60,7 @@ struct ProposerContext : public Context
           highest_proposed_decree(highest_proposed_decree_),
           replicaset(replicaset_),
           promise_map(),
+          nprepare_map(),
           naccept_map(),
           requested_values(),
           ignore_handler(ignore_handler),

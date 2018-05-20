@@ -315,8 +315,10 @@ HandleNackPrepare(
     std::lock_guard<std::mutex> lock(context->mutex);
 
     auto tail_decree = context->ledger->Tail();
-    if (IsRootDecreeHigher(message.decree, tail_decree))
+    if (context->nprepare_map.find(message.decree) == context->nprepare_map.end() &&
+        IsRootDecreeHigher(message.decree, tail_decree))
     {
+        context->nprepare_map.insert(message.decree);
         //
         // If ledger is behind the messaged decree then we should attempt to
         // catch up to a state that we can re-send a prepare-able decree.

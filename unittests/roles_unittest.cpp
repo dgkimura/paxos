@@ -861,6 +861,55 @@ TEST_F(ProposerTest, testHandleNackPrepareSendsUpdateMessage)
 }
 
 
+TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateForEqualDecrees)
+{
+    auto replica = paxos::Replica("host");
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    std::stringstream ss;
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
+    );
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
+        replicaset,
+        ledger,
+        std::make_shared<paxos::VolatileDecree>(),
+        [](std::string entry){},
+        std::make_shared<paxos::NoPause>(),
+        signal
+    );
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNackPrepare(
+        paxos::Message(
+            paxos::Decree(replica, 1, "next", paxos::DecreeType::UserDecree),
+            replica,
+            replica,
+            paxos::MessageType::NackPrepareMessage
+        ),
+        context,
+        sender
+    );
+    // Equal decree (1) is sent
+    HandleNackPrepare(
+        paxos::Message(
+            paxos::Decree(replica, 1, "next", paxos::DecreeType::UserDecree),
+            replica,
+            replica,
+            paxos::MessageType::NackPrepareMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::UpdateMessage);
+
+    // Should only send UpdateMessage once even though 2 NackPrepareMessage sent
+    ASSERT_EQ(sender->sentMessages().size(), 1);
+}
+
+
 TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateOnLowerRootDecrees)
 {
     auto replica = paxos::Replica("host");
