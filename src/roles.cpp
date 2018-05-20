@@ -252,22 +252,15 @@ HandleNackTie(
 
     std::lock_guard<std::mutex> lock(context->mutex);
 
-    if (IsRootDecreeHigher(message.decree,
-                           context->highest_proposed_decree.Value()) ||
-        (IsRootDecreeEqual(message.decree,
-                           context->highest_proposed_decree.Value()) &&
-         //
-         // If decree is equal to highest proposed decree then we throttle.
-         //
-         context->nacktie_time + context->interval <
-         std::chrono::high_resolution_clock::now()))
+    auto tail_decree = context->ledger->Tail();
+    if (context->ntie_map.find(message.decree) == context->ntie_map.end() &&
+        IsRootDecreeHigher(message.decree, tail_decree) &&
+        IsRootDecreeEqual(message.decree, context->highest_proposed_decree.Value()) &&
+        context->nacktie_time + context->interval < std::chrono::high_resolution_clock::now())
     {
+        context->ntie_map.insert(message.decree);
         context->nacktie_time = std::chrono::high_resolution_clock::now();
 
-        //
-        // Iff the current proposed decree is tied then retry with a higher
-        // decree.
-        //
         Message nack_response(
             message.decree,
             message.to,

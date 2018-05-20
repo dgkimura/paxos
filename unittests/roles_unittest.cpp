@@ -567,7 +567,7 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
     auto current_decree = paxos::Decree(replica, 2, "current", paxos::DecreeType::UserDecree);
     auto replicaset = std::make_shared<paxos::ReplicaSet>();
     auto highest_proposed_decree = std::make_shared<paxos::VolatileDecree>();
-    highest_proposed_decree->Put(decree);
+    highest_proposed_decree->Put(current_decree);
     std::stringstream ss;
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
@@ -583,6 +583,7 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
         std::make_shared<paxos::NoPause>(),
         signal
     );
+    context->interval = std::chrono::milliseconds(0);
 
     // Add replica to known replicas.
     context->replicaset->Add(replica);
@@ -634,6 +635,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestPro
         std::make_shared<paxos::NoPause>(),
         signal
     );
+    context->interval = std::chrono::milliseconds(0);
 
     // Add replica to known replicas.
     context->replicaset->Add(replica);
@@ -655,20 +657,19 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestPro
 }
 
 
-TEST_F(ProposerTest, testHandleNackTieDoesSendWhenDecreeIsHigherThanHighestProposedDecree)
+TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanLedgerTail)
 {
     auto replica = paxos::Replica("host");
-    auto decree = paxos::Decree(replica, 2, "next", paxos::DecreeType::UserDecree);
+    auto current_decree = paxos::Decree(replica, 1, "current", paxos::DecreeType::UserDecree);
     auto replicaset = std::make_shared<paxos::ReplicaSet>();
     auto highest_proposed_decree = std::make_shared<paxos::VolatileDecree>();
-
-    // Highest proposed decree (1) is lower than decree (2).
-    highest_proposed_decree->Put(paxos::Decree(replica, 1, "first", paxos::DecreeType::UserDecree));
+    highest_proposed_decree->Put(current_decree);
     std::stringstream ss;
-    auto ledger = std::make_shared<paxos::Ledger>(
-        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
-    );
-    ledger->Append(paxos::Decree(replica, 1, "first", paxos::DecreeType::UserDecree));
+    auto queue = std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss);
+    auto ledger = std::make_shared<paxos::Ledger>(queue);
+    // Ledger tail decree (2) is higher than messaged decree (1)
+    ledger->Append(paxos::Decree(replica, 1, "tail", paxos::DecreeType::UserDecree));
+    ledger->Append(paxos::Decree(replica, 2, "tail", paxos::DecreeType::UserDecree));
 
     auto signal = std::make_shared<paxos::Signal>();
     auto context = std::make_shared<paxos::ProposerContext>(
@@ -679,15 +680,70 @@ TEST_F(ProposerTest, testHandleNackTieDoesSendWhenDecreeIsHigherThanHighestPropo
         std::make_shared<paxos::NoPause>(),
         signal
     );
+    context->interval = std::chrono::milliseconds(0);
 
     // Add replica to known replicas.
+    context->replicaset->Add(replica);
+    context->replicaset->Add(paxos::Replica("host-2"));
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNackTie(
+        paxos::Message(
+            current_decree,
+            replica,
+            replica,
+            paxos::MessageType::NackTieMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::PrepareMessage);
+}
+
+
+TEST_F(ProposerTest, testHandleNackTieDoesNotSendResendWhenDecreeIsEqualToPreviousTie)
+{
+    auto replica = paxos::Replica("host");
+    auto decree = paxos::Decree(replica, 1, "first", paxos::DecreeType::UserDecree);
+    auto current_decree = paxos::Decree(replica, 2, "current", paxos::DecreeType::UserDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    auto highest_proposed_decree = std::make_shared<paxos::VolatileDecree>();
+    highest_proposed_decree->Put(current_decree);
+    std::stringstream ss;
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
+    );
+    ledger->Append(decree);
+
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
+        replicaset,
+        ledger,
+        highest_proposed_decree,
+        [](std::string entry){},
+        std::make_shared<paxos::NoPause>(),
+        signal
+    );
+    context->interval = std::chrono::milliseconds(0);
     context->replicaset->Add(replica);
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
     HandleNackTie(
         paxos::Message(
-            decree,
+            current_decree,
+            replica,
+            replica,
+            paxos::MessageType::NackTieMessage
+        ),
+        context,
+        sender
+    );
+    HandleNackTie(
+        paxos::Message(
+            current_decree,
             replica,
             replica,
             paxos::MessageType::NackTieMessage
@@ -697,6 +753,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesSendWhenDecreeIsHigherThanHighestPropo
     );
 
     ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::PrepareMessage);
+    ASSERT_EQ(1, sender->sentMessages().size());
 }
 
 
