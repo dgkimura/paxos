@@ -92,7 +92,7 @@ class ParliamentTest: public testing::Test
         ledger = std::make_shared<paxos::Ledger>(queue);
         receiver = std::make_shared<MockReceiver>();
         sender = std::make_shared<MockSender>();
-        auto signal = std::make_shared<paxos::Signal>();
+        auto signal = std::make_shared<paxos::Signal>([](){});
         auto proposer = std::make_shared<paxos::ProposerContext>(
             legislators,
             ledger,

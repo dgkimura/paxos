@@ -1,3 +1,5 @@
+#include <thread>
+
 #include "paxos/signal.hpp"
 
 
@@ -5,9 +7,13 @@ namespace paxos
 {
 
 
-Signal::Signal()
+Signal::Signal(
+    std::function<void(void)> retry,
+    std::chrono::milliseconds retry_interval)
+    : flag(false),
+      retry(retry),
+      retry_interval(retry_interval)
 {
-    flag = false;
 }
 
 void
@@ -23,8 +29,18 @@ bool
 Signal::Wait()
 {
     std::unique_lock<std::mutex> lock(mutex);
-    condition.wait(lock, [&] { return flag; });
-    flag = false;
+    while (condition.wait_for(lock, retry_interval) == std::cv_status::timeout)
+    {
+        if (flag)
+        {
+            flag = false;
+            return success;
+        }
+        else
+        {
+            retry();
+        }
+    }
     return success;
 }
 

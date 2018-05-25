@@ -31,7 +31,8 @@ Parliament::Parliament(
           std::make_shared<RolloverQueue<Decree>>(location, "paxos.ledger"))),
       learner(std::make_shared<LearnerContext>(legislators, ledger)),
       location(location),
-      signal(std::make_shared<Signal>())
+      signal(std::make_shared<Signal>([this](){ SendProposal(""); },
+             std::chrono::milliseconds(1000)))
 {
     ledger->RegisterHandler(
         DecreeType::UserDecree,

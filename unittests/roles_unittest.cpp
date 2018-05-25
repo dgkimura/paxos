@@ -132,7 +132,7 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -164,7 +164,7 @@ TEST_F(ProposerTest, testHandleRequestWillSendHigestProposedDecreeIfItExists)
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -200,7 +200,7 @@ TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneUniqueInProgressProposal)
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -264,7 +264,7 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromise
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -293,7 +293,7 @@ TEST_F(ProposerTest, testHandlePromiseWithoutAnyRequestedValuesDoesNotSendAccept
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -325,7 +325,7 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeAndNonemptyContentResendsAc
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -358,7 +358,7 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -390,7 +390,7 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotU
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -421,7 +421,7 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedV
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -458,7 +458,7 @@ TEST_F(ProposerTest, testHandlePromiseRecievesPromiseContainingContentsSendsAcce
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -489,7 +489,7 @@ TEST_F(ProposerTest, testHandlePromiseWillSendAcceptAgainIfDuplicatePromiseIsSen
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -530,7 +530,7 @@ TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -574,7 +574,7 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
     );
     ledger->Append(decree);
 
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -626,7 +626,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestPro
     );
     ledger->Append(paxos::Decree(replica, 1, "first", paxos::DecreeType::UserDecree));
 
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -671,7 +671,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanLedgerTail
     ledger->Append(paxos::Decree(replica, 1, "tail", paxos::DecreeType::UserDecree));
     ledger->Append(paxos::Decree(replica, 2, "tail", paxos::DecreeType::UserDecree));
 
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -717,7 +717,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendResendWhenDecreeIsEqualToPrevio
     );
     ledger->Append(decree);
 
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -795,7 +795,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenHighestNackTieIsIncremented
     );
     ledger->Append(paxos::Decree(replica, 0, "first", paxos::DecreeType::UserDecree));
 
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto pause = std::make_shared<EventfulPause>();
 
     auto context = std::make_shared<paxos::ProposerContext>(
@@ -842,7 +842,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenLedgerIsIncrementedBetweenP
     );
     ledger->Append(paxos::Decree(replica, 0, "first", paxos::DecreeType::UserDecree));
 
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto pause = std::make_shared<EventfulPause>();
 
     auto context = std::make_shared<paxos::ProposerContext>(
@@ -890,7 +890,7 @@ TEST_F(ProposerTest, testHandleNackPrepareSendsUpdateMessage)
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -926,7 +926,7 @@ TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateForEqualDecrees)
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -980,7 +980,7 @@ TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateOnLowerRootDecrees)
     );
     ledger->Append(paxos::Decree(paxos::Replica(), 1, "", paxos::DecreeType::UserDecree));
     ledger->Append(paxos::Decree(paxos::Replica(), 2, "", paxos::DecreeType::UserDecree));
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -1020,7 +1020,7 @@ TEST_F(ProposerTest, testHandleNackAcceptQuorumRunsIgnoreHandlerAndSendsRequest)
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -1056,7 +1056,7 @@ TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
     auto replicaset = std::make_shared<paxos::ReplicaSet>();
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -1121,7 +1121,7 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
@@ -1156,7 +1156,7 @@ TEST_F(ProposerTest, testHandleResumeSendsNextRequestIfThereArePendingProposals)
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
     ledger->Append(decree);
-    auto signal = std::make_shared<paxos::Signal>();
+    auto signal = std::make_shared<paxos::Signal>([](){});
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
         ledger,
