@@ -31,10 +31,6 @@ RegisterProposer(
         MessageType::NackPrepareMessage
     );
     receiver->RegisterCallback(
-        Callback(std::bind(HandleNackAccept, std::placeholders::_1, context, sender)),
-        MessageType::NackAcceptMessage
-    );
-    receiver->RegisterCallback(
         Callback(std::bind(HandleResume, std::placeholders::_1, context, sender)),
         MessageType::ResumeMessage
     );
@@ -320,55 +316,6 @@ HandleNackPrepare(
         response.decree = tail_decree;
         response.to = message.decree.author;
         sender->Reply(response);
-    }
-}
-
-
-void
-HandleNackAccept(
-    Message message,
-    std::shared_ptr<ProposerContext> context,
-    std::shared_ptr<Sender> sender)
-{
-    LOG(LogLevel::Info) << "HandleNackAccept | " << message.decree.number << "|"
-                        << Serialize(message);
-
-    std::lock_guard<std::mutex> lock(context->mutex);
-
-    if (context->naccept_map.find(message.decree) == context->naccept_map.end())
-    {
-        //
-        // If there is no entry for the messaged decree then make an entry.
-        //
-        context->naccept_map[message.decree] = std::make_shared<ReplicaSet>();
-    }
-
-    context->naccept_map[message.decree]->Add(message.from);
-
-    int minimum_quorum = context->replicaset->GetSize() / 2 + 1;
-    int received_naccepts = context->naccept_map[message.decree]
-                                   ->Intersection(context->replicaset)
-                                   ->GetSize();
-
-    if (received_naccepts >= minimum_quorum)
-    {
-        context->ignore_handler(message.decree.content);
-        context->naccept_map.erase(context->naccept_map.find(message.decree));
-    }
-
-    if (context->requested_values.size() > 0)
-    {
-        //
-        // Setup next round for pending proposals.
-        //
-        sender->Reply(
-            Message(
-                Decree(),
-                message.to,
-                message.to,
-                MessageType::RequestMessage
-            )
-        );
     }
 }
 

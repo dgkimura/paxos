@@ -39,7 +39,6 @@ struct ProposerContext : public Context
     std::set<Decree, compare_decree> nprepare_map;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> naccept_map;
     std::vector<std::tuple<std::string, DecreeType>> requested_values;
-    std::function<void(std::string)> ignore_handler;
 
     std::mutex mutex;
     Decree highest_nacked_decree;
@@ -53,7 +52,6 @@ struct ProposerContext : public Context
         std::shared_ptr<ReplicaSet>& replicaset_,
         std::shared_ptr<Ledger>& ledger_,
         std::shared_ptr<Storage<Decree>> highest_proposed_decree_,
-        std::function<void(std::string)> ignore_handler,
         std::shared_ptr<Pause> pause,
         std::shared_ptr<Signal>& signal
     )
@@ -65,7 +63,6 @@ struct ProposerContext : public Context
           nprepare_map(),
           naccept_map(),
           requested_values(),
-          ignore_handler(ignore_handler),
           mutex(),
           highest_nacked_decree(Replica(""), -1, "first", DecreeType::UserDecree),
           highest_nacktie_decree(Replica(""), -1, "first", DecreeType::UserDecree),

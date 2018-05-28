@@ -29,8 +29,7 @@ public:
 
     Parliament(Replica legislator,
                std::string location=".",
-               Handler accept_handler=[](std::string entry){},
-               Handler ignore_handler=[](std::string entry){});
+               Handler accept_handler=[](std::string entry){});
 
     Parliament(Replica legislator,
                std::shared_ptr<ReplicaSet> legislators,

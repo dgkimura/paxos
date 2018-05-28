@@ -10,8 +10,7 @@ namespace paxos
 Parliament::Parliament(
     Replica legislator,
     std::string location,
-    Handler accept_handler,
-    Handler ignore_handler)
+    Handler accept_handler)
     : legislator(legislator),
       legislators(LoadReplicaSet(
           std::ifstream(
@@ -61,7 +60,6 @@ Parliament::Parliament(
         std::make_shared<PersistentDecree>(
             location,
             "paxos.highest_proposed_decree"),
-        ignore_handler,
         std::make_shared<RandomPause>(std::chrono::milliseconds(100)),
         signal);
     auto acceptor = std::make_shared<AcceptorContext>(

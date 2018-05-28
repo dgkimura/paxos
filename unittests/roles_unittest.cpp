@@ -137,7 +137,6 @@ TEST_F(ProposerTest, testRegisterProposerWillRegistereMessageTypes)
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -169,7 +168,6 @@ TEST_F(ProposerTest, testHandleRequestWillSendHigestProposedDecreeIfItExists)
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -205,7 +203,6 @@ TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneUniqueInProgressProposal)
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -269,7 +266,6 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromise
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -298,7 +294,6 @@ TEST_F(ProposerTest, testHandlePromiseWithoutAnyRequestedValuesDoesNotSendAccept
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -330,7 +325,6 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeAndNonemptyContentResendsAc
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -363,7 +357,6 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -395,7 +388,6 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotU
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -426,7 +418,6 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedV
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -463,7 +454,6 @@ TEST_F(ProposerTest, testHandlePromiseRecievesPromiseContainingContentsSendsAcce
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -494,7 +484,6 @@ TEST_F(ProposerTest, testHandlePromiseWillSendAcceptAgainIfDuplicatePromiseIsSen
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -535,7 +524,6 @@ TEST_F(ProposerTest, testHandlePromiseWillNotSendAcceptAgainIfPromiseIsUnique)
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -579,7 +567,6 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
         replicaset,
         ledger,
         highest_proposed_decree,
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -631,7 +618,6 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanHighestPro
         replicaset,
         ledger,
         highest_proposed_decree,
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -676,7 +662,6 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenDecreeIsLowerThanLedgerTail
         replicaset,
         ledger,
         highest_proposed_decree,
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -722,7 +707,6 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendResendWhenDecreeIsEqualToPrevio
         replicaset,
         ledger,
         highest_proposed_decree,
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -802,7 +786,6 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenHighestNackTieIsIncremented
         replicaset,
         ledger,
         highest_proposed_decree,
-        [](std::string entry){},
         pause,
         signal
     );
@@ -849,7 +832,6 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenLedgerIsIncrementedBetweenP
         replicaset,
         ledger,
         highest_proposed_decree,
-        [](std::string entry){},
         pause,
         signal
     );
@@ -895,7 +877,6 @@ TEST_F(ProposerTest, testHandleNackPrepareSendsUpdateMessage)
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -931,7 +912,6 @@ TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateForEqualDecrees)
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -985,7 +965,6 @@ TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateOnLowerRootDecrees)
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -1008,47 +987,6 @@ TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateOnLowerRootDecrees)
 }
 
 
-TEST_F(ProposerTest, testHandleNackAcceptQuorumRunsIgnoreHandlerAndSendsRequest)
-{
-    bool was_ignore_handler_run = false;
-    auto replica = paxos::Replica("host");
-
-    auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::AddReplicaDecree);
-    auto replicaset = std::make_shared<paxos::ReplicaSet>();
-    replicaset->Add(replica);
-    std::stringstream ss;
-    auto ledger = std::make_shared<paxos::Ledger>(
-        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
-    );
-    auto signal = std::make_shared<paxos::Signal>([](){});
-    auto context = std::make_shared<paxos::ProposerContext>(
-        replicaset,
-        ledger,
-        std::make_shared<paxos::VolatileDecree>(),
-        [&was_ignore_handler_run](std::string entry){ was_ignore_handler_run = true; },
-        std::make_shared<paxos::NoPause>(),
-        signal
-    );
-    context->requested_values.push_back(std::make_tuple("a pending value", paxos::DecreeType::AddReplicaDecree));
-
-    auto sender = std::make_shared<FakeSender>(context->replicaset);
-
-    HandleNackAccept(
-        paxos::Message(
-            decree,
-            replica,
-            replica,
-            paxos::MessageType::NackAcceptMessage
-        ),
-        context,
-        sender
-    );
-
-    ASSERT_TRUE(was_ignore_handler_run);
-    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::RequestMessage);
-}
-
-
 TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
 {
     std::stringstream ss;
@@ -1061,7 +999,6 @@ TEST_F(ProposerTest, testUpdatingLedgerUpdatesNextProposedDecreeNumber)
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -1126,7 +1063,6 @@ TEST_F(ProposerTest, testHandleAcceptRemovesEntriesInThePromiseMap)
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );
@@ -1161,7 +1097,6 @@ TEST_F(ProposerTest, testHandleResumeSendsNextRequestIfThereArePendingProposals)
         replicaset,
         ledger,
         std::make_shared<paxos::VolatileDecree>(),
-        [](std::string entry){},
         std::make_shared<paxos::NoPause>(),
         signal
     );

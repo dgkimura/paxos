@@ -97,7 +97,6 @@ class ParliamentTest: public testing::Test
             legislators,
             ledger,
             std::make_shared<paxos::VolatileDecree>(),
-            [](std::string entry){},
             std::make_shared<paxos::NoPause>(),
             signal
         );
