@@ -529,7 +529,7 @@ HandleAccept(
         // If the message decree is not higher than the accepted decree then we
         // reject it.
         //
-        sender->Reply(Response(message, MessageType::NackAcceptMessage));
+        sender->Reply(Response(message, MessageType::NackPrepareMessage));
     }
 }
 
