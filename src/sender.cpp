@@ -55,7 +55,7 @@ BoostTransport::Write(std::string content)
             auto message_size = content.size();
             std::vector<uint8_t> header(4);
             header[0] = static_cast<uint8_t>((message_size >> 24) & 0xFF);
-            header[1] = static_cast<uint8_t>((message_size >> 12) & 0xFF);
+            header[1] = static_cast<uint8_t>((message_size >> 16) & 0xFF);
             header[2] = static_cast<uint8_t>((message_size >> 8) & 0xFF);
             header[3] = static_cast<uint8_t>((message_size >> 0) & 0xFF);
             boost::asio::write(socket_, boost::asio::buffer(header,
