@@ -59,6 +59,8 @@ TEST(SenderTest, testSendFileAlongTransport)
         {
             transport_writes.push_back(content);
         }
+
+        void Read(){}
     };
 
     paxos::NetworkFileSender<MockTransport> sender;

@@ -47,22 +47,35 @@ SynchronousServer::do_accept()
         boost::asio::read(socket, boost::asio::buffer(read_buffer),
                           boost::asio::transfer_exactly(HEADER_SIZE));
 
-        unsigned int message_size = 0;
+        int message_size = 0;
         for (int i=0; i<HEADER_SIZE; i++)
         {
             message_size = message_size * 256 +
                            (static_cast<uint8_t>(read_buffer[i]) & 0xFF);
         }
+
+        std::string content;
         read_buffer.resize(message_size);
-
-        boost::system::error_code ec;
-        boost::asio::read(socket, boost::asio::buffer(read_buffer), ec);
-
-        if (!ec || ec == boost::asio::error::eof)
+        while (message_size > 0)
         {
-            std::string content(read_buffer.begin(), read_buffer.end());
-            action(content);
+            read_buffer.resize(message_size >= 1024 ? 1024 : message_size);
+
+            boost::system::error_code ec;
+            int read_bytes = boost::asio::read(
+                socket,
+                boost::asio::buffer(read_buffer),
+                boost::asio::transfer_exactly(message_size),
+                ec);
+            content += std::string(read_buffer.begin(), read_buffer.end());
+            message_size -= read_bytes;
         }
+
+        action(content);
+
+        // signal done, syn-ack...
+        std::vector<uint8_t> a_byte{1};
+        boost::asio::write(socket, boost::asio::buffer(a_byte,
+                                                       a_byte.size()));
     }
 }
 

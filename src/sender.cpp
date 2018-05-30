@@ -88,6 +88,16 @@ BoostTransport::Write(std::string content)
 
 
 void
+BoostTransport::Read()
+{
+    boost::system::error_code ec;
+    std::vector<uint8_t> a_byte{0};
+    boost::asio::read(socket_, boost::asio::buffer(a_byte),
+                      boost::asio::transfer_exactly(1), ec);
+}
+
+
+void
 BoostTransport::check_deadline()
 {
     if (timer_.expires_at() <= boost::asio::deadline_timer::traits_type::now())

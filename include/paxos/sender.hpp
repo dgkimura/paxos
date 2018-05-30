@@ -50,6 +50,8 @@ public:
 
     void Write(std::string content);
 
+    void Read();
+
 private:
 
     void check_deadline();
@@ -129,19 +131,18 @@ public:
 
         std::string key = replica.hostname + ":" +
                           std::to_string(replica.port + 1);
-        if (cached_transports.find(key) == std::end(cached_transports))
-        {
-            cached_transports[key] = std::unique_ptr<Transport>(
-                                        new Transport(replica.hostname,
-                                                      replica.port + 1));
-        }
-        auto& transport = cached_transports[key];
+        auto transport = std::unique_ptr<Transport>(
+                                    new Transport(replica.hostname,
+                                                  replica.port + 1));
 
         // 1. serialize file
         std::string file_str = Serialize(file);
 
         // 2. write file
         transport->Write(file_str);
+
+        // 3. block until file send completed
+        transport->Read();
     }
 
 private:
