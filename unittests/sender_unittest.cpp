@@ -77,16 +77,31 @@ TEST(SenderTest, testSendFileAlongTransport)
 
 TEST(SenderTest, testCreateHeader)
 {
-    ASSERT_THAT(paxos::CreateHeader(
-        "It was the best of times,"
-        "it was the worst of times,"
-        "it was the age of wisdom,"
-        "it was the age of foolishness,"
-        "it was the epoch of belief,"
-        "it was the epoch of incredulity,"
-        "it was the season of Light,"
-        "it was the season of Darkness,"
-        "it was the spring of hope,"
-        "it was the winter of despair,"),
-        testing::ElementsAre('\0', '\0', '\x1', '\x15'));
+    ASSERT_THAT(paxos::CreateHeader(0), testing::ElementsAre('\0', '\0', '\0', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(1), testing::ElementsAre('\0', '\0', '\0', '\x01'));
+    ASSERT_THAT(paxos::CreateHeader(2), testing::ElementsAre('\0', '\0', '\0', '\x02'));
+    ASSERT_THAT(paxos::CreateHeader(4), testing::ElementsAre('\0', '\0', '\0', '\x04'));
+    ASSERT_THAT(paxos::CreateHeader(8), testing::ElementsAre('\0', '\0', '\0', '\x08'));
+    ASSERT_THAT(paxos::CreateHeader(16), testing::ElementsAre('\0', '\0', '\0', '\x10'));
+    ASSERT_THAT(paxos::CreateHeader(32), testing::ElementsAre('\0', '\0', '\0', '\x20'));
+    ASSERT_THAT(paxos::CreateHeader(64), testing::ElementsAre('\0', '\0', '\0', '\x40'));
+    ASSERT_THAT(paxos::CreateHeader(128), testing::ElementsAre('\0', '\0', '\0', '\x80'));
+    ASSERT_THAT(paxos::CreateHeader(256), testing::ElementsAre('\0', '\0', '\x01', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(512), testing::ElementsAre('\0', '\0', '\x02', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(1024), testing::ElementsAre('\0', '\0', '\x04', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(2048), testing::ElementsAre('\0', '\0', '\x08', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(4096), testing::ElementsAre('\0', '\0', '\x10', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(8192), testing::ElementsAre('\0', '\0', '\x20', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(16384), testing::ElementsAre('\0', '\0', '\x40', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(32768), testing::ElementsAre('\0', '\0', '\x80', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(65536), testing::ElementsAre('\0', '\x01', '\0', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(65536), testing::ElementsAre('\0', '\x01', '\0', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(131072), testing::ElementsAre('\0', '\x02', '\0', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(262144), testing::ElementsAre('\0', '\x04', '\0', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(524288), testing::ElementsAre('\0', '\x08', '\0', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(1048576), testing::ElementsAre('\0', '\x10', '\0', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(2097152), testing::ElementsAre('\0', '\x20', '\0', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(4194304), testing::ElementsAre('\0', '\x40', '\0', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(8388608), testing::ElementsAre('\0', '\x80', '\0', '\0'));
+    ASSERT_THAT(paxos::CreateHeader(16777216), testing::ElementsAre('\x01', '\0', '\0', '\0'));
 }

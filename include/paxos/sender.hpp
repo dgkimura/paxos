@@ -20,7 +20,7 @@ namespace paxos
 {
 
 
-std::vector<uint8_t> CreateHeader(const std::string& content);
+std::vector<uint8_t> CreateHeader(size_t message_size);
 
 
 class Sender

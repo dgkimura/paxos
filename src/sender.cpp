@@ -11,9 +11,8 @@ namespace paxos
 
 
 std::vector<uint8_t>
-CreateHeader(const std::string& content)
+CreateHeader(size_t message_size)
 {
-    auto message_size = content.size();
     std::vector<uint8_t> header(4);
     header[0] = static_cast<uint8_t>((message_size >> 24) & 0xFF);
     header[1] = static_cast<uint8_t>((message_size >> 16) & 0xFF);
@@ -65,7 +64,7 @@ BoostTransport::Write(std::string content)
     {
         if (socket_.is_open())
         {
-            auto header = CreateHeader(content);
+            auto header = CreateHeader(content.size());
             boost::asio::write(socket_, boost::asio::buffer(header,
                                                             header.size()));
 
