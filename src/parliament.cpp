@@ -30,8 +30,7 @@ Parliament::Parliament(
           std::make_shared<RolloverQueue<Decree>>(location, "paxos.ledger"))),
       learner(std::make_shared<LearnerContext>(legislators, ledger)),
       location(location),
-      signal(std::make_shared<Signal>([this](){ SendProposal(""); },
-             std::chrono::milliseconds(1000)))
+      signal(std::make_shared<Signal>())
 {
     ledger->RegisterHandler(
         DecreeType::UserDecree,
@@ -67,6 +66,19 @@ Parliament::Parliament(
         std::make_shared<PersistentDecree>(location, "paxos.accepted_decree"),
         std::chrono::milliseconds(1000));
     hookup_legislator(legislator, proposer, acceptor);
+
+    //
+    // We periodically attempt to flush out pending decrees which can get stuck
+    // if messages were dropped at inopportune times.
+    //
+    std::thread([this]()
+    {
+        while (true)
+        {
+            SendProposal("");
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        }
+    }).detach();
 }
 
 

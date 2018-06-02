@@ -15,9 +15,7 @@ class Signal
 {
 public:
 
-    Signal(
-        std::function<void(void)> retry,
-        std::chrono::milliseconds retry_interval=std::chrono::milliseconds(0));
+    Signal();
 
     void Set(bool success);
 
@@ -29,10 +27,6 @@ private:
     std::condition_variable condition;
 
     bool flag;
-
-    std::function<void()> retry;
-
-    std::chrono::milliseconds retry_interval;
 
     bool success;
 };

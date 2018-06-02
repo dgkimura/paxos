@@ -134,7 +134,10 @@ HandleRequest(
     response.decree.author = message.to;
     response.decree.content = "";
 
-    sender->ReplyAll(response);
+    if (context->requested_values.size() > 0)
+    {
+        sender->ReplyAll(response);
+    }
 }
 
 
@@ -346,20 +349,17 @@ HandleResume(
 
     if (IsDecreeIdentical(context->ledger->Tail(), message.decree))
     {
-        if (context->requested_values.size() > 0)
-        {
-            //
-            // Setup next round for pending proposals.
-            //
-            sender->Reply(
-                Message(
-                    Decree(),
-                    message.to,
-                    message.to,
-                    MessageType::RequestMessage
-                )
-            );
-        }
+        //
+        // Setup next round for pending proposals.
+        //
+        sender->Reply(
+            Message(
+                Decree(),
+                message.to,
+                message.to,
+                MessageType::RequestMessage
+            )
+        );
     }
 }
 
