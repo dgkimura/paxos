@@ -347,6 +347,16 @@ HandleResume(
         context->promise_map.erase(message.decree);
     }
 
+    auto highest_proposed_decree = context->highest_proposed_decree.Value();
+    if (IsRootDecreeEqual(highest_proposed_decree, message.decree) &&
+        context->resume_map.find(message.decree) == context->resume_map.end() &&
+        highest_proposed_decree.content != message.decree.content)
+    {
+        context->resume_map.insert(message.decree);
+        context->requested_values.push_back(
+            std::make_tuple(highest_proposed_decree.content, highest_proposed_decree.type));
+    }
+
     if (IsDecreeIdentical(context->ledger->Tail(), message.decree))
     {
         //
@@ -442,7 +452,8 @@ HandleAccept(
     std::lock_guard<std::mutex> lock(context->mutex);
 
     if (IsRootDecreeHigher(message.decree, context->promised_decree.Value()) ||
-        IsDecreeIdentical(message.decree, context->promised_decree.Value()))
+        IsDecreeIdentical(message.decree, context->accepted_decree.Value()) ||
+        IsRootDecreeHigher(message.decree, context->accepted_decree.Value()))
     {
         if (IsRootDecreeHigher(message.decree, context->accepted_decree.Value()))
         {
@@ -468,9 +479,7 @@ HandleAccept(
             sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
         }
     }
-    else if (IsDecreeLower(message.decree, context->accepted_decree.Value()) ||
-             (IsRootDecreeEqual(message.decree, context->accepted_decree.Value()) &&
-              !IsDecreeIdentical(message.decree, context->accepted_decree.Value())))
+    else
     {
         //
         // If the message decree is not higher than the accepted decree then we
