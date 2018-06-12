@@ -37,6 +37,7 @@ struct ProposerContext : public Context
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> promise_map;
     std::set<Decree, compare_decree> ntie_map;
     std::set<Decree, compare_decree> nprepare_map;
+    std::set<Decree, compare_decree> resume_map;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> naccept_map;
     std::vector<std::tuple<std::string, DecreeType>> requested_values;
 
@@ -62,6 +63,7 @@ struct ProposerContext : public Context
           ntie_map(),
           nprepare_map(),
           naccept_map(),
+          resume_map(),
           requested_values(),
           mutex(),
           highest_nacked_decree(Replica(""), -1, "first", DecreeType::UserDecree),

@@ -1109,6 +1109,40 @@ TEST_F(ProposerTest, testHandleResumeSendsNextRequestIfThereArePendingProposals)
 }
 
 
+TEST_F(ProposerTest, testHandleResumeInsertsHighestProposedDecreeIntoRequestsIfItWasNotAccepted)
+{
+    paxos::Decree decree(paxos::Replica("A"), 1, "content", paxos::DecreeType::UserDecree);
+    paxos::Message message(
+        decree,
+        paxos::Replica("from"),
+        paxos::Replica("to"),
+        paxos::MessageType::AcceptMessage);
+
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    std::stringstream ss;
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
+    );
+    ledger->Append(decree);
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
+        replicaset,
+        ledger,
+        std::make_shared<paxos::VolatileDecree>(),
+        std::make_shared<paxos::NoPause>(),
+        signal
+    );
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("the_author"), 1, "other_contents", paxos::DecreeType::UserDecree);
+    auto sender = std::shared_ptr<FakeSender>(new FakeSender());
+
+    HandleResume(message, context, sender);
+
+    // Request "other_contents" should be re-added because the decree that we was accepted "content" was not our highest_proposed_decree.
+    ASSERT_EQ(1, context->requested_values.size());
+    ASSERT_TRUE("other_contents" == std::get<0>(context->requested_values[0]));
+}
+
+
 class AcceptorTest: public testing::Test
 {
     virtual void SetUp()
