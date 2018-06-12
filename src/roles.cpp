@@ -310,6 +310,13 @@ HandleNackPrepare(
     if (context->nprepare_map.find(message.decree) == context->nprepare_map.end() &&
         IsRootDecreeHigher(message.decree, tail_decree))
     {
+        auto highest_proposed_decree = context->highest_proposed_decree.Value();
+        if (IsRootDecreeEqual(highest_proposed_decree, message.decree) &&
+            highest_proposed_decree.content != message.decree.content)
+        {
+            context->requested_values.push_back(
+                std::make_tuple(highest_proposed_decree.content, highest_proposed_decree.type));
+        }
         context->nprepare_map.insert(message.decree);
         //
         // If ledger is behind the messaged decree then we should attempt to
