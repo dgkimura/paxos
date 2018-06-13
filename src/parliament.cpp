@@ -225,8 +225,13 @@ Parliament::GetAbsenteeBallots(int max_ballots)
     {
         if (start <= kv.first.root_number)
         {
-            Decree d(Replica(), kv.first.number, "", DecreeType::UserDecree);
-            d.root_number = kv.first.root_number;
+            //
+            // It is worth noting that we will not add separate ballot entries
+            // for each contending decree. This keeyps the structure simpler by
+            // maintaining only one ballot count per root decree. If there are
+            // more ballots, then the last one wins.
+            //
+            Decree d(Replica(), kv.first.root_number, "", DecreeType::UserDecree);
             ballots[d] = learner->replicaset->Difference(kv.second);
         }
     }
@@ -242,7 +247,6 @@ Parliament::GetAbsenteeBallots(int max_ballots)
     }
 
     return ballots;
-
 }
 
 

@@ -245,6 +245,39 @@ TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleReplicaSet)
 }
 
 
+TEST_F(ParliamentTest, testGetAbsenteeBallotReturnsCorrectNumberOfBallots)
+{
+    legislators->Add(paxos::Replica("yourhost", 2222));
+    legislators->Add(paxos::Replica("ourhost", 1111));
+
+    paxos::Decree decree_1(paxos::Replica("myhost"), 111, "my decree content", paxos::DecreeType::UserDecree);
+    decree_1.root_number = 1;
+    ledger->Append(decree_1);
+    receiver->ReceiveMessage(
+        paxos::Message(
+            decree_1,
+            replica,
+            replica,
+            paxos::MessageType::AcceptedMessage
+        )
+    );
+
+    paxos::Decree decree_2(paxos::Replica("myhost"), 112, "next content", paxos::DecreeType::UserDecree);
+    decree_2.root_number = 2;
+    ledger->Append(decree_2);
+    receiver->ReceiveMessage(
+        paxos::Message(
+            decree_2,
+            replica,
+            replica,
+            paxos::MessageType::AcceptedMessage
+        )
+    );
+
+    ASSERT_EQ(2, parliament->GetAbsenteeBallots(100).size());
+}
+
+
 TEST_F(ParliamentTest, testGetAbsenteeBallotWithMultipleDecrees)
 {
     ledger->Append(paxos::Decree(replica, 1, "my decree 1", paxos::DecreeType::UserDecree));
