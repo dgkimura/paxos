@@ -307,10 +307,12 @@ HandleNackPrepare(
     std::lock_guard<std::mutex> lock(context->mutex);
 
     auto tail_decree = context->ledger->Tail();
-    if (context->nprepare_map.find(message.decree) == context->nprepare_map.end() &&
-        IsRootDecreeHigher(message.decree, tail_decree))
+
+    if (IsRootDecreeHigher(message.decree, tail_decree) &&
+        context->nprepare_map.find(message.decree) == context->nprepare_map.end())
     {
-        context->nprepare_map.insert(message.decree);
+        context->nprepare_map[message.decree] = false;
+
         //
         // If ledger is behind the messaged decree then we should attempt to
         // catch up to a state that we can re-send a prepare-able decree.
@@ -319,6 +321,25 @@ HandleNackPrepare(
         response.decree = tail_decree;
         response.to = message.decree.author;
         sender->Reply(response);
+    }
+
+    if (!message.decree.content.empty() &&
+        IsRootDecreeHigher(message.decree, tail_decree) &&
+        context->nprepare_map[message.decree] == false)
+    {
+        //
+        // It might be the case that the first time we receive nack prepare the
+        // decree is empty, but the next time it is not. We must be sure to add
+        // the non-empty nack prepared decree exactly once to requested_values.
+        //
+        context->nprepare_map[message.decree] = true;
+
+        //
+        // Conflict so we need to retry after we update.
+        //
+        auto proposed_decree = context->highest_proposed_decree.Value();
+        context->requested_values.push_front(
+            std::make_tuple(proposed_decree.content, proposed_decree.type));
     }
 }
 
@@ -353,7 +374,7 @@ HandleResume(
         highest_proposed_decree.content != message.decree.content)
     {
         context->resume_map.insert(message.decree);
-        context->requested_values.push_back(
+        context->requested_values.push_front(
             std::make_tuple(highest_proposed_decree.content, highest_proposed_decree.type));
     }
 

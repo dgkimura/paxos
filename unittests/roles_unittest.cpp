@@ -3,6 +3,7 @@
 #include <string>
 #include <thread>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 #include "paxos/logging.hpp"
@@ -860,6 +861,47 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenLedgerIsIncrementedBetweenP
     );
 
     ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::PrepareMessage);
+}
+
+
+TEST_F(ProposerTest, testHandleNackPrepareInsertsHighestProposedDecreeIntoRequestsWhenItWasRejected)
+{
+    auto replica = paxos::Replica("host");
+    auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::UserDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    std::stringstream ss;
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
+    );
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
+        replicaset,
+        ledger,
+        std::make_shared<paxos::VolatileDecree>(),
+        std::make_shared<paxos::NoPause>(),
+        signal
+    );
+    context->highest_proposed_decree = paxos::Decree(
+        paxos::Replica("the_author"),
+        1,
+        "highest proposed decree",
+        paxos::DecreeType::UserDecree);
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNackPrepare(
+        paxos::Message(
+            decree,
+            replica,
+            replica,
+            paxos::MessageType::NackPrepareMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_EQ(1, context->requested_values.size());
+    ASSERT_THAT(std::get<0>(context->requested_values[0]), ::testing::StrEq("highest proposed decree"));
 }
 
 
