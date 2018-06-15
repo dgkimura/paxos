@@ -37,7 +37,7 @@ struct ProposerContext : public Context
     std::shared_ptr<ReplicaSet>& replicaset;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> promise_map;
     std::set<Decree, compare_decree> ntie_map;
-    std::map<Decree, bool, compare_decree> nprepare_map;
+    std::map<Decree, std::tuple<std::shared_ptr<ReplicaSet>, bool>, compare_map_decree> nprepare_map;
     std::set<Decree, compare_decree> resume_map;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> naccept_map;
     std::deque<std::tuple<std::string, DecreeType>> requested_values;

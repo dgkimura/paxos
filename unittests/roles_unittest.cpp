@@ -869,6 +869,7 @@ TEST_F(ProposerTest, testHandleNackPrepareInsertsHighestProposedDecreeIntoReques
     auto replica = paxos::Replica("host");
     auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::UserDecree);
     auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    replicaset->Add(replica);
     std::stringstream ss;
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
@@ -901,7 +902,7 @@ TEST_F(ProposerTest, testHandleNackPrepareInsertsHighestProposedDecreeIntoReques
     );
 
     ASSERT_EQ(1, context->requested_values.size());
-    ASSERT_THAT(std::get<0>(context->requested_values[0]), ::testing::StrEq("highest proposed decree"));
+    ASSERT_THAT(std::get<0>(context->requested_values[0]), ::testing::StrEq("next"));
 }
 
 
@@ -945,6 +946,7 @@ TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateForEqualDecrees)
 {
     auto replica = paxos::Replica("host");
     auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    replicaset->Add(replica);
     std::stringstream ss;
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
@@ -989,19 +991,18 @@ TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateForEqualDecrees)
 }
 
 
-TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateOnLowerRootDecrees)
+TEST_F(ProposerTest, testHandleNackPrepareDoesNotReinsertRequestedValueWithoutNackQuorum)
 {
     auto replica = paxos::Replica("host");
 
-    // Decree (1) is lower than ledger tail decree (2)
     auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::AddReplicaDecree);
     auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    replicaset->Add(replica);
+    replicaset->Add(paxos::Replica("host2"));
     std::stringstream ss;
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
     );
-    ledger->Append(paxos::Decree(paxos::Replica(), 1, "", paxos::DecreeType::UserDecree));
-    ledger->Append(paxos::Decree(paxos::Replica(), 2, "", paxos::DecreeType::UserDecree));
     auto signal = std::make_shared<paxos::Signal>();
     auto context = std::make_shared<paxos::ProposerContext>(
         replicaset,
@@ -1010,10 +1011,11 @@ TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateOnLowerRootDecrees)
         std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->requested_values.push_back(std::make_tuple("a pending value", paxos::DecreeType::AddReplicaDecree));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
+    // Becuase Replica set is size 2, 1 nack is not enough to form quorum.
+    // There we do not expect to re-insert requested value.
     HandleNackPrepare(
         paxos::Message(
             decree,
@@ -1025,7 +1027,7 @@ TEST_F(ProposerTest, testHandleNackPrepareDoesNotSendUpdateOnLowerRootDecrees)
         sender
     );
 
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::UpdateMessage);
+    ASSERT_EQ(0, context->requested_values.size());
 }
 
 
@@ -1258,7 +1260,6 @@ TEST_F(AcceptorTest, testHandlePrepareWithLowerAndDifferentAuthorDecreeDoesNotUp
     HandlePrepare(message, context, sender);
 
     ASSERT_TRUE(IsDecreeLower(message.decree, context->promised_decree.Value()));
-    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::NackPrepareMessage);
 }
 
 

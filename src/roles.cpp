@@ -306,40 +306,35 @@ HandleNackPrepare(
 
     std::lock_guard<std::mutex> lock(context->mutex);
 
-    auto tail_decree = context->ledger->Tail();
-
-    if (IsRootDecreeHigher(message.decree, tail_decree) &&
-        context->nprepare_map.find(message.decree) == context->nprepare_map.end())
+    if (context->nprepare_map.find(message.decree) == context->nprepare_map.end())
     {
-        context->nprepare_map[message.decree] = false;
+        context->nprepare_map[message.decree] = std::make_tuple(std::make_shared<ReplicaSet>(), false);
+    }
+
+    if (std::get<1>(context->nprepare_map[message.decree]) == false)
+    {
+        std::get<0>(context->nprepare_map[message.decree])->Add(message.from);;
+
+        int minimum_quorum = context->replicaset->GetSize() / 2 + 1;
+        int received_nprepare = std::get<0>(context->nprepare_map[message.decree])
+                                       ->Intersection(context->replicaset)
+                                       ->GetSize();
+
+        if (received_nprepare >= minimum_quorum)
+        {
+            std::get<1>(context->nprepare_map[message.decree]) = true;
+            context->requested_values.push_front(
+                std::make_tuple(message.decree.content, message.decree.type));
+        }
 
         //
         // If ledger is behind the messaged decree then we should attempt to
         // catch up to a state that we can re-send a prepare-able decree.
         //
         Message response = Response(message, MessageType::UpdateMessage);
-        response.decree = tail_decree;
+        response.decree = context->ledger->Tail();
         response.to = message.decree.author;
         sender->Reply(response);
-    }
-
-    if (!message.decree.content.empty() &&
-        IsRootDecreeHigher(message.decree, tail_decree) &&
-        context->nprepare_map[message.decree] == false)
-    {
-        //
-        // It might be the case that the first time we receive nack prepare the
-        // decree is empty, but the next time it is not. We must be sure to add
-        // the non-empty nack prepared decree exactly once to requested_values.
-        //
-        context->nprepare_map[message.decree] = true;
-
-        //
-        // Conflict so we need to retry after we update.
-        //
-        auto proposed_decree = context->highest_proposed_decree.Value();
-        context->requested_values.push_front(
-            std::make_tuple(proposed_decree.content, proposed_decree.type));
     }
 }
 
@@ -368,14 +363,37 @@ HandleResume(
         context->promise_map.erase(message.decree);
     }
 
-    auto highest_proposed_decree = context->highest_proposed_decree.Value();
-    if (IsRootDecreeEqual(highest_proposed_decree, message.decree) &&
+    auto decree = context->highest_proposed_decree.Value();
+    if (IsRootDecreeEqual(decree, message.decree) &&
         context->resume_map.find(message.decree) == context->resume_map.end() &&
-        highest_proposed_decree.content != message.decree.content)
+        decree.content != message.decree.content)
     {
+        if (context->nprepare_map.find(decree) != context->nprepare_map.end())
+        {
+            //
+            // If decree is in the nack map then check whether we should
+            // re-insert value and ensure it will be done only once.
+            //
+            if (std::get<1>(context->nprepare_map[decree]) == false)
+            {
+                std::get<1>(context->nprepare_map[decree]) = true;
+
+                context->requested_values.push_front(
+                    std::make_tuple(decree.content, decree.type));
+            }
+        }
+        else
+        {
+            //
+            // If decree is not already in nack map then insert it with true so
+            // it will never be reconsidered for re-insertion.
+            //
+            context->nprepare_map[decree] = std::make_tuple(
+                std::make_shared<paxos::ReplicaSet>(), true);
+            context->requested_values.push_front(
+                std::make_tuple(decree.content, decree.type));
+        }
         context->resume_map.insert(message.decree);
-        context->requested_values.push_front(
-            std::make_tuple(highest_proposed_decree.content, highest_proposed_decree.type));
     }
 
     if (IsDecreeIdentical(context->ledger->Tail(), message.decree))
@@ -450,14 +468,6 @@ HandlePrepare(
         //
         sender->Reply(Response(message, MessageType::NackTieMessage));
     }
-    else
-    {
-        //
-        // If the messaged decree is lower than current promised decree then
-        // the other proposer is behind. Send a Nack.
-        //
-        sender->Reply(Response(message, MessageType::NackPrepareMessage));
-    }
 }
 
 
@@ -474,7 +484,8 @@ HandleAccept(
 
     if (IsRootDecreeHigher(message.decree, context->promised_decree.Value()) ||
         IsDecreeIdentical(message.decree, context->accepted_decree.Value()) ||
-        IsRootDecreeHigher(message.decree, context->accepted_decree.Value()))
+        IsRootDecreeHigher(message.decree, context->accepted_decree.Value()) ||
+        IsDecreeIdentical(message.decree, context->accepted_decree.Value()))
     {
         if (IsRootDecreeHigher(message.decree, context->accepted_decree.Value()))
         {
@@ -489,7 +500,7 @@ HandleAccept(
         }
         else if (context->accepted_time + context->interval <
                  std::chrono::high_resolution_clock::now() &&
-                 IsDecreeIdentical(message.decree,
+                 IsRootDecreeEqual(message.decree,
                                    context->accepted_decree.Value()))
         {
             //
@@ -500,7 +511,7 @@ HandleAccept(
             sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
         }
     }
-    else
+    else if (IsRootDecreeEqual(message.decree, context->accepted_decree.Value()))
     {
         //
         // If the message decree is not higher than the accepted decree then we
@@ -522,14 +533,19 @@ HandleCleanup(
 
     std::lock_guard<std::mutex> lock(context->mutex);
 
-    if (IsRootDecreeHigherOrEqual(message.decree, context->accepted_decree.Value()))
+    auto accepted_decree = context->accepted_decree.Value();
+    if (IsRootDecreeHigherOrEqual(message.decree, accepted_decree))
     {
-        // if (message.decree.content != context->accepted_decree.Value().content)
-        // {
-        //     XXX: What should we do if the decree is not identical?
-        //          Run ignore handler or resubmit request?
-        //     return;
-        // }
+        if (message.decree.content != context->accepted_decree.Value().content &&
+            !accepted_decree.content.empty())
+        {
+            //
+            // If decree we accepted decree was not written to ledger then
+            // resubmit request.
+            //
+            message.decree = accepted_decree;
+            sender->Reply(Response(message, MessageType::RequestMessage));
+        }
 
         //
         // We reset the accepted decree content to "" to signal to the prepare
