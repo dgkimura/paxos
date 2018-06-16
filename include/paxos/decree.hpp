@@ -109,6 +109,14 @@ struct compare_decree
     }
 };
 
+struct compare_root_decree
+{
+    bool operator()(const Decree& lhs, const Decree& rhs) const
+    {
+        return lhs.root_number - rhs.root_number < 0;
+    }
+};
+
 struct compare_map_decree
 {
     bool operator()(const Decree& lhs, const Decree& rhs) const

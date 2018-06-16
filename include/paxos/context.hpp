@@ -38,7 +38,7 @@ struct ProposerContext : public Context
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> promise_map;
     std::set<Decree, compare_decree> ntie_map;
     std::map<Decree, std::tuple<std::shared_ptr<ReplicaSet>, bool>, compare_map_decree> nprepare_map;
-    std::set<Decree, compare_decree> resume_map;
+    std::set<Decree, compare_root_decree> resume_map;
     std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> naccept_map;
     std::deque<std::tuple<std::string, DecreeType>> requested_values;
 
@@ -82,6 +82,7 @@ struct AcceptorContext : public Context
 {
     Field<Decree> promised_decree;
     Field<Decree> accepted_decree;
+    std::set<Decree, compare_decree> accepted_map;
     std::chrono::high_resolution_clock::time_point accepted_time;
     std::chrono::milliseconds interval;
     std::mutex mutex;
@@ -93,6 +94,7 @@ struct AcceptorContext : public Context
     )
         : promised_decree(promised_decree_),
           accepted_decree(accepted_decree_),
+          accepted_map(),
           accepted_time(std::chrono::high_resolution_clock::now()),
           interval(interval_),
           mutex()

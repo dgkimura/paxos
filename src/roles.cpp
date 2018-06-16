@@ -326,15 +326,6 @@ HandleNackPrepare(
             context->requested_values.push_front(
                 std::make_tuple(message.decree.content, message.decree.type));
         }
-
-        //
-        // If ledger is behind the messaged decree then we should attempt to
-        // catch up to a state that we can re-send a prepare-able decree.
-        //
-        Message response = Response(message, MessageType::UpdateMessage);
-        response.decree = context->ledger->Tail();
-        response.to = message.decree.author;
-        sender->Reply(response);
     }
 }
 
@@ -363,41 +354,21 @@ HandleResume(
         context->promise_map.erase(message.decree);
     }
 
-    auto decree = context->highest_proposed_decree.Value();
-    if (IsRootDecreeEqual(decree, message.decree) &&
-        context->resume_map.find(message.decree) == context->resume_map.end() &&
-        decree.content != message.decree.content)
-    {
-        if (context->nprepare_map.find(decree) != context->nprepare_map.end())
-        {
-            //
-            // If decree is in the nack map then check whether we should
-            // re-insert value and ensure it will be done only once.
-            //
-            if (std::get<1>(context->nprepare_map[decree]) == false)
-            {
-                std::get<1>(context->nprepare_map[decree]) = true;
-
-                context->requested_values.push_front(
-                    std::make_tuple(decree.content, decree.type));
-            }
-        }
-        else
-        {
-            //
-            // If decree is not already in nack map then insert it with true so
-            // it will never be reconsidered for re-insertion.
-            //
-            context->nprepare_map[decree] = std::make_tuple(
-                std::make_shared<paxos::ReplicaSet>(), true);
-            context->requested_values.push_front(
-                std::make_tuple(decree.content, decree.type));
-        }
-        context->resume_map.insert(message.decree);
-    }
-
     if (IsDecreeIdentical(context->ledger->Tail(), message.decree))
     {
+        auto decree = context->highest_proposed_decree.Value();
+        if (IsRootDecreeEqual(message.decree, decree) &&
+            context->resume_map.find(message.decree) == context->resume_map.end() &&
+            decree.content != message.decree.content &&
+            !decree.content.empty() &&
+            std::get<1>(context->nprepare_map[decree]) == false)
+        {
+            context->requested_values.push_front(
+                std::make_tuple(decree.content, decree.type));
+            context->resume_map.insert(message.decree);
+            std::get<1>(context->nprepare_map[decree]) = true;
+        }
+
         //
         // Setup next round for pending proposals.
         //
@@ -496,6 +467,7 @@ HandleAccept(
             //
             context->accepted_time = std::chrono::high_resolution_clock::now();
             context->accepted_decree = message.decree;
+            context->accepted_map.insert(message.decree);
             sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
         }
         else if (context->accepted_time + context->interval <
@@ -511,7 +483,7 @@ HandleAccept(
             sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
         }
     }
-    else if (IsRootDecreeEqual(message.decree, context->accepted_decree.Value()))
+    else if (context->accepted_map.find(message.decree) == context->accepted_map.end())
     {
         //
         // If the message decree is not higher than the accepted decree then we
@@ -536,17 +508,6 @@ HandleCleanup(
     auto accepted_decree = context->accepted_decree.Value();
     if (IsRootDecreeHigherOrEqual(message.decree, accepted_decree))
     {
-        if (message.decree.content != context->accepted_decree.Value().content &&
-            !accepted_decree.content.empty())
-        {
-            //
-            // If decree we accepted decree was not written to ledger then
-            // resubmit request.
-            //
-            message.decree = accepted_decree;
-            sender->Reply(Response(message, MessageType::RequestMessage));
-        }
-
         //
         // We reset the accepted decree content to "" to signal to the prepare
         // handler that there is not at pending accept decree to flush.
