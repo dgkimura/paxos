@@ -10,13 +10,12 @@ TEST(MessageTest, testMessageTypeHashFunction)
     ASSERT_EQ(2, std::hash<paxos::MessageType>{}(paxos::MessageType::PrepareMessage));
     ASSERT_EQ(3, std::hash<paxos::MessageType>{}(paxos::MessageType::PromiseMessage));
     ASSERT_EQ(4, std::hash<paxos::MessageType>{}(paxos::MessageType::NackTieMessage));
-    ASSERT_EQ(5, std::hash<paxos::MessageType>{}(paxos::MessageType::NackPrepareMessage));
-    ASSERT_EQ(6, std::hash<paxos::MessageType>{}(paxos::MessageType::AcceptMessage));
-    ASSERT_EQ(7, std::hash<paxos::MessageType>{}(paxos::MessageType::NackAcceptMessage));
-    ASSERT_EQ(8, std::hash<paxos::MessageType>{}(paxos::MessageType::AcceptedMessage));
-    ASSERT_EQ(9, std::hash<paxos::MessageType>{}(paxos::MessageType::ResumeMessage));
-    ASSERT_EQ(10, std::hash<paxos::MessageType>{}(paxos::MessageType::UpdateMessage));
-    ASSERT_EQ(11, std::hash<paxos::MessageType>{}(paxos::MessageType::UpdatedMessage));
+    ASSERT_EQ(5, std::hash<paxos::MessageType>{}(paxos::MessageType::AcceptMessage));
+    ASSERT_EQ(6, std::hash<paxos::MessageType>{}(paxos::MessageType::NackMessage));
+    ASSERT_EQ(7, std::hash<paxos::MessageType>{}(paxos::MessageType::AcceptedMessage));
+    ASSERT_EQ(8, std::hash<paxos::MessageType>{}(paxos::MessageType::ResumeMessage));
+    ASSERT_EQ(9, std::hash<paxos::MessageType>{}(paxos::MessageType::UpdateMessage));
+    ASSERT_EQ(10, std::hash<paxos::MessageType>{}(paxos::MessageType::UpdatedMessage));
 }
 
 

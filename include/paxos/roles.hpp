@@ -70,7 +70,7 @@ void HandleNackTie(
     std::shared_ptr<Sender> sender);
 
 
-void HandleNackPrepare(
+void HandleNack(
     Message message,
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender);

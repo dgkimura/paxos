@@ -27,8 +27,8 @@ RegisterProposer(
         MessageType::NackTieMessage
     );
     receiver->RegisterCallback(
-        Callback(std::bind(HandleNackPrepare, std::placeholders::_1, context, sender)),
-        MessageType::NackPrepareMessage
+        Callback(std::bind(HandleNack, std::placeholders::_1, context, sender)),
+        MessageType::NackMessage
     );
     receiver->RegisterCallback(
         Callback(std::bind(HandleResume, std::placeholders::_1, context, sender)),
@@ -296,12 +296,12 @@ HandleNackTie(
 
 
 void
-HandleNackPrepare(
+HandleNack(
     Message message,
     std::shared_ptr<ProposerContext> context,
     std::shared_ptr<Sender> sender)
 {
-    LOG(LogLevel::Info) << "HandleNackPrepare| " << message.decree.number << "|"
+    LOG(LogLevel::Info) << "HandleNack    | " << message.decree.number << "|"
                         << Serialize(message);
 
     std::lock_guard<std::mutex> lock(context->mutex);
@@ -489,7 +489,7 @@ HandleAccept(
         // If the message decree is not higher than the accepted decree then we
         // reject it.
         //
-        sender->Reply(Response(message, MessageType::NackPrepareMessage));
+        sender->Reply(Response(message, MessageType::NackMessage));
     }
 }
 

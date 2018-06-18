@@ -864,7 +864,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenLedgerIsIncrementedBetweenP
 }
 
 
-TEST_F(ProposerTest, testHandleNackPrepareInsertsHighestProposedDecreeIntoRequestsWhenItWasRejected)
+TEST_F(ProposerTest, testHandleNackInsertsHighestProposedDecreeIntoRequestsWhenItWasRejected)
 {
     auto replica = paxos::Replica("host");
     auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::UserDecree);
@@ -890,12 +890,12 @@ TEST_F(ProposerTest, testHandleNackPrepareInsertsHighestProposedDecreeIntoReques
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
-    HandleNackPrepare(
+    HandleNack(
         paxos::Message(
             decree,
             replica,
             replica,
-            paxos::MessageType::NackPrepareMessage
+            paxos::MessageType::NackMessage
         ),
         context,
         sender
@@ -906,7 +906,7 @@ TEST_F(ProposerTest, testHandleNackPrepareInsertsHighestProposedDecreeIntoReques
 }
 
 
-TEST_F(ProposerTest, testHandleNackPrepareDoesNotReinsertRequestedValueWithoutNackQuorum)
+TEST_F(ProposerTest, testHandleNackDoesNotReinsertRequestedValueWithoutNackQuorum)
 {
     auto replica = paxos::Replica("host");
 
@@ -931,12 +931,12 @@ TEST_F(ProposerTest, testHandleNackPrepareDoesNotReinsertRequestedValueWithoutNa
 
     // Becuase Replica set is size 2, 1 nack is not enough to form quorum.
     // There we do not expect to re-insert requested value.
-    HandleNackPrepare(
+    HandleNack(
         paxos::Message(
             decree,
             replica,
             replica,
-            paxos::MessageType::NackPrepareMessage
+            paxos::MessageType::NackMessage
         ),
         context,
         sender
