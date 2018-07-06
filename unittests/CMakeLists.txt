@@ -22,6 +22,7 @@ set(SOURCES
     ledger_unittest.cpp
     messages_unittest.cpp
     parliament_unittest.cpp
+    pause_unittest.cpp
     queue_unittest.cpp
     receiver_unittest.cpp
     replicaset_unittest.cpp
