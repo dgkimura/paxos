@@ -36,3 +36,29 @@ TEST(HandlerTest, testCompositeDecreeHandlerWithMultipleHandlers)
     ASSERT_TRUE(was_called);
     ASSERT_TRUE(was_called_too);
 }
+
+
+TEST(HandlerTest, testHandleAddReplicaSavesNewReplicaSet)
+{
+    auto replica = paxos::Replica("host", 8080);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    replicaset->Add(replica);
+
+    bool called_saved_replicaset = false;
+
+    paxos::HandleAddReplica handler(
+        "mylocation",
+        replica,
+        replicaset,
+        std::make_shared<paxos::Signal>(),
+        [&called_saved_replicaset](
+            std::shared_ptr<paxos::ReplicaSet>,
+            std::ostream&)
+        {
+            called_saved_replicaset = true;
+        }
+    );
+    handler("a replica");
+
+    ASSERT_TRUE(called_saved_replicaset);
+}

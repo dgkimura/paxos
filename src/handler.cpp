@@ -51,11 +51,15 @@ HandleAddReplica::HandleAddReplica(
     std::string location,
     Replica legislator,
     std::shared_ptr<ReplicaSet>& legislators,
-    std::shared_ptr<Signal> signal)
+    std::shared_ptr<Signal> signal,
+    std::function<void(
+        std::shared_ptr<ReplicaSet>,
+        std::ostream&)> save_replicaset)
     : location(location),
       legislator(legislator),
       legislators(legislators),
-      signal(signal)
+      signal(signal),
+      save_replicaset(save_replicaset)
 {
 }
 
@@ -68,7 +72,7 @@ HandleAddReplica::operator()(std::string entry)
     std::ofstream replicasetfile(
         (boost::filesystem::path(location) /
          boost::filesystem::path(ReplicasetFilename)).string());
-    SaveReplicaSet(legislators, replicasetfile);
+    save_replicaset(legislators, replicasetfile);
 
     // Only decree author sends bootstrap.
     if (decree.author.hostname == legislator.hostname &&
