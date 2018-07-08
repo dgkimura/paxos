@@ -93,7 +93,10 @@ public:
         std::string location,
         Replica legislator,
         std::shared_ptr<ReplicaSet>& legislators,
-        std::shared_ptr<Signal> signal);
+        std::shared_ptr<Signal> signal,
+        std::function<void(
+            std::shared_ptr<ReplicaSet>,
+            std::ostream&)> save_replicaset=SaveReplicaSet);
 
     virtual void operator()(std::string entry) override;
 
@@ -106,6 +109,10 @@ private:
     std::shared_ptr<ReplicaSet>& legislators;
 
     std::shared_ptr<Signal> signal;
+
+    std::function<void(
+        std::shared_ptr<ReplicaSet>,
+        std::ostream&)> save_replicaset;
 };
 
 
