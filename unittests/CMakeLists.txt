@@ -20,6 +20,7 @@ set(SOURCES
     fields_unittest.cpp
     handler_unittest.cpp
     ledger_unittest.cpp
+    lru_set_unittest.cpp
     messages_unittest.cpp
     parliament_unittest.cpp
     pause_unittest.cpp
