@@ -30,3 +30,14 @@ TEST(LruSetTest, testInsertExceedingCapacityRemovesLeastRecentlyUsedElement)
     ASSERT_TRUE(lruset.contains(5));
     ASSERT_TRUE(lruset.contains(6));
 }
+
+
+TEST(LruSetTest, testInsertSameElementDoesNotEvictElements)
+{
+    paxos::lru_set<int> lruset(2);
+
+    lruset.insert(1);
+    lruset.insert(2);
+    lruset.insert(2);
+    ASSERT_TRUE(lruset.contains(1));
+}

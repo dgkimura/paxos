@@ -23,6 +23,11 @@ public:
     void
     insert(Key e)
     {
+        if (contains(e))
+        {
+            return;
+        }
+
         queue.push_back(e);
         if (queue.size() > capacity)
         {
