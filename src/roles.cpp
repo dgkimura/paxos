@@ -467,7 +467,7 @@ HandleAccept(
             //
             context->accepted_time = std::chrono::high_resolution_clock::now();
             context->accepted_decree = message.decree;
-            context->accepted_map.insert(message.decree);
+            context->accepted_set.insert(message.decree);
             sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
         }
         else if (context->accepted_time + context->interval <
@@ -483,7 +483,7 @@ HandleAccept(
             sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
         }
     }
-    else if (context->accepted_map.find(message.decree) == context->accepted_map.end())
+    else if (!context->accepted_set.contains(message.decree))
     {
         //
         // If the message decree is not higher than the accepted decree then we

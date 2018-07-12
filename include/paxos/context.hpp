@@ -16,6 +16,7 @@
 #include "paxos/decree.hpp"
 #include "paxos/fields.hpp"
 #include "paxos/ledger.hpp"
+#include "paxos/lru_set.hpp"
 #include "paxos/pause.hpp"
 #include "paxos/replicaset.hpp"
 #include "paxos/signal.hpp"
@@ -82,7 +83,7 @@ struct AcceptorContext : public Context
 {
     Field<Decree> promised_decree;
     Field<Decree> accepted_decree;
-    std::set<Decree, compare_decree> accepted_map;
+    paxos::lru_set<Decree, compare_decree> accepted_set;
     std::chrono::high_resolution_clock::time_point accepted_time;
     std::chrono::milliseconds interval;
     std::mutex mutex;
@@ -94,7 +95,7 @@ struct AcceptorContext : public Context
     )
         : promised_decree(promised_decree_),
           accepted_decree(accepted_decree_),
-          accepted_map(),
+          accepted_set(128),
           accepted_time(std::chrono::high_resolution_clock::now()),
           interval(interval_),
           mutex()
