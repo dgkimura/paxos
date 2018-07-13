@@ -328,6 +328,18 @@ TEST(DecreeUnitTest, testCompareDecreeDoesNotCompareHostnameWhenDecreesAreEqual)
 }
 
 
+TEST(DecreeUnitTest, testCompareRootDecreeDoesNotCompareNumberOrHostname)
+{
+    paxos::Decree a_decree(paxos::Replica("author_a"), 1, "", paxos::DecreeType::UserDecree);
+    a_decree.root_number = 1;
+    paxos::Decree another_decree(paxos::Replica("author_b"), 2, "", paxos::DecreeType::UserDecree);
+    another_decree.root_number = 1;
+
+    ASSERT_FALSE(paxos::compare_root_decree()(a_decree, another_decree));
+    ASSERT_FALSE(paxos::compare_root_decree()(another_decree, a_decree));
+}
+
+
 TEST(DecreeUnitTest, testCompareMapDecreeUsingKeyWithSameNumberButDiffeerntAuthorInStandardMap)
 {
     std::map<paxos::Decree, int, paxos::compare_map_decree> compare_map;
