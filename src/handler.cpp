@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <memory>
 
 #include <boost/filesystem.hpp>
 
@@ -78,10 +79,13 @@ HandleAddReplica::operator()(std::string entry)
     if (decree.author.hostname == legislator.hostname &&
         decree.author.port == legislator.port)
     {
-        SendBootstrap<BoostTransport>(
-            decree.replica,
+        SendBootstrap(
             location,
-            decree.remote_directory);
+            decree.remote_directory,
+            [&](BootstrapFile file){
+                NetworkFileSender<BoostTransport> sender;
+                sender.SendFile(decree.replica, file);
+            });
         signal->Set(true);
     }
 }
