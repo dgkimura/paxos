@@ -70,6 +70,7 @@ private:
 void SendBootstrap(
     std::string local_directory,
     std::string remote_directory,
+    std::vector<boost::filesystem::directory_entry> filepaths,
     std::function<void(BootstrapFile)> sender);
 
 

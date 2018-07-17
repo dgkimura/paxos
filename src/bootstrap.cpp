@@ -8,6 +8,7 @@ namespace paxos
 void SendBootstrap(
     std::string local_directory,
     std::string remote_directory,
+    std::vector<boost::filesystem::directory_entry> filepaths,
     std::function<void(BootstrapFile)> send_file)
 {
     {
@@ -29,8 +30,7 @@ void SendBootstrap(
         send_file(file);
     }
 
-    for (auto& entry : boost::make_iterator_range(
-         boost::filesystem::directory_iterator(local_directory), {}))
+    for (auto& entry : filepaths)
     {
         if (boost::algorithm::ends_with(entry.path().native(), ReplicasetFilename))
         {

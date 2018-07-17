@@ -79,9 +79,17 @@ HandleAddReplica::operator()(std::string entry)
     if (decree.author.hostname == legislator.hostname &&
         decree.author.port == legislator.port)
     {
+        std::vector<boost::filesystem::directory_entry> filepaths;
+        if(boost::filesystem::is_directory(location))
+        {
+            std::copy(boost::filesystem::directory_iterator(location),
+                      boost::filesystem::directory_iterator(),
+                      std::back_inserter(filepaths));
+        }
         SendBootstrap(
             location,
             decree.remote_directory,
+            filepaths,
             [&](BootstrapFile file){
                 NetworkFileSender<BoostTransport> sender;
                 sender.SendFile(decree.replica, file);
