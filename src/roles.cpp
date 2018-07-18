@@ -171,7 +171,16 @@ HandlePromise(
         context->promise_map[message.decree] = std::make_shared<ReplicaSet>();
     }
 
-    if (IsDecreeEqual(message.decree, context->highest_proposed_decree.Value()))
+    if (!message.decree.content.empty())
+    {
+        //
+        // Promise with non-empty decree contents suggests that decree was once
+        // in accept state. Therefore we should send accept on this decree
+        // again and let propogate through to accepted.
+        //
+        sender->ReplyAll(Response(message, MessageType::AcceptMessage));
+    }
+    else if (IsDecreeIdentical(message.decree, context->highest_proposed_decree.Value()))
     {
         bool duplicate = context->promise_map[message.decree]
                                 ->Contains(message.from);
@@ -226,17 +235,6 @@ HandlePromise(
             }
         }
     }
-    else if (!message.decree.content.empty())
-    {
-        //
-        // Promise with non-empty decree contents suggests that decree was once
-        // in accept state. Therefore we should send accept on this decree
-        // again and let it either propogate through to accepted or if a quorum
-        // rejects then run the ignore handler.
-        //
-        sender->ReplyAll(Response(message, MessageType::AcceptMessage));
-    }
-
 }
 
 

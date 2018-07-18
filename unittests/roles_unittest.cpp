@@ -249,15 +249,16 @@ TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneUniqueInProgressProposal)
 }
 
 
-TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromisedDecree)
+TEST_F(ProposerTest, testHandlePromiseWithLowerWithNonemptyContentForwardsAcceptMessage)
 {
     paxos::Message message(
-        paxos::Decree(paxos::Replica("the_author"), -1, "", paxos::DecreeType::UserDecree),
+        paxos::Decree(paxos::Replica("the_author"), -1, "some contents", paxos::DecreeType::UserDecree),
         paxos::Replica("from"),
         paxos::Replica("to"),
         paxos::MessageType::PromiseMessage);
 
     auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    replicaset->Add(paxos::Replica("host"));
     std::stringstream ss;
     auto ledger = std::make_shared<paxos::Ledger>(
         std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
@@ -272,7 +273,39 @@ TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromise
     );
     context->highest_proposed_decree = paxos::Decree(paxos::Replica("the_author"), 0, "", paxos::DecreeType::UserDecree);
 
-    std::shared_ptr<FakeSender> sender(new FakeSender());
+    std::shared_ptr<FakeSender> sender(new FakeSender(context->replicaset));
+
+    HandlePromise(message, context, sender);
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::AcceptMessage);
+}
+
+
+TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromisedDecree)
+{
+    paxos::Message message(
+        paxos::Decree(paxos::Replica("the_author"), -1, "", paxos::DecreeType::UserDecree),
+        paxos::Replica("from"),
+        paxos::Replica("to"),
+        paxos::MessageType::PromiseMessage);
+
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    replicaset->Add(paxos::Replica("host"));
+    std::stringstream ss;
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
+    );
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
+        replicaset,
+        ledger,
+        std::make_shared<paxos::VolatileDecree>(),
+        std::make_shared<paxos::NoPause>(),
+        signal
+    );
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("the_author"), 0, "", paxos::DecreeType::UserDecree);
+
+    std::shared_ptr<FakeSender> sender(new FakeSender(context->replicaset));
 
     HandlePromise(message, context, sender);
 
