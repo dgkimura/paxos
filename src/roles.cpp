@@ -590,18 +590,16 @@ HandleAccepted(
                             context->tracked_future_decrees.top()) &&
             !context->is_observer)
         {
-            Decree current_decree, previous_decree = context->ledger->Tail();
             while (context->tracked_future_decrees.size() > 0)
             {
-                current_decree = context->tracked_future_decrees.top();
-                if (IsRootDecreeOrdered(previous_decree, current_decree))
+                Decree current_decree = context->tracked_future_decrees.top();
+                if (IsRootDecreeOrdered(context->ledger->Tail(), current_decree))
                 {
                     //
                     // If tracked_future_decrees contains the next ordered
                     // decree then append to the ledger.
                     //
                     context->ledger->Append(current_decree);
-                    previous_decree = current_decree;
                     context->tracked_future_decrees.pop();
                 }
                 else
@@ -658,19 +656,17 @@ HandleUpdated(
         //
         context->ledger->Append(message.decree);
 
-        Decree current_decree, previous_decree = message.decree;
         while (context->tracked_future_decrees.size() > 0)
         {
-            current_decree = context->tracked_future_decrees.top();
+            Decree current_decree = context->tracked_future_decrees.top();
 
-            if (IsRootDecreeOrdered(previous_decree, current_decree))
+            if (IsRootDecreeOrdered(context->ledger->Tail(), current_decree))
             {
                 //
                 // If tracked_future_decrees contains the next ordered decree
                 // then append to the ledger.
                 //
                 context->ledger->Append(current_decree);
-                previous_decree = current_decree;
                 context->tracked_future_decrees.pop();
             }
             else
@@ -683,7 +679,7 @@ HandleUpdated(
             }
         }
 
-        if (IsDecreeEqual(message.decree, previous_decree))
+        if (IsDecreeIdentical(message.decree, context->ledger->Tail()))
         {
             //
             // If the tracked_future_decrees did not contain the next ordered
