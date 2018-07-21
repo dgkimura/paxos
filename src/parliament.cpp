@@ -27,7 +27,7 @@ Parliament::Parliament(
           )
       ),
       ledger(std::make_shared<Ledger>(
-          std::make_shared<RolloverQueue<Decree>>(location, "paxos.ledger"))),
+          std::make_shared<RolloverQueue<Decree>>(location, LEDGER_FILENAME))),
       learner(std::make_shared<LearnerContext>(legislators, ledger)),
       location(location),
       signal(std::make_shared<Signal>())
@@ -58,12 +58,12 @@ Parliament::Parliament(
         ledger,
         std::make_shared<PersistentDecree>(
             location,
-            "paxos.highest_proposed_decree"),
+            HIGHEST_PROPOSED_DECREE_FILENAME),
         std::make_shared<RandomPause>(std::chrono::milliseconds(100)),
         signal);
     auto acceptor = std::make_shared<AcceptorContext>(
-        std::make_shared<PersistentDecree>(location, "paxos.promised_decree"),
-        std::make_shared<PersistentDecree>(location, "paxos.accepted_decree"),
+        std::make_shared<PersistentDecree>(location, PROMISED_DECREE_FILENAME),
+        std::make_shared<PersistentDecree>(location, ACCEPTED_DECREE_FILENAME),
         std::chrono::milliseconds(1000));
     hookup_legislator(legislator, proposer, acceptor);
 

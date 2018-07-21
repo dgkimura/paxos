@@ -12,6 +12,15 @@ namespace paxos
 {
 
 
+const std::string LEDGER_FILENAME = "paxos.ledger";
+
+const std::string HIGHEST_PROPOSED_DECREE_FILENAME = "paxos.highest_proposed_decree";
+
+const std::string PROMISED_DECREE_FILENAME = "paxos.promised_decree";
+
+const std::string ACCEPTED_DECREE_FILENAME = "paxos.accepted_decree";
+
+
 template <typename T>
 class Storage
 {

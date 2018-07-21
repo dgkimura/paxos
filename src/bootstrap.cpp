@@ -66,9 +66,9 @@ void SendBootstrap(
         // decree on the new replica will incorrectly consider current decree as
         // stale accept from a prevous round.
         //
-        remotepath /= "paxos.accepted_decree";
+        remotepath /= ACCEPTED_DECREE_FILENAME;
         auto accepted = PersistentDecree(local_directory,
-                                         "paxos.accepted_decree").Get();
+                                         ACCEPTED_DECREE_FILENAME).Get();
         accepted.content = "";
         file.name = remotepath.native();
         file.content = Serialize(accepted);
