@@ -99,6 +99,8 @@ bool IsRootDecreeEqual(Decree lhs, Decree rhs);
 
 bool IsRootDecreeHigher(Decree lhs, Decree rhs);
 
+bool IsRootDecreeLower(Decree lhs, Decree rhs);
+
 bool IsRootDecreeHigherOrEqual(Decree lhs, Decree rhs);
 
 struct compare_decree

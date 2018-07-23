@@ -1688,6 +1688,20 @@ TEST_F(LearnerTest, testAcceptedHandleTracksFutureDecreesIfReceivedOutOfOrder)
 }
 
 
+TEST_F(LearnerTest, testAcceptedHandlerIgnoresOlderStaleDecrees)
+{
+    paxos::Message message(paxos::Decree(paxos::Replica("A"), 42, "", paxos::DecreeType::UserDecree), paxos::Replica("A"), paxos::Replica("A"), paxos::MessageType::AcceptedMessage);
+    message.decree.root_number = -1;
+    replicaset->Add(paxos::Replica("A"));
+
+    HandleAccepted(message, context, std::shared_ptr<FakeSender>(new FakeSender()));
+
+    // Decree number is higher than ledger tail, but the root decree is lower.
+    // So we it should not be added to tracked decrees queue.
+    ASSERT_EQ(context->tracked_future_decrees.size(), 0);
+}
+
+
 TEST_F(LearnerTest, testAcceptedHandleDoesNotTrackPastDecrees)
 {
     paxos::Decree past_decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree);

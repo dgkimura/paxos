@@ -563,7 +563,7 @@ HandleAccepted(
             response.decree = context->ledger->Tail();
             sender->Reply(response);
         }
-        else if (IsDecreeLower(context->ledger->Tail(), message.decree))
+        else if (IsRootDecreeLower(context->ledger->Tail(), message.decree))
         {
             //
             // Save the decree in memory if the decree is a future decree that
