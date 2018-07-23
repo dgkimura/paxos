@@ -553,18 +553,15 @@ HandleAccepted(
             //
             context->ledger->Append(message.decree);
 
-            if (accepted_quorum >= minimum_quorum )
-            {
-                //
-                // A quorum has been accepted so we should resume to allow
-                // ourselves to send proposals in the next election.
-                //
-                Message response;
-                response.to = message.to;
-                response.type = MessageType::ResumeMessage;
-                response.decree = context->ledger->Tail();
-                sender->Reply(response);
-            }
+            //
+            // A quorum has been accepted so we should resume to allow
+            // ourselves to send proposals in the next election.
+            //
+            Message response;
+            response.to = message.to;
+            response.type = MessageType::ResumeMessage;
+            response.decree = context->ledger->Tail();
+            sender->Reply(response);
         }
         else if (IsDecreeLower(context->ledger->Tail(), message.decree))
         {
