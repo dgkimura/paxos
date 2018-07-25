@@ -308,6 +308,18 @@ TEST(DecreeUnitTest, testCompareMapDecreeComparesHostnameWhenDecreesAreEqual)
 }
 
 
+TEST(DecreeUnitTest, testCompareMapDecreeComparesRootDecreeWhenDecreesAreEqual)
+{
+    paxos::Decree a_decree(paxos::Replica("author_a"), 1, "", paxos::DecreeType::UserDecree);
+    a_decree.root_number = 1;
+    paxos::Decree another_decree(paxos::Replica("author_a"), 1, "", paxos::DecreeType::UserDecree);
+    another_decree.root_number = 2;
+
+    ASSERT_TRUE(paxos::compare_map_decree()(a_decree, another_decree));
+    ASSERT_FALSE(paxos::compare_map_decree()(another_decree, a_decree));
+}
+
+
 TEST(DecreeUnitTest, testCompareMapDecreeComparesPortWhenDecreesHostnamesAreEqual)
 {
     paxos::Decree a_decree(paxos::Replica("author_a", 111), 1, "", paxos::DecreeType::UserDecree);

@@ -127,6 +127,10 @@ struct compare_map_decree
         {
                return CompareDecrees(lhs, rhs) < 0;
         }
+        if (CompareRootDecrees(lhs, rhs) != 0)
+        {
+               return CompareRootDecrees(lhs, rhs) < 0;
+        }
         if (lhs.author.hostname != rhs.author.hostname)
         {
             return lhs.author.hostname < rhs.author.hostname;
