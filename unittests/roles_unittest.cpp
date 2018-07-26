@@ -249,38 +249,6 @@ TEST_F(ProposerTest, testHandleRequestAllowsOnlyOneUniqueInProgressProposal)
 }
 
 
-TEST_F(ProposerTest, testHandlePromiseWithLowerWithNonemptyContentForwardsAcceptMessage)
-{
-    paxos::Message message(
-        paxos::Decree(paxos::Replica("the_author"), -1, "some contents", paxos::DecreeType::UserDecree),
-        paxos::Replica("from"),
-        paxos::Replica("to"),
-        paxos::MessageType::PromiseMessage);
-
-    auto replicaset = std::make_shared<paxos::ReplicaSet>();
-    replicaset->Add(paxos::Replica("host"));
-    std::stringstream ss;
-    auto ledger = std::make_shared<paxos::Ledger>(
-        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
-    );
-    auto signal = std::make_shared<paxos::Signal>();
-    auto context = std::make_shared<paxos::ProposerContext>(
-        replicaset,
-        ledger,
-        std::make_shared<paxos::VolatileDecree>(),
-        std::make_shared<paxos::NoPause>(),
-        signal
-    );
-    context->highest_proposed_decree = paxos::Decree(paxos::Replica("the_author"), 0, "", paxos::DecreeType::UserDecree);
-
-    std::shared_ptr<FakeSender> sender(new FakeSender(context->replicaset));
-
-    HandlePromise(message, context, sender);
-
-    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::AcceptMessage);
-}
-
-
 TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeDoesNotUpdatesighestPromisedDecree)
 {
     paxos::Message message(
@@ -345,38 +313,6 @@ TEST_F(ProposerTest, testHandlePromiseWithoutAnyRequestedValuesDoesNotSendAccept
 }
 
 
-TEST_F(ProposerTest, testHandlePromiseWithLowerDecreeAndNonemptyContentResendsAccept)
-{
-    paxos::Message message(paxos::Decree(paxos::Replica("host"), 1, "previous accepted decree content", paxos::DecreeType::UserDecree), paxos::Replica("host"), paxos::Replica("host"), paxos::MessageType::PromiseMessage);
-
-    auto replicaset = std::make_shared<paxos::ReplicaSet>();
-    std::stringstream ss;
-    auto ledger = std::make_shared<paxos::Ledger>(
-        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
-    );
-    auto signal = std::make_shared<paxos::Signal>();
-    auto context = std::make_shared<paxos::ProposerContext>(
-        replicaset,
-        ledger,
-        std::make_shared<paxos::VolatileDecree>(),
-        std::make_shared<paxos::NoPause>(),
-        signal
-    );
-    // highest proposed decree is higher than messaged decree
-    context->highest_proposed_decree = paxos::Decree(paxos::Replica("host"), 2, "", paxos::DecreeType::UserDecree);
-    context->replicaset = std::make_shared<paxos::ReplicaSet>();
-    context->replicaset->Add(paxos::Replica("host"));
-    context->requested_values.push_back(std::make_tuple("a_requested_value", paxos::DecreeType::UserDecree));
-
-    auto sender = std::make_shared<FakeSender>(context->replicaset);
-
-    HandlePromise(message, context, sender);
-
-    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::AcceptMessage);
-    ASSERT_EQ("previous accepted decree content", sender->sentMessages()[0].decree.content);
-}
-
-
 TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecree)
 {
     paxos::Message message(paxos::Decree(paxos::Replica("host"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("host"), paxos::Replica("host"), paxos::MessageType::PromiseMessage);
@@ -405,36 +341,6 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
 
     ASSERT_TRUE(IsDecreeEqual(message.decree, context->highest_proposed_decree.Value()));
     ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::AcceptMessage);
-}
-
-
-TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeFromUnknownReplicaDoesNotUpdateHighestPromisedDecree)
-{
-    paxos::Message message(paxos::Decree(paxos::Replica("host"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("unknown_host"), paxos::Replica("host"), paxos::MessageType::PromiseMessage);
-
-    auto replicaset = std::make_shared<paxos::ReplicaSet>();
-    std::stringstream ss;
-    auto ledger = std::make_shared<paxos::Ledger>(
-        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
-    );
-    auto signal = std::make_shared<paxos::Signal>();
-    auto context = std::make_shared<paxos::ProposerContext>(
-        replicaset,
-        ledger,
-        std::make_shared<paxos::VolatileDecree>(),
-        std::make_shared<paxos::NoPause>(),
-        signal
-    );
-    context->highest_proposed_decree = paxos::Decree(paxos::Replica("host"), 0, "", paxos::DecreeType::UserDecree);
-    context->replicaset = std::shared_ptr<paxos::ReplicaSet>(new paxos::ReplicaSet());
-    context->replicaset->Add(paxos::Replica("host"));
-
-    auto sender = std::make_shared<FakeSender>(context->replicaset);
-
-    HandlePromise(message, context, sender);
-
-    ASSERT_FALSE(IsDecreeEqual(message.decree, context->highest_proposed_decree.Value()));
-    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::AcceptMessage);
 }
 
 
@@ -629,6 +535,54 @@ TEST_F(ProposerTest, testHandleNackTieIncrementsDecreeNumberAndResendsPrepareMes
 
     // Sends 1 message to each replica
     ASSERT_EQ(2, sender->sentMessages().size());
+}
+
+
+TEST_F(ProposerTest, testHandleNackTieRespondsWithPrepareDoesNotChangeHighestProposedDecreeContents)
+{
+    auto replica = paxos::Replica("host");
+    auto decree = paxos::Decree(replica, 1, "first", paxos::DecreeType::UserDecree);
+    auto current_decree = paxos::Decree(replica, 2, "current", paxos::DecreeType::UserDecree);
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    auto highest_proposed_decree = std::make_shared<paxos::VolatileDecree>();
+    highest_proposed_decree->Put(paxos::Decree(replica, 2, "highest-proposed-decree-contents", paxos::DecreeType::UserDecree));
+    std::stringstream ss;
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
+    );
+    ledger->Append(decree);
+
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
+        replicaset,
+        ledger,
+        highest_proposed_decree,
+        std::make_shared<paxos::NoPause>(),
+        signal
+    );
+    context->interval = std::chrono::milliseconds(0);
+
+    // Add replica to known replicas.
+    context->replicaset->Add(replica);
+    context->replicaset->Add(paxos::Replica("host-2"));
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandleNackTie(
+        paxos::Message(
+            current_decree,
+            replica,
+            replica,
+            paxos::MessageType::NackTieMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::PrepareMessage);
+
+    // Send next prepare should preserve the highest proposed decree content.
+    ASSERT_EQ(context->highest_proposed_decree.Value().content, "highest-proposed-decree-contents");
 }
 
 
@@ -897,7 +851,7 @@ TEST_F(ProposerTest, testHandleNackTieDoesNotSendWhenLedgerIsIncrementedBetweenP
 }
 
 
-TEST_F(ProposerTest, testHandleNackInsertsHighestProposedDecreeIntoRequestsWhenItWasRejected)
+TEST_F(ProposerTest, testHandleNackInsertsReplicaIntoNackMap)
 {
     auto replica = paxos::Replica("host");
     auto decree = paxos::Decree(replica, 1, "next", paxos::DecreeType::UserDecree);
@@ -934,8 +888,7 @@ TEST_F(ProposerTest, testHandleNackInsertsHighestProposedDecreeIntoRequestsWhenI
         sender
     );
 
-    ASSERT_EQ(1, context->requested_values.size());
-    ASSERT_THAT(std::get<0>(context->requested_values[0]), ::testing::StrEq("next"));
+    ASSERT_TRUE(std::get<0>(context->nprepare_map[decree])->Contains(replica));
 }
 
 
@@ -1132,6 +1085,38 @@ TEST_F(ProposerTest, testHandleResumeInsertsHighestProposedDecreeIntoRequestsIfI
     // Request "other_contents" should be re-added because the decree that we was accepted "content" was not our highest_proposed_decree.
     ASSERT_EQ(1, context->requested_values.size());
     ASSERT_TRUE("other_contents" == std::get<0>(context->requested_values[0]));
+}
+
+
+TEST_F(ProposerTest, testHandleResumeWithHigherDecreeThanHighestProposedDecreeWillEraseHighestProposedDecreeContents)
+{
+    paxos::Decree decree(paxos::Replica("A"), 42, "content", paxos::DecreeType::UserDecree);
+    paxos::Message message(
+        decree,
+        paxos::Replica("from"),
+        paxos::Replica("to"),
+        paxos::MessageType::AcceptMessage);
+
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    std::stringstream ss;
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
+    );
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
+        replicaset,
+        ledger,
+        std::make_shared<paxos::VolatileDecree>(),
+        std::make_shared<paxos::NoPause>(),
+        signal
+    );
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("the_author"), 1, "other_contents", paxos::DecreeType::UserDecree);
+    auto sender = std::shared_ptr<FakeSender>(new FakeSender());
+
+    HandleResume(message, context, sender);
+
+    // Messaged decree 42 is higher than highest_proposed_decree 1 so we should erase the highest proposed contents.
+    ASSERT_EQ("", context->highest_proposed_decree.Value().content);
 }
 
 
