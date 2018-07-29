@@ -344,6 +344,38 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
 }
 
 
+TEST_F(ProposerTest, testHandlePromiseWithNonEmptyHighestProposedDecreeContentAndNonEmptyPromisedDecreeContent)
+{
+    paxos::Message message(paxos::Decree(paxos::Replica("host"), 2, "previous-accept-content", paxos::DecreeType::UserDecree), paxos::Replica("host"), paxos::Replica("host"), paxos::MessageType::PromiseMessage);
+
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    std::stringstream ss;
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
+    );
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
+        replicaset,
+        ledger,
+        std::make_shared<paxos::VolatileDecree>(),
+        std::make_shared<paxos::NoPause>(),
+        signal
+    );
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("host"), 2, "current-proposed-content", paxos::DecreeType::UserDecree);
+    context->replicaset = std::make_shared<paxos::ReplicaSet>();
+    context->replicaset->Add(paxos::Replica("host"));
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandlePromise(message, context, sender);
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::AcceptMessage);
+
+    // We expect that the promised message decree is forwarded as the accept decree message.
+    ASSERT_EQ("previous-accept-content", sender->sentMessages()[0].decree.content);
+}
+
+
 TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedValueThenUpdateDecreeContents)
 {
     paxos::Message message(paxos::Decree(paxos::Replica("host"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("host"), paxos::Replica("host"), paxos::MessageType::PromiseMessage);
