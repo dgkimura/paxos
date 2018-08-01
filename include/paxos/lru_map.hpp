@@ -51,6 +51,14 @@ public:
     void
     erase(const Key e)
     {
+        for (int i=0; i<queue.size(); i++)
+        {
+            if (Compare{}(queue.at(i), e))
+            {
+                queue.erase(queue.begin() + i);
+                break;
+            }
+        }
         map.erase(e);
     }
 

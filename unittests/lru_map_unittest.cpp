@@ -42,3 +42,15 @@ TEST(LruMapTest, testInsertSameElementDoesNotEvictElements)
     lruset[2] = 2;
     ASSERT_NE(lruset.end(), lruset.find(1));
 }
+
+
+TEST(LruMapTest, testEraseCreatesSpaceForNextElementWithoutEvicting)
+{
+    paxos::lru_map<int, int> lruset(2);
+
+    lruset[1] = 1;
+    lruset[2] = 2;
+    lruset.erase(2);
+    lruset[3] = 3;
+    ASSERT_NE(lruset.end(), lruset.find(1));
+}
