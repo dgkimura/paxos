@@ -16,6 +16,7 @@
 #include "paxos/decree.hpp"
 #include "paxos/fields.hpp"
 #include "paxos/ledger.hpp"
+#include "paxos/lru_map.hpp"
 #include "paxos/lru_set.hpp"
 #include "paxos/pause.hpp"
 #include "paxos/replicaset.hpp"
@@ -36,11 +37,11 @@ struct ProposerContext : public Context
     std::shared_ptr<Ledger>& ledger;
     Field<Decree> highest_proposed_decree;
     std::shared_ptr<ReplicaSet>& replicaset;
-    std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> promise_map;
+    paxos::lru_map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> promise_map;
     std::set<Decree, compare_decree> ntie_map;
-    std::map<Decree, std::tuple<std::shared_ptr<ReplicaSet>, bool>, compare_map_decree> nprepare_map;
+    paxos::lru_map<Decree, std::tuple<std::shared_ptr<ReplicaSet>, bool>, compare_map_decree> nprepare_map;
     paxos::lru_set<Decree, compare_root_decree> resume_map;
-    std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> naccept_map;
+    paxos::lru_map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> naccept_map;
     std::deque<std::tuple<std::string, DecreeType>> requested_values;
 
     std::mutex mutex;
@@ -61,10 +62,10 @@ struct ProposerContext : public Context
         : ledger(ledger_),
           highest_proposed_decree(highest_proposed_decree_),
           replicaset(replicaset_),
-          promise_map(),
+          promise_map(256),
           ntie_map(),
-          nprepare_map(),
-          naccept_map(),
+          nprepare_map(256),
+          naccept_map(256),
           resume_map(256),
           requested_values(),
           mutex(),
@@ -107,7 +108,7 @@ struct AcceptorContext : public Context
 struct LearnerContext : public Context
 {
     std::shared_ptr<ReplicaSet>& replicaset;
-    std::map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> accepted_map;
+    paxos::lru_map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> accepted_map;
     std::shared_ptr<Ledger>& ledger;
     std::priority_queue<Decree, std::vector<Decree>, ascending_decree> tracked_future_decrees;
     bool is_observer;
@@ -119,7 +120,7 @@ struct LearnerContext : public Context
         bool is_observer=false
     )
         : replicaset(replicaset_),
-          accepted_map(),
+          accepted_map(256),
           ledger(ledger_),
           tracked_future_decrees(),
           is_observer(is_observer),
