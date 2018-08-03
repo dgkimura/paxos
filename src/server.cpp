@@ -21,7 +21,7 @@ SynchronousServer::SynchronousServer(std::string address, short port)
 
 void
 SynchronousServer::RegisterAction(
-    std::function<void(std::string content)> action_)
+    std::function<void(const std::string& content)> action_)
 {
     action = action_;
 }
@@ -117,7 +117,7 @@ AsynchronousServer::Start()
 
 void
 AsynchronousServer::RegisterAction(
-    std::function<void(std::string content)> action_)
+    std::function<void(const std::string& content)> action_)
 {
     action = action_;
 }
@@ -140,7 +140,7 @@ AsynchronousServer::do_accept()
 
 AsynchronousServer::Session::Session(
     boost::asio::ip::tcp::socket socket,
-    std::function<void(std::string content)> action
+    std::function<void(const std::string& content)> action
 )
     : socket(std::move(socket)),
       action(action)

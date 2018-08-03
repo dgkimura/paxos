@@ -18,7 +18,7 @@ public:
 
     SynchronousServer(std::string address, short port);
 
-    void RegisterAction(std::function<void(std::string content)> action_);
+    void RegisterAction(std::function<void(const std::string& content)> action_);
 
     void Start();
 
@@ -32,7 +32,7 @@ private:
 
     boost::asio::ip::tcp::acceptor acceptor;
 
-    std::function<void(std::string content)> action;
+    std::function<void(const std::string& content)> action;
 };
 
 
@@ -44,7 +44,7 @@ public:
 
     ~AsynchronousServer();
 
-    void RegisterAction(std::function<void(std::string content)> action_);
+    void RegisterAction(std::function<void(const std::string& content)> action_);
 
     void Start();
 
@@ -65,7 +65,7 @@ private:
     public:
         Session(
             boost::asio::ip::tcp::socket socket,
-            std::function<void(std::string content)> action
+            std::function<void(const std::string& content)> action
         );
 
         void Start();
@@ -82,10 +82,10 @@ private:
 
         std::vector<uint8_t> readbuf;
 
-        std::function<void(std::string content)> action;
+        std::function<void(const std::string& content)> action;
     };
 
-    std::function<void(std::string content)> action;
+    std::function<void(const std::string& content)> action;
 };
 
 
