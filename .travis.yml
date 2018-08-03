@@ -13,7 +13,7 @@ before_script:
 
 install:
   - pip install --user --upgrade pip
-  - sudo apt-get install lcov
+  - sudo apt-get install lcov gcov
   - pip install --user cpp-coveralls
 
 script:
