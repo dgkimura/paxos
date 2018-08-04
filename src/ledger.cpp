@@ -90,7 +90,7 @@ Ledger::Head()
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
     Decree head;
-    for (Decree d : *decrees)
+    for (const Decree& d : *decrees)
     {
         head = d;
         break;
@@ -114,7 +114,7 @@ Ledger::Next(Decree previous)
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
     Decree next;
-    for (Decree current : *decrees)
+    for (const Decree& current : *decrees)
     {
         if (IsRootDecreeOrdered(previous, current))
         {
