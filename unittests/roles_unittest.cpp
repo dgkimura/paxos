@@ -1670,6 +1670,48 @@ TEST_F(LearnerTest, testAcceptedHandleDoesNotWriteInLedgerIfTheLastDecreeInTheLe
     );
 
     ASSERT_EQ(GetQueueSize(queue), 1);
+}
+
+
+TEST_F(LearnerTest, testAcceptedHandleSendsUpdateMessageIfAcceptedDecreeIsTooFarInTheFuture)
+{
+    replicaset->Add(paxos::Replica("A"));
+    auto sender = std::make_shared<FakeSender>();
+
+    HandleAccepted(
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 1, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"), paxos::Replica("A"),
+            paxos::MessageType::AcceptedMessage
+        ),
+        context,
+        sender
+    );
+
+    // 9 missing decrees isn't enough behind to send update message.
+    HandleAccepted(
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 10, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"), paxos::Replica("A"),
+            paxos::MessageType::AcceptedMessage
+        ),
+        context,
+        sender
+    );
+
+    ASSERT_MESSAGE_TYPE_NOT_SENT(sender, paxos::MessageType::UpdateMessage);
+
+    // 14 missing decrees is enough behind that we send out update message.
+    HandleAccepted(
+        paxos::Message(
+            paxos::Decree(paxos::Replica("A"), 15, "", paxos::DecreeType::UserDecree),
+            paxos::Replica("A"), paxos::Replica("A"),
+            paxos::MessageType::AcceptedMessage
+        ),
+        context,
+        sender
+    );
+
     ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::UpdateMessage);
 }
 

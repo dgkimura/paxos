@@ -636,11 +636,15 @@ HandleAccepted(
         }
         else if (context->tracked_future_decrees.size() > 0 &&
                  !IsRootDecreeOrdered(context->ledger->Tail(),
-                                  context->tracked_future_decrees.top()))
+                                  context->tracked_future_decrees.top()) &&
+                 context->ledger->Tail().root_number + 10 < message.decree.root_number)
         {
             //
             // If the decree is not in order with the last decree recorded in
-            // our ledger then there must be holes in our ledger.
+            // our ledger then there must be holes in our ledger. In order to
+            // prevent oversending update messages, we allow small holes of
+            // size 10 or less. These holes are often automatically corrected
+            // and do not require an update message to be sent
             //
             Message response = Response(message, MessageType::UpdateMessage);
             response.decree = context->ledger->Tail();
