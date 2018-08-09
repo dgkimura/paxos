@@ -163,8 +163,8 @@ TEST_F(LedgerUnitTest, testNextWithMultipleDecrees)
     ledger.Append(paxos::Decree(paxos::Replica("b_author"), 2, "b_content", paxos::DecreeType::UserDecree));
     ledger.Append(paxos::Decree(paxos::Replica("c_author"), 3, "c_content", paxos::DecreeType::UserDecree));
 
-    paxos::Decree expected = paxos::Decree(paxos::Replica("b_author"), 2, "b_content", paxos::DecreeType::UserDecree),
-           actual = ledger.Next(paxos::Decree(paxos::Replica("a_author"), 1, "a_content", paxos::DecreeType::UserDecree));
+    paxos::Decree expected = paxos::Decree(paxos::Replica("b_author"), 2, "b_content", paxos::DecreeType::UserDecree);
+    paxos::Decree actual = ledger.Next(paxos::Decree(paxos::Replica("a_author"), 1, "a_content", paxos::DecreeType::UserDecree));
 
     ASSERT_EQ(expected.author.hostname, actual.author.hostname);
     ASSERT_EQ(expected.author.port, actual.author.port);

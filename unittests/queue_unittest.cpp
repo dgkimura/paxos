@@ -184,6 +184,34 @@ TEST(QueueTest, testThatRolloverQueueSizeAfterEnqueue)
 }
 
 
+TEST(QueueTest, testThatEnqeueAfterRolloverKeepsCorrctElements)
+{
+    std::stringstream file;
+
+    std::string element("narf");
+
+    auto queue = std::make_shared<paxos::RolloverQueue<std::string>>(file, paxos::Serialize(element).length() * 2);
+
+    queue->Enqueue(element);
+    queue->Enqueue("barf");
+    queue->Enqueue("zort");
+    queue->Enqueue("zoit");
+
+    // Let $=first
+    //   $           $                       $           $
+    // [ narf ] -> [ narf, barf ] -> [ zort, barf ] -> [ zort, zoit ]
+
+    int count = 0;
+    std::vector<std::string> expected{"zort", "zoit"};
+    for (auto e : *queue)
+    {
+        ASSERT_EQ(expected[count], e);
+        count += 1;
+    }
+    ASSERT_EQ(2, count);
+}
+
+
 TEST(QueueTest, testThatRolloverQueueGetLastLement)
 {
     std::stringstream file;
