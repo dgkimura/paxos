@@ -330,16 +330,12 @@ private:
         }
         catch (const std::exception& e)
         {
-            return -1;
+            return UNINITIALIZED;
         }
     }
 
     std::streampos get_last_position()
     {
-        if (file.is_open())
-        {
-            stream.rdbuf(file.rdbuf());
-        }
         stream.seekg(1 * INDEX_SIZE, std::ios::beg);
         std::string buffer(INDEX_SIZE, '\0');
         stream.read(&buffer[0], INDEX_SIZE);
@@ -350,41 +346,29 @@ private:
         }
         catch (const std::exception& e)
         {
-            return -1;
+            return UNINITIALIZED;
         }
     }
 
     std::streampos get_eof_position()
     {
-        if (file.is_open())
-        {
-            stream.rdbuf(file.rdbuf());
-        }
-        stream.seekg(2 * INDEX_SIZE, std::ios::beg);
-        std::string buffer(INDEX_SIZE, '\0');
-        stream.read(&buffer[0], INDEX_SIZE);
-        boost::trim(buffer);
-        try
-        {
-            return static_cast<std::streampos>(std::stoi(buffer));
-        }
-        catch (const std::exception& e)
-        {
-            return -1;
-        }
+        stream.seekg(0, std::ios::end);
+        return stream.tellg();
     }
 
     std::fstream file;
 
     std::iostream& stream;
 
+    std::string filename;
+
     std::streampos rollover_size;
 
     constexpr static const int64_t INDEX_SIZE = 10;
 
-    constexpr static const int64_t UNINITIALIZED = -1;
+    constexpr static const int64_t UNINITIALIZED = 0;
 
-    constexpr static const int64_t HEADER_SIZE = INDEX_SIZE * 3;
+    constexpr static const int64_t HEADER_SIZE = INDEX_SIZE * 2;
 
     //
     // If queue rollover size is too large then it will take an unreasonable
@@ -398,16 +382,12 @@ private:
 
         Iterator(
             std::iostream& stream,
-            std::streampos first,
             std::streampos position,
-            std::streampos last,
-            std::streampos eof
+            std::streampos rollover
         )
             : stream(stream),
-              first(first),
               position(position),
-              last(last),
-              eof(eof)
+              rollover(rollover)
         {
         }
 
@@ -420,19 +400,14 @@ private:
 
         Iterator& operator++()
         {
-            if (position == last)
-            {
-                position = UNINITIALIZED;
-            }
-            else
+            if (position <= rollover)
             {
                 stream.seekg(position, std::ios::beg);
                 position += Serialize<T>(Deserialize<T>(stream)).length();
-
-                if (position == eof)
-                {
-                    position = HEADER_SIZE;
-                }
+            }
+            else
+            {
+                position = HEADER_SIZE;
             }
 
             return *this;
@@ -447,13 +422,9 @@ private:
 
         std::iostream& stream;
 
-        std::streampos first;
-
         std::streampos position;
 
-        std::streampos last;
-
-        std::streampos eof;
+        std::streampos rollover;
     };
 
 public:
@@ -464,6 +435,24 @@ public:
     }
 
     RolloverQueue(
+        const RolloverQueue<T>&& rhs
+    ) : file(rhs.filename,
+             std::ios::out | std::ios::in | std::ios::binary),
+        stream(rhs.stream),
+        filename(rhs.filename),
+        rollover_size(rhs.rollover_size)
+    {
+    }
+
+    RolloverQueue<T>& operator=(RolloverQueue<T> rhs)
+    {
+        rollover_size = rhs.rollover_size;
+        file.swap(rhs.file);
+        filename = rhs.filename;
+        return *this;
+    }
+
+    RolloverQueue(
         std::string dirname,
         std::string filename,
         std::streampos rollover_size=DEFAULT_ROLLOVER_SIZE
@@ -471,15 +460,16 @@ public:
               boost::filesystem::path(filename)).string(),
                std::ios::out | std::ios::in | std::ios::binary),
         stream(file),
-        rollover_size(rollover_size + HEADER_SIZE)
+        filename((boost::filesystem::path(dirname) /
+                  boost::filesystem::path(filename)).string()),
+        rollover_size(rollover_size)
     {
         auto path = (boost::filesystem::path(dirname) /
                      boost::filesystem::path(filename)).string();
         if (!boost::filesystem::exists(path))
         {
             file.open(path, std::ios::out | std::ios::app | std::ios::binary);
-            file << std::setw(INDEX_SIZE) << UNINITIALIZED;
-            file << std::setw(INDEX_SIZE) << UNINITIALIZED;
+            file << std::setw(INDEX_SIZE) << HEADER_SIZE;
             file << std::setw(INDEX_SIZE) << UNINITIALIZED;
             file.flush();
             file.close();
@@ -491,13 +481,12 @@ public:
         std::iostream& stream,
         std::streampos rollover_size=DEFAULT_ROLLOVER_SIZE
     ) : stream(stream),
-        rollover_size(rollover_size + HEADER_SIZE)
+        rollover_size(rollover_size)
     {
         stream.seekg(0, std::ios::end);
         if (stream.tellg() < HEADER_SIZE)
         {
-            stream << std::setw(INDEX_SIZE) << UNINITIALIZED;
-            stream << std::setw(INDEX_SIZE) << UNINITIALIZED;
+            stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
             stream << std::setw(INDEX_SIZE) << UNINITIALIZED;
         }
     }
@@ -505,181 +494,71 @@ public:
     void Enqueue(T e)
     {
         std::string element_as_string = Serialize<T>(e);
-        auto element_length = static_cast<std::streampos>(element_as_string.length());
+        auto size = element_as_string.length();
 
-        std::streampos first_pointer = get_first_position();
-        std::streampos last_pointer = get_last_position();
-        std::streampos eof_pointer = get_eof_position();
-
-        //
-        // case 0: if first insert ever then insert into beginning of file
-        //
-        if (first_pointer == UNINITIALIZED && last_pointer == UNINITIALIZED &&
-            eof_pointer == UNINITIALIZED)
+        std::streampos position = get_last_position();
+        if (position == UNINITIALIZED)
         {
-            stream.seekp(HEADER_SIZE, std::ios::beg);
-            stream << element_as_string;
+            position = HEADER_SIZE;
+        }
+        else
+        {
+            stream.seekg(position, std::ios::beg);
+            position += Serialize<T>(Deserialize<T>(stream)).length();
+        }
 
+        if (rollover_size < position + static_cast<std::streampos>(size))
+        {
+            // rollover the queue
+            file.close();
+            boost::filesystem::rename(filename, filename + ".0");
+            file.open(filename, std::ios::out | std::ios::app | std::ios::binary);
+
+            position = HEADER_SIZE;
             stream.seekp(0 * INDEX_SIZE, std::ios::beg);
-            stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
+            stream << std::setw(INDEX_SIZE) << position;
+            stream.flush();
 
             stream.seekp(1 * INDEX_SIZE, std::ios::beg);
-            stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
-
-            stream.seekp(2 * INDEX_SIZE, std::ios::beg);
-            stream << std::setw(INDEX_SIZE) << (HEADER_SIZE + element_length);
+            stream << std::setw(INDEX_SIZE) << position;
             stream.flush();
+
+            // flush element
+            stream.seekp(position, std::ios::beg);
+            stream << element_as_string;
+            stream.flush();
+
+            // hack to re-initialize std::iostream
+            *this = RolloverQueue<T>(filename);
             return;
         }
 
-        stream.seekg(last_pointer, std::ios::beg);
-        auto last_element = Serialize<T>(Deserialize<T>(stream));
-        auto last_element_length = static_cast<std::streampos>(last_element.length());
+        // flush element
+        stream.seekp(position, std::ios::beg);
+        stream << element_as_string;
+        stream.flush();
 
-        //
-        // case 1: if last < first end then reclaim space from first for next
-        //         insert
-        //
-        if (last_pointer < first_pointer)
-        {
-            std::streampos insert_pointer = last_pointer + last_element_length;
-
-            stream.seekg(first_pointer, std::ios::beg);
-            while ((first_pointer - insert_pointer) < element_length)
-            {
-                stream.seekg(first_pointer, std::ios::beg);
-                first_pointer += static_cast<std::streampos>(
-                    Serialize<T>(Deserialize<T>(stream)).length());
-            }
-
-            if (first_pointer == eof_pointer)
-            {
-                // special case where we wrap around
-                first_pointer = HEADER_SIZE;
-            }
-
-            // update first pointer
-            stream.seekp(0 * INDEX_SIZE, std::ios::beg);
-            stream << std::setw(INDEX_SIZE) << first_pointer;
-
-            // update last pointer
-            stream.seekp(1 * INDEX_SIZE, std::ios::beg);
-            stream << std::setw(INDEX_SIZE) << insert_pointer;
-
-            // insert the object
-            stream.seekp(insert_pointer, std::ios::beg);
-            stream << element_as_string;
-        }
-
-
-        //
-        // case 2: if insert causes rollover then reclaim space at begining of
-        //         file for next insert
-        //
-        else if (last_pointer + last_element_length + element_length >
-                 rollover_size)
-        {
-            std::streampos reclaim_pointer = HEADER_SIZE;
-            stream.seekg(reclaim_pointer, std::ios::beg);
-
-            // calculate how much space at start to free
-            auto reclaim_object = Serialize<T>(Deserialize<T>(stream));
-            int reclaim_size = reclaim_object.length();
-            while (reclaim_size < element_length)
-            {
-                reclaim_pointer += reclaim_object.length();
-
-                stream.seekg(reclaim_pointer, std::ios::beg);
-                reclaim_object = Serialize<T>(Deserialize<T>(stream));
-            }
-
-            // insert element at start since we are rolled over
-            stream.seekp(HEADER_SIZE, std::ios::beg);
-            stream << element_as_string;
-
-            // update start pointer.
-            if (first_pointer == last_pointer)
-            {
-                // special case, single element
-                stream.seekp(0 * INDEX_SIZE, std::ios::beg);
-                stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
-
-                // update eof pointer
-                stream.seekp(2 * INDEX_SIZE, std::ios::beg);
-                stream << std::setw(INDEX_SIZE) << first_pointer +
-                    element_length;
-            }
-            else
-            {
-                // typical case
-                stream.seekp(0 * INDEX_SIZE, std::ios::beg);
-                stream << std::setw(INDEX_SIZE) << reclaim_pointer +
-                    static_cast<std::streampos>(reclaim_object.length());
-
-                // eof pointer stays the same.
-            }
-
-            // update last pointer.
-            stream.seekp(1 * INDEX_SIZE, std::ios::beg);
-            stream << std::setw(INDEX_SIZE) << HEADER_SIZE;
-            stream.flush();
-        }
-
-        //
-        // case 3: else insert into end of file and increment pointers
-        //
-        else
-        {
-            stream.seekg(last_pointer, std::ios::beg);
-            auto insert_pointer = last_pointer + last_element_length;
-
-            stream.seekp(insert_pointer, std::ios::beg);
-            stream << element_as_string;
-
-            // update last pointer
-            stream.seekp(1 * INDEX_SIZE, std::ios::beg);
-            stream << std::setw(INDEX_SIZE) << insert_pointer;
-
-            // update eof pointer
-            stream.seekp(2 * INDEX_SIZE, std::ios::beg);
-            stream << std::setw(INDEX_SIZE) << insert_pointer + element_length;
-            stream.flush();
-        }
+        // update end position
+        stream.seekp(1 * INDEX_SIZE, std::ios::beg);
+        stream << std::setw(INDEX_SIZE) << position;
+        stream.flush();
     }
 
     void Dequeue()
     {
-        auto first = get_first_position();
-        auto last = get_last_position();
-        auto eof = get_eof_position();
+        auto position = get_first_position();
+        stream.seekg(position, std::ios::beg);
 
-        if (first == last)
-        {
-            stream.seekp(0, std::ios::beg);
-            stream << std::setw(INDEX_SIZE) << UNINITIALIZED;
-            stream << std::setw(INDEX_SIZE) << UNINITIALIZED;
-            stream << std::setw(INDEX_SIZE) << UNINITIALIZED;
-            return;
-        }
-        else
-        {
-            stream.seekg(first, std::ios::beg);
+        auto next = position + static_cast<std::streampos>(
+            Serialize<T>(Deserialize<T>(stream)).length());
 
-            auto next = first + static_cast<std::streampos>(
-                Serialize<T>(Deserialize<T>(stream)).length());
-
-            stream.seekp(0 * INDEX_SIZE, std::ios::beg);
-            stream << std::setw(INDEX_SIZE) << next;
-        }
+        stream.seekp(0 * INDEX_SIZE, std::ios::beg);
+        stream << std::setw(INDEX_SIZE) << next;
     }
 
     T Last()
     {
         auto position = get_last_position();
-        if (position == UNINITIALIZED)
-        {
-            return T{};
-        }
 
         stream.seekg(position, std::ios::beg);
         return Deserialize<T>(stream);
@@ -687,11 +566,7 @@ public:
 
     Iterator begin()
     {
-        auto first = get_first_position();
-        auto last = get_last_position();
-        auto eof = get_eof_position();
-
-        return Iterator(stream, first, first, last, eof);
+        return Iterator(stream, get_first_position(), rollover_size);
     }
 
     Iterator end()
@@ -699,8 +574,16 @@ public:
         auto first = get_first_position();
         auto last = get_last_position();
         auto eof = get_eof_position();
-
-        return Iterator(stream, first, UNINITIALIZED, last, eof);
+        if (last == UNINITIALIZED || last == eof)
+        {
+            last = first;
+        }
+        else
+        {
+            stream.seekg(last, std::ios::beg);
+            last += Serialize<T>(Deserialize<T>(stream)).length();
+        }
+        return Iterator(stream, last, rollover_size);
     }
 };
 

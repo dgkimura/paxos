@@ -391,7 +391,8 @@ HandleResume(
         context->highest_proposed_decree = highest_proposed_decree;
     }
 
-    if (IsRootDecreeEqual(context->ledger->Tail(), message.decree))
+    if (IsRootDecreeEqual(context->ledger->Tail(), message.decree) ||
+        IsRootDecreeEqual(context->ledger->Tail(), paxos::Decree()))
     {
         //
         // Setup next round for pending proposals.
@@ -585,7 +586,7 @@ HandleAccepted(
             Message response;
             response.to = message.to;
             response.type = MessageType::ResumeMessage;
-            response.decree = context->ledger->Tail();
+            response.decree = message.decree;
             sender->Reply(response);
         }
         else if (IsRootDecreeLower(context->ledger->Tail(), message.decree))
