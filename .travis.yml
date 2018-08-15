@@ -15,6 +15,8 @@ matrix:
             - g++-5
       env:
          - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+      after_success:
+        - coveralls --include src --include include --gcov-options '\-lp'
     - os: linux
       addons:
         apt:
@@ -26,6 +28,8 @@ matrix:
             - g++-6
       env:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+      after_success:
+        - coveralls --include src --include include --gcov-options '\-lp'
     - os: linux
       addons:
         apt:
@@ -37,6 +41,41 @@ matrix:
             - g++-7
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+      after_success:
+        - coveralls --include src --include include --gcov-options '\-lp'
+    - os: linux
+      addons:
+        apt:
+          config:
+             retries: true
+          sources:
+            - llvm-toolchain-trusty-3.9
+          packages:
+            - clang-3.9
+      env:
+        - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
+    - os: linux
+      addons:
+        apt:
+          config:
+             retries: true
+          sources:
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+      env:
+        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+    - os: linux
+      addons:
+        apt:
+          config:
+             retries: true
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
+      env:
+        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
 
 before_install:
     - eval "${MATRIX_EVAL}"
@@ -52,6 +91,3 @@ before_script:
 script:
   - make -j2
   - ./unittests/all_unittests
-
-after_success:
-  - coveralls --include src --include include --gcov-options '\-lp'
