@@ -333,6 +333,14 @@ HandleNack(
     {
         std::get<0>(context->nprepare_map[message.decree])->Add(message.from);;
     }
+    sender->Reply(
+        Message(
+            Decree(),
+            message.to,
+            message.to,
+            MessageType::RequestMessage
+        )
+    );
 }
 
 
