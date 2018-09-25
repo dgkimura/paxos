@@ -94,8 +94,8 @@ HandleAddReplica::operator()(std::string entry)
                 NetworkFileSender<BoostTransport> sender;
                 sender.SendFile(decree.replica, file);
             });
-        signal->Set(true);
     }
+    signal->Set(true);
 }
 
 
