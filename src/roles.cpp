@@ -108,7 +108,10 @@ HandleRequest(
     if (!message.decree.content.empty())
     {
         context->requested_values.push_back(
-            std::make_tuple(message.decree.content, message.decree.type));
+            std::make_tuple(
+                message.decree.content,
+                message.decree.type,
+                message.decree.author));
     }
 
     Message response = Response(message, MessageType::PrepareMessage);
@@ -240,6 +243,8 @@ HandlePromise(
                 highest_proposed_decree.content = std::get<0>(
                     context->requested_values[0]);
                 highest_proposed_decree.type = std::get<1>(
+                    context->requested_values[0]);
+                highest_proposed_decree.author = std::get<2>(
                     context->requested_values[0]);
 
                 context->highest_proposed_decree = highest_proposed_decree;
@@ -382,7 +387,8 @@ HandleResume(
         //
         context->requested_values.push_front(
             std::make_tuple(highest_proposed_decree.content,
-                            highest_proposed_decree.type));
+                            highest_proposed_decree.type,
+                            highest_proposed_decree.author));
         context->resume_map.insert(message.decree);
         std::get<1>(context->nprepare_map[message.decree]) = true;
     }

@@ -333,7 +333,7 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
     context->highest_proposed_decree = paxos::Decree(paxos::Replica("host"), 0, "", paxos::DecreeType::UserDecree);
     context->replicaset = std::make_shared<paxos::ReplicaSet>();
     context->replicaset->Add(paxos::Replica("host"));
-    context->requested_values.push_back(std::make_tuple("a_requested_value", paxos::DecreeType::UserDecree));
+    context->requested_values.push_back(std::make_tuple("a_requested_value", paxos::DecreeType::UserDecree, paxos::Replica("author")));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
@@ -400,7 +400,7 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherEmptyDecreeAndExistingRequestedV
     context->replicaset->Add(paxos::Replica("host"));
 
     // Requested values contains entry with "new content to be used".
-    context->requested_values.push_back(std::make_tuple("new content to be used", paxos::DecreeType::UserDecree));
+    context->requested_values.push_back(std::make_tuple("new content to be used", paxos::DecreeType::UserDecree, paxos::Replica("author")));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
@@ -468,7 +468,7 @@ TEST_F(ProposerTest, testHandlePromiseWillSendAcceptAgainIfDuplicatePromiseIsSen
     context->promise_map[message.decree]->Add(paxos::Replica("host1"));
     context->promise_map[message.decree]->Add(paxos::Replica("host2"));
     context->promise_map[message.decree]->Add(paxos::Replica("host3"));
-    context->requested_values.push_back(std::make_tuple("a_requested_value",  paxos::DecreeType::UserDecree));
+    context->requested_values.push_back(std::make_tuple("a_requested_value", paxos::DecreeType::UserDecree, paxos::Replica("author")));
 
     auto sender = std::make_shared<FakeSender>(context->replicaset);
 
@@ -1114,7 +1114,7 @@ TEST_F(ProposerTest, testHandleResumeSendsNextRequestIfThereArePendingProposals)
         std::make_shared<paxos::NoPause>(),
         signal
     );
-    context->requested_values.push_back(std::make_tuple("another pending value", paxos::DecreeType::UserDecree));
+    context->requested_values.push_back(std::make_tuple("another pending value", paxos::DecreeType::UserDecree, paxos::Replica("author")));
     auto sender = std::shared_ptr<FakeSender>(new FakeSender());
 
     HandleResume(message, context, sender);

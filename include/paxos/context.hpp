@@ -42,7 +42,7 @@ struct ProposerContext : public Context
     paxos::lru_map<Decree, std::tuple<std::shared_ptr<ReplicaSet>, bool>, compare_map_decree> nprepare_map;
     paxos::lru_set<Decree, compare_root_decree> resume_map;
     paxos::lru_map<Decree, std::shared_ptr<ReplicaSet>, compare_map_decree> naccept_map;
-    std::deque<std::tuple<std::string, DecreeType>> requested_values;
+    std::deque<std::tuple<std::string, DecreeType, paxos::Replica>> requested_values;
 
     std::mutex mutex;
     Decree highest_nacked_decree;

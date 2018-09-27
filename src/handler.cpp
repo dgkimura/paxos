@@ -126,7 +126,11 @@ HandleRemoveReplica::operator()(std::string entry)
          boost::filesystem::path(ReplicasetFilename)).string());
     save_replicaset(legislators, replicasetfile);
 
-    signal->Set(true);
+    if (decree.author.hostname == legislator.hostname &&
+        decree.author.port == legislator.port)
+    {
+        signal->Set(true);
+    }
 }
 
 
