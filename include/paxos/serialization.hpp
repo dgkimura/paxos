@@ -75,8 +75,15 @@ template <typename T>
 std::string Serialize(T object)
 {
     std::stringstream stream;
-    boost::archive::text_oarchive oa(stream);
-    oa << object;
+    try
+    {
+        boost::archive::text_oarchive oa(stream);
+        oa << object;
+        return stream.str();
+    }
+    catch (boost::archive::archive_exception& e)
+    {
+    }
     return stream.str();
 }
 

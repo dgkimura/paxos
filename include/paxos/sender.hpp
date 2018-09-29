@@ -95,8 +95,11 @@ public:
         // 1. serialize message
         std::string message_str = Serialize(message);
 
-        // 2. write message
-        transport->Write(message_str);
+        if (IsValidMessageString(message_str))
+        {
+            // 2. write message
+            transport->Write(message_str);
+        }
     }
 
     void ReplyAll(Message message)
@@ -116,6 +119,11 @@ private:
     std::unordered_map<std::string, std::unique_ptr<Transport>> cached_transports;
 
     std::mutex mutex;
+
+    bool IsValidMessageString(const std::string& message_str)
+    {
+        return message_str.size() > 0;
+    }
 };
 
 
