@@ -343,6 +343,37 @@ TEST_F(ProposerTest, testHandlePromiseWithHigherDecreeUpdatesHighestPromisedDecr
     ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::AcceptMessage);
 }
 
+TEST_F(ProposerTest, testHandlePromiseWithExistingHighestProposedDecreeContent)
+{
+    paxos::Message message(paxos::Decree(paxos::Replica("host"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("host"), paxos::Replica("host"), paxos::MessageType::PromiseMessage);
+
+    auto replicaset = std::make_shared<paxos::ReplicaSet>();
+    std::stringstream ss;
+    auto ledger = std::make_shared<paxos::Ledger>(
+        std::make_shared<paxos::RolloverQueue<paxos::Decree>>(ss)
+    );
+    auto signal = std::make_shared<paxos::Signal>();
+    auto context = std::make_shared<paxos::ProposerContext>(
+        replicaset,
+        ledger,
+        std::make_shared<paxos::VolatileDecree>(),
+        std::make_shared<paxos::NoPause>(),
+        signal
+    );
+    context->highest_proposed_decree = paxos::Decree(paxos::Replica("host"), 0, "some_previous_value", paxos::DecreeType::UserDecree);
+
+    auto sender = std::make_shared<FakeSender>(context->replicaset);
+
+    HandlePromise(message, context, sender);
+
+    // Because the highest_proposed_decree has some_previous_value, even though
+    // a higher decree is sent, we should not update highest_proposed_decree.
+    // This is because we need the previous value to be propogated through and
+    // accepted, else we risk missing a decree.
+    ASSERT_FALSE(IsDecreeEqual(message.decree, context->highest_proposed_decree.Value()));
+}
+
+
 
 TEST_F(ProposerTest, testHandlePromiseWithNonEmptyHighestProposedDecreeContentAndNonEmptyPromisedDecreeContent)
 {
