@@ -1293,6 +1293,7 @@ TEST_F(AcceptorTest, testHandlePrepareWithLowerAndDifferentAuthorDecreeDoesNotUp
     HandlePrepare(message, context, sender);
 
     ASSERT_TRUE(IsDecreeLower(message.decree, context->promised_decree.Value()));
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::NackMessage);
 }
 
 

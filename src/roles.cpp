@@ -478,6 +478,16 @@ HandlePrepare(
         //
         sender->Reply(Response(message, MessageType::NackTieMessage));
     }
+    else
+    {
+        //
+        // Allow proposer to retry the request after reevaluating the decree
+        // number. It may be the case that a decree was written into the ledger
+        // right before this decree was proposed, and therefore the proposer
+        // should retry after bumping the decree number.
+        //
+        sender->Reply(Response(message, MessageType::NackMessage));
+    }
 }
 
 
