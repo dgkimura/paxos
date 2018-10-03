@@ -1359,6 +1359,24 @@ TEST_F(AcceptorTest, testHandlePrepareWithPendingNonEmptyAcceptDecree)
 }
 
 
+TEST_F(AcceptorTest, testHandlePrepareWithPendingNonEmptyAcceptDecreeButReceivesLowerDecree)
+{
+    paxos::Message message(paxos::Decree(paxos::Replica("the_author"), 1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::PrepareMessage);
+
+    std::shared_ptr<paxos::AcceptorContext> context = createAcceptorContext();
+
+    // We have a promised decree (2) and pending accepted decree (2) with non-empty content with higher value than messaged decree (1)
+    context->promised_decree = paxos::Decree(paxos::Replica("the_other_author"), 2, "", paxos::DecreeType::UserDecree);
+    context->accepted_decree = paxos::Decree(paxos::Replica("the_other_author"), 2, "pending non-empty contents", paxos::DecreeType::UserDecree);
+
+    auto sender = std::make_shared<FakeSender>();
+
+    HandlePrepare(message, context, sender);
+
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::NackMessage);
+}
+
+
 TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
 {
     paxos::Message message(paxos::Decree(paxos::Replica("the_author"), -1, "", paxos::DecreeType::UserDecree), paxos::Replica("from"), paxos::Replica("to"), paxos::MessageType::AcceptMessage);

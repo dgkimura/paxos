@@ -434,7 +434,8 @@ HandlePrepare(
 
     std::lock_guard<std::mutex> lock(context->mutex);
 
-    if (!context->accepted_decree.Value().content.empty())
+    if (!context->accepted_decree.Value().content.empty() &&
+        IsDecreeHigherOrEqual(message.decree, context->promised_decree.Value()))
     {
         //
         // If there is a pending accepted decree then we must reply with a
