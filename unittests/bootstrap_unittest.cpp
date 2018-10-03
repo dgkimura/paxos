@@ -49,6 +49,26 @@ TEST(BootstrapTest, testSendBootstrapFirstFileSentIsEmptyReplicaSetFile)
 }
 
 
+TEST(BootstrapTest, testSendBootstrApantepenultimateFileSentIsHighestProposedDecreeFile)
+{
+    std::vector<paxos::BootstrapFile> sent_files;
+    auto send_file = [&](paxos::BootstrapFile file)
+    {
+        sent_files.push_back(file);
+    };
+    paxos::SendBootstrap(
+        "local_directorty",
+        "remote_directory",
+        std::vector<boost::filesystem::directory_entry>{},
+        send_file);
+
+    // third to last
+    size_t index = sent_files.size() - 3;
+    ASSERT_EQ("remote_directory/paxos.highest_proposed_decree", sent_files[index].name);
+    ASSERT_EQ("", paxos::Deserialize<paxos::Decree>(sent_files[index].content).content);
+}
+
+
 TEST(BootstrapTest, testSendBootstrapPentultimateFileSentIsAcceptedDecreeFile)
 {
     std::vector<paxos::BootstrapFile> sent_files;
@@ -62,8 +82,10 @@ TEST(BootstrapTest, testSendBootstrapPentultimateFileSentIsAcceptedDecreeFile)
         std::vector<boost::filesystem::directory_entry>{},
         send_file);
 
+    // second to last
     size_t index = sent_files.size() - 2;
     ASSERT_EQ("remote_directory/paxos.accepted_decree", sent_files[index].name);
+    ASSERT_EQ("", paxos::Deserialize<paxos::Decree>(sent_files[index].content).content);
 }
 
 

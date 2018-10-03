@@ -41,7 +41,6 @@ void SendBootstrap(
             continue;
         }
 
-
         // 1. serialize file
         std::ifstream filestream(entry.path().native());
         std::stringstream buffer;
@@ -56,6 +55,22 @@ void SendBootstrap(
         send_file(file);
     }
 
+    {
+        BootstrapFile file;
+        boost::filesystem::path remotepath(remote_directory);
+
+        //
+        // Let the new replica decide what is the highest proposed decree. This
+        // prevents trying to flush a decree from another replica.
+        //
+        remotepath /= HIGHEST_PROPOSED_DECREE_FILENAME;
+        auto proposed = PersistentDecree(local_directory,
+                                         HIGHEST_PROPOSED_DECREE_FILENAME).Get();
+        proposed.content = "";
+        file.name = remotepath.native();
+        file.content = Serialize(proposed);
+        send_file(file);
+    }
     {
         BootstrapFile file;
         boost::filesystem::path remotepath(remote_directory);
