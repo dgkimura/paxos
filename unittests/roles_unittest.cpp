@@ -1390,6 +1390,7 @@ TEST_F(AcceptorTest, testHandleAcceptWithLowerDecreeDoesNotUpdateAcceptedDecree)
     HandleAccept(message, context, sender);
 
     ASSERT_TRUE(IsDecreeLower(message.decree, context->accepted_decree.Value()));
+    ASSERT_MESSAGE_TYPE_SENT(sender, paxos::MessageType::NackMessage);
 }
 
 

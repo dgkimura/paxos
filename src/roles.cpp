@@ -532,7 +532,7 @@ HandleAccept(
             sender->ReplyAll(Response(message, MessageType::AcceptedMessage));
         }
     }
-    else if (!context->accepted_set.contains(message.decree))
+    else
     {
         //
         // If the message decree is not higher than the accepted decree then we
